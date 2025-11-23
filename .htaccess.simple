@@ -1,0 +1,15 @@
+# Simple .htaccess for Portfolio Tracker
+# If the full .htaccess doesn't work, try this simpler version
+
+# Set default index file to login.html
+DirectoryIndex login.html index.html
+
+# Enable following symbolic links (required for some servers)
+Options +FollowSymLinks
+
+# Prevent access to hidden files (like .env, .git)
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+

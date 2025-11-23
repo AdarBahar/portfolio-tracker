@@ -1,0 +1,227 @@
+/**
+ * Login Page Styles
+ */
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: var(--space-24);
+}
+
+.login-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-48);
+    max-width: 1200px;
+    width: 100%;
+}
+
+.login-card {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.login-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: var(--space-32);
+    text-align: center;
+}
+
+.login-header h1 {
+    margin: 0 0 var(--space-8) 0;
+    font-size: 2rem;
+}
+
+.login-header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+}
+
+.login-content {
+    padding: var(--space-48) var(--space-32);
+    text-align: center;
+}
+
+.login-content h2 {
+    margin: 0 0 var(--space-8) 0;
+    color: var(--text-primary);
+}
+
+.login-subtitle {
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-32) 0;
+}
+
+/* Google Sign-In Button Container */
+#g_id_onload {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-24);
+}
+
+.g_id_signin {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--space-24);
+}
+
+/* Divider */
+.divider {
+    display: flex;
+    align-items: center;
+    margin: var(--space-24) 0;
+    color: var(--text-secondary);
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.divider span {
+    padding: 0 var(--space-16);
+    font-size: 0.875rem;
+}
+
+/* Demo Button */
+.demo-btn {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-16);
+    font-size: 1rem;
+}
+
+.demo-btn small {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    font-weight: normal;
+}
+
+/* Login Info */
+.login-info {
+    margin-top: var(--space-32);
+    padding: var(--space-16);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    text-align: left;
+}
+
+.login-info p {
+    margin: 0 0 var(--space-12) 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.login-info p:last-child {
+    margin-bottom: 0;
+}
+
+.login-info strong {
+    color: var(--text-primary);
+}
+
+/* Login Footer */
+.login-footer {
+    padding: var(--space-16) var(--space-32);
+    background: var(--bg-secondary);
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+}
+
+.login-footer p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Features Preview */
+.features-preview {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius-lg);
+    padding: var(--space-32);
+    color: white;
+}
+
+.features-preview h3 {
+    margin: 0 0 var(--space-24) 0;
+    font-size: 1.5rem;
+}
+
+.features-preview ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.features-preview li {
+    display: flex;
+    gap: var(--space-16);
+    margin-bottom: var(--space-24);
+    align-items: flex-start;
+}
+
+.features-preview li:last-child {
+    margin-bottom: 0;
+}
+
+.feature-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.features-preview strong {
+    display: block;
+    margin-bottom: var(--space-4);
+    font-size: 1.1rem;
+}
+
+.features-preview p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+    .login-container {
+        grid-template-columns: 1fr;
+        gap: var(--space-24);
+    }
+
+    .features-preview {
+        order: -1;
+    }
+}
+
+@media (max-width: 640px) {
+    .login-page {
+        padding: var(--space-16);
+    }
+
+    .login-content {
+        padding: var(--space-32) var(--space-24);
+    }
+
+    .login-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .features-preview {
+        padding: var(--space-24);
+    }
+}
+

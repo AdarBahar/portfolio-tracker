@@ -1,0 +1,7 @@
+# Minimal .htaccess for testing
+
+# Set default index files
+DirectoryIndex login.html index.html
+
+# That's it - just the basics
+

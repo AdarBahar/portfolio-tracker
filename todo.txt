@@ -1,0 +1,21 @@
+Add to smoketest - Google credentials for test user
+save cache for tikers data, to reduce API calls
+
+
+Finnhub API for stock ticker data
+Real-time quotes (fetch-stock-prices):
+
+Endpoint: https://finnhub.io/api/v1/quote
+Returns current price, previous close, and calculates change %
+Company profiles (fetch-stock-prices):
+
+Endpoint: https://finnhub.io/api/v1/stock/profile2
+Returns company name
+Historical prices (fetch-historical-prices):
+
+Endpoint: https://finnhub.io/api/v1/stock/candle
+Returns OHLC (Open, High, Low, Close) data with daily resolution
+Finnhub was chosen over alternatives like Alpha Vantage because it offers better rate limits (60 calls/minute vs 5/minute) and real-time data access.
+
+I'm using Finnhub API for all stock ticker data. Specifically:
+

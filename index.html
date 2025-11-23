@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Broker</title>
+    <meta name="description" content="Track your investment portfolio with real-time updates, performance metrics, and insights">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div class="header">
+        <div>
+            <h1>Fantasy Broker</h1>
+            <p class="last-updated" id="lastUpdated">Last updated: --</p>
+        </div>
+        <div class="header-actions">
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"></button>
+            <button class="btn btn-secondary" id="exportBtn">Export Summary</button>
+            <button class="btn btn-primary" id="addPositionBtn">Add Position</button>
+        </div>
+    </div>
+
+    <main id="main-content">
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Total Portfolio Value</div>
+                <div class="metric-value" id="totalValue">$0.00</div>
+            </div>
+        <div class="metric-card">
+            <div class="metric-label">Total Gain/Loss</div>
+            <div class="metric-value" id="totalGain">$0.00</div>
+            <div class="metric-change" id="totalGainPercent">0.00%</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Dividend Income YTD</div>
+            <div class="metric-value" id="dividendIncome">$0.00</div>
+            <div class="metric-change" id="estimatedAnnual">Est. Annual: $0.00</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Today's Change</div>
+            <div class="metric-value" id="todayChange">$0.00</div>
+            <div class="metric-change" id="todayChangePercent">0.00%</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">
+            <h2 class="section-title">Holdings</h2>
+            <input type="text" class="search-input" id="searchInput" placeholder="Search by ticker or company...">
+        </div>
+        <div class="filter-buttons" id="filterButtons">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="Technology">Technology</button>
+            <button class="filter-btn" data-filter="Healthcare">Healthcare</button>
+            <button class="filter-btn" data-filter="Diversified">Diversified</button>
+            <button class="filter-btn" data-filter="Finance">Finance</button>
+            <button class="filter-btn" data-filter="Consumer">Consumer</button>
+            <button class="filter-btn" data-filter="Energy">Energy</button>
+        </div>
+        <div class="table-container">
+            <table id="holdingsTable">
+                <thead>
+                    <tr>
+                        <th data-sort="ticker">Ticker</th>
+                        <th data-sort="name">Company</th>
+                        <th data-sort="shares">Shares</th>
+                        <th data-sort="purchase_price">Purchase Price</th>
+                        <th data-sort="current_price">Current Price</th>
+                        <th>Trend (30d)</th>
+                        <th data-sort="current_value">Current Value</th>
+                        <th data-sort="gain_loss">Gain/Loss ($)</th>
+                        <th data-sort="gain_loss_percent">Gain/Loss (%)</th>
+                        <th data-sort="recommendation">Recommendation</th>
+                        <th>Info</th>
+                        <th data-sort="sector">Sector</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="holdingsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <div class="chart-container">
+            <h3 class="chart-title">Asset Allocation by Sector</h3>
+            <div class="chart-wrapper">
+                <canvas id="sectorChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-container">
+            <h3 class="chart-title">Asset Allocation by Type</h3>
+            <div class="chart-wrapper">
+                <canvas id="assetClassChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-container" style="margin-bottom: var(--space-24);">
+        <h3 class="chart-title">Performance by Holding</h3>
+        <div class="chart-wrapper" style="height: 400px;">
+            <canvas id="performanceChart"></canvas>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">Performance Metrics</h2>
+        <div class="performance-highlights">
+            <div class="highlight-card">
+                <div class="highlight-label">Portfolio Beta</div>
+                <div class="highlight-value" id="portfolioBeta">--</div>
+            </div>
+            <div class="highlight-card">
+                <div class="highlight-label">Avg Dividend Yield</div>
+                <div class="highlight-value" id="avgDivYield">--</div>
+            </div>
+            <div class="highlight-card">
+                <div class="highlight-label">Best Performer</div>
+                <div class="highlight-value" id="bestPerformer">--</div>
+            </div>
+            <div class="highlight-card">
+                <div class="highlight-label">Worst Performer</div>
+                <div class="highlight-value" id="worstPerformer">--</div>
+            </div>
+            <div class="highlight-card">
+                <div class="highlight-label">Total Cost Basis</div>
+                <div class="highlight-value" id="totalCostBasis">--</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">Dividend Income</h2>
+        <div class="chart-wrapper" style="height: 300px; margin-bottom: var(--space-24);">
+            <canvas id="dividendChart"></canvas>
+        </div>
+        <div class="dividend-list" id="dividendList"></div>
+    </div>
+
+    <div class="section">
+        <h2 class="section-title">Transaction History</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Ticker</th>
+                        <th>Shares</th>
+                        <th>Price</th>
+                        <th>Fees</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Position Modal -->
+    <div class="modal" id="addPositionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Position</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <form id="addPositionForm">
+                <div class="form-group">
+                    <label class="form-label">Ticker Symbol</label>
+                    <input type="text" class="form-input" id="ticker" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Company Name</label>
+                    <input type="text" class="form-input" id="companyName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Shares</label>
+                    <input type="number" class="form-input" id="shares" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Purchase Price</label>
+                    <input type="number" class="form-input" id="purchasePrice" min="0" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Purchase Date</label>
+                    <input type="date" class="form-input" id="purchaseDate" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sector</label>
+                    <select class="form-select" id="sector" required>
+                        <option value="Technology">Technology</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Consumer">Consumer</option>
+                        <option value="Energy">Energy</option>
+                        <option value="Diversified">Diversified</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Asset Class</label>
+                    <select class="form-select" id="assetClass" required>
+                        <option value="US Stocks">US Stocks</option>
+                        <option value="International Stocks">International Stocks</option>
+                        <option value="ETF">ETF</option>
+                        <option value="Bonds">Bonds</option>
+                        <option value="Crypto">Crypto</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Add Position</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sparkline Tooltip -->
+    <div class="sparkline-tooltip" id="sparklineTooltip">
+        <div class="tooltip-row">
+            <span class="tooltip-label">High:</span>
+            <span class="tooltip-value" id="tooltipHigh">--</span>
+        </div>
+        <div class="tooltip-row">
+            <span class="tooltip-label">Low:</span>
+            <span class="tooltip-value" id="tooltipLow">--</span>
+        </div>
+        <div class="tooltip-row">
+            <span class="tooltip-label">30d Change:</span>
+            <span class="tooltip-value" id="tooltipChange">--</span>
+        </div>
+        <div class="tooltip-row">
+            <span class="tooltip-label">Date Range:</span>
+            <span class="tooltip-value" id="tooltipRange">--</span>
+        </div>
+    </div>
+
+    <!-- Detail Chart Modal -->
+    <div class="detail-chart-modal" id="detailChartModal">
+        <div class="detail-chart-content">
+            <div class="detail-chart-header">
+                <h3 class="modal-title" id="detailChartTitle">30-Day Price History</h3>
+                <button class="close-btn" id="closeDetailChart">&times;</button>
+            </div>
+            <div class="detail-stats" id="detailStats"></div>
+            <div class="chart-wrapper" style="height: 400px;">
+                <canvas id="detailChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Insights Modal -->
+    <div class="modal" id="insightsModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="insightsTitle">Educational Insights</h3>
+                <button class="close-btn" id="closeInsightsModal">&times;</button>
+            </div>
+            <div id="insightsContent"></div>
+        </div>
+    </div>
+    </main>
+
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="exportModalTitle">Portfolio Summary</h3>
+                <button class="close-btn" id="closeExportModal" aria-label="Close export modal">&times;</button>
+            </div>
+            <div class="export-content" id="exportContent"></div>
+        </div>
+    </div>
+
+    <!-- Load modular JavaScript -->
+    <script type="module" src="scripts/app.js"></script>
+</body>
+</html>

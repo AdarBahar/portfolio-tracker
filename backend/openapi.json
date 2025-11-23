@@ -1,0 +1,1030 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Portfolio Tracker API",
+    "version": "1.0.0",
+    "description": "Backend API for the Portfolio Tracker application (Node.js + Express + MySQL)."
+  },
+  "servers": [
+    {
+      "url": "https://www.bahar.co.il/fantasybroker-api",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:4000",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Returns basic health information to verify the API is running.",
+        "tags": ["System"],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "db": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/google": {
+      "post": {
+        "summary": "Authenticate with Google",
+        "description": "Accepts a Google ID token (credential) from the frontend, verifies it with Google, upserts the user in the database, and returns a backend JWT and user profile.",
+        "tags": ["Auth"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "credential": {
+                    "type": "string",
+                    "description": "Google ID token (JWT) returned by Google Identity Services."
+                  }
+                },
+                "required": ["credential"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful authentication",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired Google token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/holdings": {
+      "get": {
+        "summary": "List holdings",
+        "description": "Returns the current user's holdings.",
+        "tags": ["Holdings"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of holdings for the current user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "holdings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer", "format": "int64" },
+                          "ticker": { "type": "string" },
+                          "name": { "type": "string" },
+                          "shares": { "type": "number" },
+                          "purchasePrice": { "type": "number" },
+                          "purchaseDate": { "type": "string", "format": "date" },
+                          "sector": { "type": ["string", "null"] },
+                          "assetClass": { "type": ["string", "null"] },
+                          "createdAt": { "type": "string", "format": "date-time" },
+                          "updatedAt": { "type": "string", "format": "date-time" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create holding",
+        "description": "Creates a new holding for the current user.",
+        "tags": ["Holdings"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ticker": { "type": "string" },
+                  "name": { "type": "string" },
+                  "shares": { "type": "number" },
+                  "purchasePrice": { "type": "number" },
+                  "purchaseDate": { "type": "string", "format": "date" },
+                  "sector": { "type": "string" },
+                  "assetClass": { "type": "string" }
+                },
+                "required": ["ticker", "name", "shares", "purchasePrice", "purchaseDate"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Holding created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "holding": { "$ref": "#/components/schemas/Holding" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/holdings/{id}": {
+      "put": {
+        "summary": "Update holding",
+        "description": "Updates an existing holding for the current user.",
+        "tags": ["Holdings"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ticker": { "type": "string" },
+                  "name": { "type": "string" },
+                  "shares": { "type": "number" },
+                  "purchasePrice": { "type": "number" },
+                  "purchaseDate": { "type": "string", "format": "date" },
+                  "sector": { "type": "string" },
+                  "assetClass": { "type": "string" }
+                },
+                "required": ["ticker", "name", "shares", "purchasePrice", "purchaseDate"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Holding updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "holding": { "$ref": "#/components/schemas/Holding" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Holding not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete holding",
+        "description": "Deletes an existing holding for the current user.",
+        "tags": ["Holdings"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Holding deleted"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Holding not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dividends": {
+      "get": {
+        "summary": "List dividends",
+        "description": "Returns the current user's dividends.",
+        "tags": ["Dividends"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of dividends for the current user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dividends": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer", "format": "int64" },
+                          "ticker": { "type": "string" },
+                          "amount": { "type": "number" },
+                          "shares": { "type": "number" },
+                          "date": { "type": "string", "format": "date" },
+                          "createdAt": { "type": "string", "format": "date-time" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create dividend",
+        "description": "Creates a new dividend for the current user.",
+        "tags": ["Dividends"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ticker": { "type": "string" },
+                  "amount": { "type": "number" },
+                  "shares": { "type": "number" },
+                  "date": { "type": "string", "format": "date" }
+                },
+                "required": ["ticker", "amount", "shares", "date"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Dividend created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dividend": { "$ref": "#/components/schemas/Dividend" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dividends/{id}": {
+      "put": {
+        "summary": "Update dividend",
+        "description": "Updates an existing dividend for the current user.",
+        "tags": ["Dividends"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ticker": { "type": "string" },
+                  "amount": { "type": "number" },
+                  "shares": { "type": "number" },
+                  "date": { "type": "string", "format": "date" }
+                },
+                "required": ["ticker", "amount", "shares", "date"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dividend updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dividend": { "$ref": "#/components/schemas/Dividend" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Dividend not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete dividend",
+        "description": "Deletes an existing dividend for the current user.",
+        "tags": ["Dividends"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Dividend deleted"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Dividend not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions": {
+      "get": {
+        "summary": "List transactions",
+        "description": "Returns the current user's transactions.",
+        "tags": ["Transactions"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of transactions for the current user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transactions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer", "format": "int64" },
+                          "type": { "type": "string", "enum": ["buy", "sell", "dividend"] },
+                          "ticker": { "type": "string" },
+                          "shares": { "type": "number" },
+                          "price": { "type": "number" },
+                          "fees": { "type": "number" },
+                          "date": { "type": "string", "format": "date" },
+                          "createdAt": { "type": "string", "format": "date-time" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create transaction",
+        "description": "Creates a new transaction for the current user.",
+        "tags": ["Transactions"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string", "enum": ["buy", "sell", "dividend"] },
+                  "ticker": { "type": "string" },
+                  "shares": { "type": "number" },
+                  "price": { "type": "number" },
+                  "fees": { "type": "number" },
+                  "date": { "type": "string", "format": "date" }
+                },
+                "required": ["type", "ticker", "shares", "price", "date"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transaction": { "$ref": "#/components/schemas/Transaction" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions/{id}": {
+      "put": {
+        "summary": "Update transaction",
+        "description": "Updates an existing transaction for the current user.",
+        "tags": ["Transactions"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string", "enum": ["buy", "sell", "dividend"] },
+                  "ticker": { "type": "string" },
+                  "shares": { "type": "number" },
+                  "price": { "type": "number" },
+                  "fees": { "type": "number" },
+                  "date": { "type": "string", "format": "date" }
+                },
+                "required": ["type", "ticker", "shares", "price", "date"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transaction": { "$ref": "#/components/schemas/Transaction" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Transaction not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete transaction",
+        "description": "Deletes an existing transaction for the current user.",
+        "tags": ["Transactions"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "format": "int64" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Transaction deleted"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Transaction not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/portfolio/all": {
+      "get": {
+        "summary": "Get full portfolio",
+        "description": "Returns holdings, dividends, and transactions for the current user.",
+        "tags": ["Portfolio"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "responses": {
+          "200": {
+            "description": "Full portfolio for the current user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "holdings": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Holding" }
+                    },
+                    "dividends": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Dividend" }
+                    },
+                    "transactions": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Transaction" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 123
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "example": "Demo User"
+          },
+          "profilePicture": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true,
+            "example": "https://example.com/avatar.png"
+          },
+          "authProvider": {
+            "type": "string",
+            "description": "Authentication provider used for this account.",
+            "example": "google"
+          },
+          "isDemo": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": ["id", "email", "authProvider", "isDemo"]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "token": {
+            "type": "string",
+            "description": "Backend JWT used for authenticating subsequent API requests."
+          }
+        },
+        "required": ["user", "token"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Invalid or expired Google token"
+          }
+        },
+        "required": ["error"]
+      },
+      "Holding": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "ticker": { "type": "string" },
+          "name": { "type": "string" },
+          "shares": { "type": "number" },
+          "purchasePrice": { "type": "number" },
+          "purchaseDate": { "type": "string", "format": "date" },
+          "sector": { "type": ["string", "null"] },
+          "assetClass": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "ticker", "name", "shares", "purchasePrice", "purchaseDate"]
+      },
+      "Dividend": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "ticker": { "type": "string" },
+          "amount": { "type": "number" },
+          "shares": { "type": "number" },
+          "date": { "type": "string", "format": "date" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "ticker", "amount", "shares", "date"]
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "type": { "type": "string", "enum": ["buy", "sell", "dividend"] },
+          "ticker": { "type": "string" },
+          "shares": { "type": "number" },
+          "price": { "type": "number" },
+          "fees": { "type": "number" },
+          "date": { "type": "string", "format": "date" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "type", "ticker", "shares", "price", "date"]
+      }
+    }
+  }
+}
+

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Fantasy Broker</title>
+    <meta name="description" content="Sign in to your Fantasy Broker">
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/login.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>📊 Fantasy Broker</h1>
+                <p>Track your investments with real-time updates and insights</p>
+            </div>
+
+            <div class="login-content">
+                <h2>Welcome Back</h2>
+                <p class="login-subtitle">Sign in to access your portfolio</p>
+
+                <!-- Google Sign-In Button -->
+                <!-- Client ID is set dynamically from config.js -->
+                <div id="g_id_onload"
+                     data-client_id=""
+                     data-context="signin"
+                     data-ux_mode="popup"
+                     data-callback="handleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-shape="rectangular"
+                     data-theme="outline"
+                     data-text="signin_with"
+                     data-size="large"
+                     data-logo_alignment="left"
+                     data-width="320">
+                </div>
+
+                <div class="divider">
+                    <span>or</span>
+                </div>
+
+                <!-- Demo Mode Button -->
+                <button class="btn btn-secondary demo-btn" id="demoBtn">
+                    <span>Continue in Demo Mode</span>
+                    <small>No login required</small>
+                </button>
+
+                <div class="login-info">
+                    <p><strong>Demo Mode:</strong> Try the app without signing in. Your data will be stored locally and won't sync across devices.</p>
+                    <p><strong>Google Sign-In:</strong> Sign in to sync your portfolio across devices and access it anywhere.</p>
+                </div>
+            </div>
+
+            <div class="login-footer">
+                <p>By signing in, you agree to our Terms of Service and Privacy Policy</p>
+            </div>
+        </div>
+
+        <div class="features-preview">
+            <h3>Features</h3>
+            <ul>
+                <li>
+                    <span class="feature-icon">📈</span>
+                    <div>
+                        <strong>Real-time Tracking</strong>
+                        <p>Monitor your investments with live updates</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="feature-icon">💰</span>
+                    <div>
+                        <strong>Dividend Tracking</strong>
+                        <p>Track dividend income and estimated returns</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="feature-icon">📊</span>
+                    <div>
+                        <strong>Interactive Charts</strong>
+                        <p>Visualize sector allocation and performance</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="feature-icon">🔒</span>
+                    <div>
+                        <strong>Secure & Private</strong>
+                        <p>Your data is encrypted and secure</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="errorToast" class="error-toast" role="alert" aria-live="assertive"></div>
+    <div id="successToast" class="success-toast" role="status" aria-live="polite"></div>
+
+    <!-- Login Script - Must load BEFORE Google library -->
+    <script type="module">
+        import { authManager } from './scripts/auth.js';
+        import configPromise from './scripts/config.js';
+
+        // Wait for config to load
+        const config = await configPromise;
+
+        // Define global callback FIRST (before Google library loads)
+        // This must be in global scope for Google's library to call it
+        window.handleCredentialResponse = async function(response) {
+            try {
+                const user = await authManager.handleGoogleSignIn(
+                    response.credential,
+                    config.apiUrl
+                );
+
+                // Show success message
+                const toast = document.getElementById('successToast');
+                if (toast) {
+                    toast.textContent = `Welcome back, ${user.name}!`;
+                    toast.classList.add('show');
+                }
+
+                // Redirect to main app using relative path
+                setTimeout(() => {
+                    window.location.href = './index.html';
+                }, 1000);
+            } catch (error) {
+                console.error('Google sign-in error:', error);
+                const toast = document.getElementById('errorToast');
+                if (toast) {
+                    toast.textContent = 'Failed to sign in with Google. Please try again.';
+                    toast.classList.add('show');
+                }
+            }
+        };
+
+        // Initialize login page
+        function initializeLoginPage() {
+            // Check if already authenticated
+            if (authManager.initialize()) {
+                window.location.href = './index.html';
+                return;
+            }
+
+            // Set up demo button
+            const demoBtn = document.getElementById('demoBtn');
+            if (demoBtn) {
+                demoBtn.addEventListener('click', () => {
+                    try {
+                        const user = authManager.signInAsDemo();
+
+                        const toast = document.getElementById('successToast');
+                        if (toast) {
+                            toast.textContent = 'Entering demo mode...';
+                            toast.classList.add('show');
+                        }
+
+                        setTimeout(() => {
+                            window.location.href = './index.html';
+                        }, 1000);
+                    } catch (error) {
+                        console.error('Demo login error:', error);
+                        const toast = document.getElementById('errorToast');
+                        if (toast) {
+                            toast.textContent = 'Failed to enter demo mode. Please try again.';
+                            toast.classList.add('show');
+                        }
+                    }
+                });
+            }
+
+            // Set Google Client ID dynamically and initialize Google Sign-In
+            const googleOnloadDiv = document.getElementById('g_id_onload');
+            if (googleOnloadDiv) {
+                if (config.googleClientId && config.googleClientId !== 'YOUR_GOOGLE_CLIENT_ID') {
+                    googleOnloadDiv.setAttribute('data-client_id', config.googleClientId);
+
+                    // Load Google Sign-In library AFTER setting up callback and client ID
+                    const script = document.createElement('script');
+                    script.src = 'https://accounts.google.com/gsi/client';
+                    script.async = true;
+                    script.defer = true;
+                    document.body.appendChild(script);
+                } else {
+                    console.warn('⚠️ Google Client ID not configured!');
+                    console.info('📝 Create scripts/config.local.js with your Client ID');
+                    console.info('📖 See GOOGLE_OAUTH_SETUP.md for instructions');
+
+                    // Hide Google Sign-In button
+                    const googleSignInContainer = googleOnloadDiv.parentElement;
+                    if (googleSignInContainer) {
+                        googleSignInContainer.style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeLoginPage);
+        } else {
+            initializeLoginPage();
+        }
+    </script>
+</body>
+</html>
+

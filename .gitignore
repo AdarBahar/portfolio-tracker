@@ -1,0 +1,43 @@
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*
+!**/.env.example
+
+# Local configuration (contains credentials)
+scripts/config.local.js
+
+# OAuth / API client secrets
+client_secret_*.json
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build output
+dist/
+backend/dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local development
+.cache/
+
