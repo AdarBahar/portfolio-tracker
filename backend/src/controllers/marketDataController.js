@@ -6,6 +6,19 @@ const { badRequest, notFound, internalError } = require('../utils/apiError');
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY || 'd4ectrhr01qrumpesmm0d4ectrhr01qrumpesmmg';
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 
+// Market data mode configuration
+// 'production' - Normal behavior: 15-minute cache TTL, calls Finnhub when cache expires
+// 'debug' - Testing mode: Infinite cache, only first call hits Finnhub (throttles API usage)
+const MARKET_DATA_MODE = process.env.MARKET_DATA_MODE || 'production';
+const IS_DEBUG_MODE = MARKET_DATA_MODE === 'debug';
+
+// Log the current mode on startup
+if (IS_DEBUG_MODE) {
+  console.warn('⚠️  MARKET_DATA_MODE=debug - Finnhub API calls are throttled (only first call per symbol is real)');
+} else {
+  console.info('✅ MARKET_DATA_MODE=production - Normal Finnhub API behavior (15-minute cache)');
+}
+
 /**
  * Make HTTPS request to Finnhub API
  * @param {string} endpoint - API endpoint path
@@ -109,22 +122,37 @@ async function fetchPriceFromAPI(symbol) {
  */
 async function getMarketData(req, res) {
   const { symbol } = req.params;
-  
+
   if (!symbol) {
     return badRequest(res, 'Missing symbol parameter');
   }
-  
+
   const upperSymbol = symbol.toUpperCase();
-  
+
   try {
-    // Check if we have cached data (less than 15 minutes old)
-    const [rows] = await db.execute(
-      'SELECT * FROM market_data WHERE symbol = ? AND last_updated > DATE_SUB(NOW(), INTERVAL 15 MINUTE)',
-      [upperSymbol]
-    );
-    
+    // Check cache based on mode
+    let cacheQuery, cacheParams;
+
+    if (IS_DEBUG_MODE) {
+      // Debug mode: Use ANY cached data (no time limit)
+      cacheQuery = 'SELECT * FROM market_data WHERE symbol = ?';
+      cacheParams = [upperSymbol];
+    } else {
+      // Production mode: Use cache only if less than 15 minutes old
+      cacheQuery = 'SELECT * FROM market_data WHERE symbol = ? AND last_updated > DATE_SUB(NOW(), INTERVAL 15 MINUTE)';
+      cacheParams = [upperSymbol];
+    }
+
+    const [rows] = await db.execute(cacheQuery, cacheParams);
+
     if (rows.length > 0) {
       const data = rows[0];
+      const cacheAge = Math.floor((Date.now() - new Date(data.last_updated).getTime()) / 1000);
+
+      if (IS_DEBUG_MODE) {
+        console.info(`[DEBUG MODE] Using cached data for ${upperSymbol} (age: ${cacheAge}s, last updated: ${data.last_updated})`);
+      }
+
       return res.json({
         symbol: data.symbol,
         currentPrice: Number(data.current_price),
@@ -134,8 +162,9 @@ async function getMarketData(req, res) {
         cached: true,
       });
     }
-    
+
     // Fetch fresh data from API
+    console.info(`${IS_DEBUG_MODE ? '[DEBUG MODE] ' : ''}Fetching fresh data from Finnhub for ${upperSymbol}`);
     const apiData = await fetchPriceFromAPI(upperSymbol);
     
     // Upsert into market_data table
@@ -187,16 +216,29 @@ async function getMultipleMarketData(req, res) {
   
   try {
     const results = [];
+    let cacheHits = 0;
+    let apiCalls = 0;
 
     for (const symbol of symbolList) {
-      // Check cache first
-      const [rows] = await db.execute(
-        'SELECT * FROM market_data WHERE symbol = ? AND last_updated > DATE_SUB(NOW(), INTERVAL 15 MINUTE)',
-        [symbol]
-      );
+      // Check cache based on mode
+      let cacheQuery, cacheParams;
+
+      if (IS_DEBUG_MODE) {
+        // Debug mode: Use ANY cached data (no time limit)
+        cacheQuery = 'SELECT * FROM market_data WHERE symbol = ?';
+        cacheParams = [symbol];
+      } else {
+        // Production mode: Use cache only if less than 15 minutes old
+        cacheQuery = 'SELECT * FROM market_data WHERE symbol = ? AND last_updated > DATE_SUB(NOW(), INTERVAL 15 MINUTE)';
+        cacheParams = [symbol];
+      }
+
+      const [rows] = await db.execute(cacheQuery, cacheParams);
 
       if (rows.length > 0) {
         const data = rows[0];
+        cacheHits++;
+
         results.push({
           symbol: symbol,
           currentPrice: Number(data.current_price),
@@ -207,6 +249,7 @@ async function getMultipleMarketData(req, res) {
         });
       } else {
         // Fetch from API
+        apiCalls++;
         const apiData = await fetchPriceFromAPI(symbol);
 
         // Upsert
@@ -231,6 +274,9 @@ async function getMultipleMarketData(req, res) {
         });
       }
     }
+
+    // Log cache statistics
+    console.info(`${IS_DEBUG_MODE ? '[DEBUG MODE] ' : ''}Market data batch: ${symbolList.length} symbols, ${cacheHits} cached, ${apiCalls} API calls`);
 
     return res.json({ data: results });
   } catch (err) {
