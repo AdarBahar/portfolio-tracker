@@ -35,9 +35,41 @@ function warn(...args) {
 
 /**
  * Error log with timestamp
+ * Formats Error objects to include timestamps on all stack trace lines
  */
 function error(...args) {
-  console.error(`[${getTimestamp()}]`, ...args);
+  const timestamp = `[${getTimestamp()}]`;
+
+  // Separate error objects from other arguments
+  const errors = [];
+  const nonErrors = [];
+
+  args.forEach(arg => {
+    if (arg instanceof Error) {
+      errors.push(arg);
+    } else {
+      nonErrors.push(arg);
+    }
+  });
+
+  // Print non-error arguments first with timestamp
+  if (nonErrors.length > 0) {
+    console.error(timestamp, ...nonErrors);
+  }
+
+  // Print each error with timestamps on all stack lines
+  errors.forEach(err => {
+    const stack = err.stack || err.toString();
+    const lines = stack.split('\n');
+    lines.forEach(line => {
+      console.error(`${timestamp} ${line}`);
+    });
+  });
+
+  // If no arguments at all, just print timestamp
+  if (args.length === 0) {
+    console.error(timestamp);
+  }
 }
 
 /**
