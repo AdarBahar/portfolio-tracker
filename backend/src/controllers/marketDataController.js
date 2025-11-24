@@ -186,28 +186,29 @@ async function getMultipleMarketData(req, res) {
   }
   
   try {
-    const results = {};
-    
+    const results = [];
+
     for (const symbol of symbolList) {
       // Check cache first
       const [rows] = await db.execute(
         'SELECT * FROM market_data WHERE symbol = ? AND last_updated > DATE_SUB(NOW(), INTERVAL 15 MINUTE)',
         [symbol]
       );
-      
+
       if (rows.length > 0) {
         const data = rows[0];
-        results[symbol] = {
+        results.push({
+          symbol: symbol,
           currentPrice: Number(data.current_price),
           companyName: data.company_name,
           changePercent: data.change_percent ? Number(data.change_percent) : null,
           lastUpdated: data.last_updated,
           cached: true,
-        };
+        });
       } else {
         // Fetch from API
         const apiData = await fetchPriceFromAPI(symbol);
-        
+
         // Upsert
         await db.execute(
           `INSERT INTO market_data (symbol, current_price, company_name, change_percent, last_updated)
@@ -219,17 +220,18 @@ async function getMultipleMarketData(req, res) {
              last_updated = NOW()`,
           [symbol, apiData.price, apiData.companyName, apiData.changePercent]
         );
-        
-        results[symbol] = {
+
+        results.push({
+          symbol: symbol,
           currentPrice: apiData.price,
           companyName: apiData.companyName,
           changePercent: apiData.changePercent,
           lastUpdated: new Date(),
           cached: false,
-        };
+        });
       }
     }
-    
+
     return res.json({ data: results });
   } catch (err) {
     console.error('Error fetching multiple market data:', err);
