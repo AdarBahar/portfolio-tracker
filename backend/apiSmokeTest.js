@@ -15,6 +15,16 @@ const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 
+// ANSI color codes
+const colors = {
+  reset: '\x1b[0m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  cyan: '\x1b[36m',
+  bold: '\x1b[1m',
+};
+
 function httpRequest(method, urlString, options = {}) {
   return new Promise((resolve, reject) => {
     const url = new URL(urlString);
@@ -1124,7 +1134,7 @@ async function main() {
   }
 
   const ctx = { baseUrl, googleCredential, secondGoogleCredential };
-  console.log(`Running API tests against ${baseUrl}...`);
+  console.log(`${colors.cyan}Running API tests against ${baseUrl}...${colors.reset}`);
 
   let passCount = 0;
   let failCount = 0;
@@ -1132,7 +1142,7 @@ async function main() {
 
   for (const t of tests) {
     if (t.optional && !googleCredential) {
-      console.log(`SKIP ${t.id} (${t.endpoint}) - no Google credential provided`);
+      console.log(`${colors.yellow}SKIP${colors.reset} ${t.id} (${t.endpoint}) - no Google credential provided`);
       skipCount += 1;
       continue;
     }
@@ -1140,16 +1150,16 @@ async function main() {
     process.stdout.write(`RUN  ${t.id} (${t.endpoint})... `);
     try {
       await t.run(ctx);
-      console.log('OK');
+      console.log(`${colors.green}OK${colors.reset}`);
       passCount += 1;
     } catch (err) {
-      console.log('FAIL');
-      console.error(`   Reason: ${err.message}`);
+      console.log(`${colors.red}FAIL${colors.reset}`);
+      console.error(`${colors.red}   Reason: ${err.message}${colors.reset}`);
       failCount += 1;
     }
   }
 
-  console.log(`\nSummary: ${passCount} passed, ${failCount} failed, ${skipCount} skipped`);
+  console.log(`\n${colors.bold}Summary:${colors.reset} ${colors.green}${passCount} passed${colors.reset}, ${colors.red}${failCount} failed${colors.reset}, ${colors.yellow}${skipCount} skipped${colors.reset}`);
   if (failCount > 0) {
     process.exitCode = 1;
   }
