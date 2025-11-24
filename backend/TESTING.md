@@ -90,12 +90,21 @@ node -e "require('./backend/tokenRefresher').clearTokenCache()"
 node backend/getTokenFromBrowser.js
 ```
 
-**Method 2: Browser Console**
+**Method 2: Browser Console (Auto-copy)**
+1. Open https://www.bahar.co.il/fantasybroker/login.html
+2. Sign in with Google
+3. Open DevTools (F12) → Console
+4. Run: `copy(localStorage.getItem('authToken'))`
+5. The token is now in your clipboard - just paste it!
+
+**Method 2b: Browser Console (Manual copy)**
 1. Open https://www.bahar.co.il/fantasybroker/login.html
 2. Sign in with Google
 3. Open DevTools (F12) → Console
 4. Run: `localStorage.getItem('authToken')`
-5. Copy the token
+5. Click on the string to expand it (if truncated)
+6. Right-click → "Copy string contents" OR hover and click "view source"
+7. Copy the FULL token (without quotes)
 
 **Method 3: Bookmarklet**
 
