@@ -286,9 +286,54 @@ async function getMultipleMarketData(req, res) {
   }
 }
 
+/**
+ * GET /api/market-data/search?q=AAPL
+ * Search for stock symbols using Finnhub symbol lookup
+ */
+async function searchSymbols(req, res) {
+  const { q } = req.query;
+
+  if (!q || q.trim().length === 0) {
+    return badRequest(res, 'Missing search query parameter');
+  }
+
+  const query = q.trim();
+
+  try {
+    // Call Finnhub symbol search endpoint
+    // Endpoint: /search?q=apple
+    const results = await finnhubRequest(`/search?q=${encodeURIComponent(query)}`);
+
+    if (!results || !results.result) {
+      return res.json({ count: 0, result: [] });
+    }
+
+    // Filter and format results
+    // Prioritize US stocks and limit to 10 results
+    const filteredResults = results.result
+      .filter(item => item.type === 'Common Stock' || item.type === 'ETF')
+      .slice(0, 10)
+      .map(item => ({
+        symbol: item.symbol,
+        description: item.description,
+        displaySymbol: item.displaySymbol || item.symbol,
+        type: item.type,
+      }));
+
+    return res.json({
+      count: filteredResults.length,
+      result: filteredResults,
+    });
+  } catch (err) {
+    logger.error('Error searching symbols:', err);
+    return internalError(res, 'Failed to search symbols');
+  }
+}
+
 module.exports = {
   getMarketData,
   getMultipleMarketData,
+  searchSymbols,
   fetchPriceFromAPI, // Export for use in order execution
 };
 

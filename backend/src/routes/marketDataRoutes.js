@@ -1,7 +1,10 @@
 const express = require('express');
-const { getMarketData, getMultipleMarketData } = require('../controllers/marketDataController');
+const { getMarketData, getMultipleMarketData, searchSymbols } = require('../controllers/marketDataController');
 
 const router = express.Router();
+
+// GET /api/market-data/search?q=AAPL (symbol search)
+router.get('/search', searchSymbols);
 
 // GET /api/market-data?symbols=AAPL,GOOGL (multiple symbols)
 // GET /api/market-data/:symbol (single symbol)

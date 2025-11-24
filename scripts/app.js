@@ -14,6 +14,7 @@ import { debounce } from './utils.js';
 import { setupSparklineInteractions } from './interactions.js';
 import { setupModals } from './modals.js';
 import { setupThemeToggle } from './theme.js';
+import { TickerAutocomplete } from './tickerAutocomplete.js';
 
 // Global app state
 let appState;
@@ -135,34 +136,213 @@ function setupFilters() {
 }
 
 /**
+ * Check if ticker is currently held or was held in the past
+ */
+function checkHoldingStatus(ticker) {
+    const holdingStatusNotification = document.getElementById('holdingStatusNotification');
+    const holdingStatusContent = document.getElementById('holdingStatusContent');
+
+    if (!holdingStatusNotification || !holdingStatusContent || !appState) {
+        return;
+    }
+
+    // Check current holdings
+    const currentHolding = appState.holdings.find(h => h.ticker === ticker);
+
+    if (currentHolding) {
+        // Currently holding this ticker
+        holdingStatusNotification.className = 'holding-status-notification warning';
+        holdingStatusContent.innerHTML = `
+            <strong>⚠️ Currently Holding</strong>
+            <div class="detail">You already have <strong>${currentHolding.shares}</strong> shares of <strong>${ticker}</strong>.</div>
+        `;
+        holdingStatusNotification.style.display = 'flex';
+        return;
+    }
+
+    // Check past holdings from transactions
+    const tickerTransactions = appState.transactions.filter(t => t.ticker === ticker);
+
+    if (tickerTransactions.length > 0) {
+        // Calculate if this was a past holding
+        const pastHolding = calculatePastHolding(tickerTransactions);
+
+        if (pastHolding && pastHolding.wasClosed) {
+            const profitLossText = pastHolding.profitLoss >= 0
+                ? `profit of $${pastHolding.profitLoss.toFixed(2)}`
+                : `loss of $${Math.abs(pastHolding.profitLoss).toFixed(2)}`;
+
+            holdingStatusNotification.className = 'holding-status-notification';
+            holdingStatusContent.innerHTML = `
+                <strong>📊 Past Holding</strong>
+                <div class="detail">
+                    You used to have <strong>${pastHolding.maxShares}</strong> shares of <strong>${ticker}</strong><br>
+                    From: <strong>${pastHolding.startDate}</strong> to: <strong>${pastHolding.endDate}</strong><br>
+                    You made a ${profitLossText}
+                </div>
+            `;
+            holdingStatusNotification.style.display = 'flex';
+            return;
+        }
+    }
+
+    // No current or past holding
+    holdingStatusNotification.style.display = 'none';
+}
+
+/**
+ * Calculate past holding details from transactions
+ */
+function calculatePastHolding(transactions) {
+    if (!transactions || transactions.length === 0) return null;
+
+    // Sort by date
+    const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    let currentShares = 0;
+    let totalBuyCost = 0;
+    let totalSellRevenue = 0;
+    let maxShares = 0;
+    let startDate = null;
+    let endDate = null;
+    let wasClosed = false;
+
+    for (const tx of sorted) {
+        if (tx.type === 'buy') {
+            if (currentShares === 0) {
+                startDate = tx.date;
+            }
+            currentShares += tx.shares;
+            totalBuyCost += (tx.shares * tx.price) + (tx.fees || 0);
+            maxShares = Math.max(maxShares, currentShares);
+        } else if (tx.type === 'sell') {
+            currentShares -= tx.shares;
+            totalSellRevenue += (tx.shares * tx.price) - (tx.fees || 0);
+
+            if (currentShares === 0) {
+                endDate = tx.date;
+                wasClosed = true;
+            }
+        }
+    }
+
+    // Only return if position was fully closed
+    if (!wasClosed) return null;
+
+    const profitLoss = totalSellRevenue - totalBuyCost;
+
+    return {
+        maxShares,
+        startDate,
+        endDate,
+        profitLoss,
+        wasClosed: true
+    };
+}
+
+/**
  * Setup add position form
  */
-function setupAddPositionForm() {
+function setupAddPositionForm(config) {
     const form = document.getElementById('addPositionForm');
     const modal = document.getElementById('addPositionModal');
-    
-    if (!form || !modal) return;
-    
+    const tickerInput = document.getElementById('ticker');
+    const autocompleteDropdown = document.getElementById('tickerAutocomplete');
+    const companyNameInput = document.getElementById('companyName');
+    const sectorSelect = document.getElementById('sector');
+    const assetClassSelect = document.getElementById('assetClass');
+    const currentPriceGroup = document.getElementById('currentPriceGroup');
+    const currentPriceDisplay = document.getElementById('currentPriceDisplay');
+    const holdingStatusNotification = document.getElementById('holdingStatusNotification');
+    const holdingStatusContent = document.getElementById('holdingStatusContent');
+
+    if (!form || !modal || !tickerInput || !autocompleteDropdown) return;
+
+    // Initialize autocomplete with API URL from config
+    const autocomplete = new TickerAutocomplete(
+        tickerInput,
+        autocompleteDropdown,
+        async (selectedItem) => {
+            // When a ticker is selected, populate the form
+            companyNameInput.value = selectedItem.description;
+
+            // Check for current or past holdings
+            checkHoldingStatus(selectedItem.symbol);
+
+            // Fetch additional data (current price and company profile)
+            try {
+                const adapter = appState.dataService?.adapter;
+                if (adapter && typeof adapter.getMarketData === 'function') {
+                    const marketData = await adapter.getMarketData([selectedItem.symbol]);
+                    const data = marketData[selectedItem.symbol];
+
+                    if (data) {
+                        // Display current price
+                        const priceValue = currentPriceDisplay.querySelector('.price-value');
+                        const priceChange = currentPriceDisplay.querySelector('.price-change');
+
+                        priceValue.textContent = `$${data.currentPrice.toFixed(2)}`;
+
+                        if (data.change !== undefined && data.changePercent !== undefined) {
+                            const changeText = `${data.change >= 0 ? '+' : ''}${data.change.toFixed(2)} (${data.changePercent.toFixed(2)}%)`;
+                            priceChange.textContent = changeText;
+                            priceChange.className = `price-change ${data.change >= 0 ? 'positive' : 'negative'}`;
+                        }
+
+                        currentPriceGroup.style.display = 'block';
+
+                        // Auto-populate sector if available
+                        if (data.sector) {
+                            const sectorValue = mapSectorToOption(data.sector);
+                            if (sectorValue) {
+                                sectorSelect.value = sectorValue;
+                            }
+                        }
+
+                        // Auto-populate asset class based on type
+                        if (selectedItem.type === 'ETF') {
+                            assetClassSelect.value = 'ETF';
+                        } else {
+                            assetClassSelect.value = 'US Stocks';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching market data:', error);
+            }
+        },
+        config.apiUrl
+    );
+
+    // Reset autocomplete when modal closes
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal || e.target.id === 'closeModal') {
+            autocomplete.reset();
+            currentPriceGroup.style.display = 'none';
+            holdingStatusNotification.style.display = 'none';
+        }
+    });
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         try {
             const validation = validatePositionForm();
-            
+
             if (!validation.valid) {
                 showError(validation.errors.join(', '));
                 return;
             }
-            
+
             // Check for duplicate ticker
             if (appState.holdings.some(h => h.ticker === validation.data.ticker)) {
                 showError(ERROR_MESSAGES.DUPLICATE_POSITION);
                 return;
             }
-            
+
             // Add holding
             await appState.addHolding(validation.data);
-            
+
             // Add transaction
             await appState.addTransaction({
                 type: 'buy',
@@ -172,15 +352,40 @@ function setupAddPositionForm() {
                 date: validation.data.purchase_date,
                 fees: DEFAULT_TRANSACTION_FEE,
             });
-            
+
             modal.classList.remove('active');
             form.reset();
+            autocomplete.reset();
+            currentPriceGroup.style.display = 'none';
+            holdingStatusNotification.style.display = 'none';
             showSuccess(`Successfully added ${validation.data.ticker} to your portfolio`);
         } catch (error) {
             console.error('Error adding position:', error);
             showError('Failed to add position. Please try again.');
         }
     });
+}
+
+/**
+ * Map Finnhub sector to our sector options
+ */
+function mapSectorToOption(sector) {
+    const sectorMap = {
+        'Technology': 'Technology',
+        'Healthcare': 'Healthcare',
+        'Financial Services': 'Finance',
+        'Finance': 'Finance',
+        'Consumer Cyclical': 'Consumer',
+        'Consumer Defensive': 'Consumer',
+        'Energy': 'Energy',
+        'Industrials': 'Diversified',
+        'Basic Materials': 'Diversified',
+        'Real Estate': 'Diversified',
+        'Utilities': 'Diversified',
+        'Communication Services': 'Technology',
+    };
+
+    return sectorMap[sector] || null;
 }
 
 /**
@@ -298,7 +503,7 @@ async function initializeApp() {
         setupTableSorting();
         setupSearch();
         setupFilters();
-        setupAddPositionForm();
+        setupAddPositionForm(config);
         setupUserProfile();
         setupSparklineInteractions(appState);
         setupModals(appState);
