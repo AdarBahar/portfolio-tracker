@@ -17,6 +17,7 @@ const openapi = require('../openapi.json');
 const db = require('./db');
 const { internalError } = require('./utils/apiError');
 const { authenticateToken } = require('./utils/authMiddleware');
+const logger = require('./utils/logger');
 
 // Optional base path for when the app is mounted under a sub-path
 // e.g. API_BASE_PATH=/fantasybroker-api on production
@@ -39,7 +40,7 @@ app.get(`${BASE_PATH}/api/health`, async (req, res) => {
       marketDataMode: process.env.MARKET_DATA_MODE || 'production'
     });
   } catch (err) {
-    console.error('Health check DB connectivity failed:', err);
+    logger.error('Health check DB connectivity failed:', err);
     return internalError(res, 'Database connection failed');
   }
 });
@@ -70,7 +71,7 @@ app.use(`${BASE_PATH}/api/market-data`, marketDataRoutes);
 // Global error handler (basic)
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  console.error(err);
+  logger.error(err);
   return internalError(res);
 });
 

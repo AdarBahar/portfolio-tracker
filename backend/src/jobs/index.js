@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const db = require('../db');
 const { calculatePortfolioValue } = require('../controllers/leaderboardController');
+const logger = require('../utils/logger');
 
 /**
  * Room State Manager
@@ -8,36 +9,36 @@ const { calculatePortfolioValue } = require('../controllers/leaderboardControlle
  */
 async function roomStateManager() {
   try {
-    console.log('[Job] Running room state manager...');
-    
+    logger.log('[Job] Running room state manager...');
+
     // Transition scheduled → active
     const [scheduledRooms] = await db.execute(
-      `SELECT id, name FROM bull_pens 
+      `SELECT id, name FROM bull_pens
        WHERE state = 'scheduled' AND start_time <= NOW()`
     );
-    
+
     for (const room of scheduledRooms) {
       await db.execute('UPDATE bull_pens SET state = ? WHERE id = ?', ['active', room.id]);
-      console.log(`[Job] Transitioned bull pen ${room.id} (${room.name}) to active`);
+      logger.log(`[Job] Transitioned bull pen ${room.id} (${room.name}) to active`);
     }
-    
+
     // Transition active → completed
     const [activeRooms] = await db.execute(
-      `SELECT id, name, start_time, duration_sec FROM bull_pens 
+      `SELECT id, name, start_time, duration_sec FROM bull_pens
        WHERE state = 'active' AND DATE_ADD(start_time, INTERVAL duration_sec SECOND) <= NOW()`
     );
-    
+
     for (const room of activeRooms) {
       await db.execute('UPDATE bull_pens SET state = ? WHERE id = ?', ['completed', room.id]);
-      console.log(`[Job] Transitioned bull pen ${room.id} (${room.name}) to completed`);
-      
+      logger.log(`[Job] Transitioned bull pen ${room.id} (${room.name}) to completed`);
+
       // Create final leaderboard snapshot
       await createLeaderboardSnapshot(room.id);
     }
-    
-    console.log(`[Job] Room state manager complete. Transitioned ${scheduledRooms.length} to active, ${activeRooms.length} to completed.`);
+
+    logger.log(`[Job] Room state manager complete. Transitioned ${scheduledRooms.length} to active, ${activeRooms.length} to completed.`);
   } catch (err) {
-    console.error('[Job] Error in room state manager:', err);
+    logger.error('[Job] Error in room state manager:', err);
   }
 }
 
@@ -47,12 +48,12 @@ async function roomStateManager() {
  */
 async function createLeaderboardSnapshot(bullPenId) {
   try {
-    console.log(`[Job] Creating leaderboard snapshot for bull pen ${bullPenId}...`);
-    
+    logger.log(`[Job] Creating leaderboard snapshot for bull pen ${bullPenId}...`);
+
     // Get bull pen info
     const [bullPenRows] = await db.execute('SELECT starting_cash FROM bull_pens WHERE id = ?', [bullPenId]);
     if (bullPenRows.length === 0) {
-      console.warn(`[Job] Bull pen ${bullPenId} not found, skipping snapshot`);
+      logger.warn(`[Job] Bull pen ${bullPenId} not found, skipping snapshot`);
       return;
     }
     
@@ -101,9 +102,9 @@ async function createLeaderboardSnapshot(bullPenId) {
       );
     }
     
-    console.log(`[Job] Created leaderboard snapshot for bull pen ${bullPenId} with ${rankings.length} entries`);
+    logger.log(`[Job] Created leaderboard snapshot for bull pen ${bullPenId} with ${rankings.length} entries`);
   } catch (err) {
-    console.error(`[Job] Error creating leaderboard snapshot for bull pen ${bullPenId}:`, err);
+    logger.error(`[Job] Error creating leaderboard snapshot for bull pen ${bullPenId}:`, err);
   }
 }
 
@@ -113,17 +114,17 @@ async function createLeaderboardSnapshot(bullPenId) {
  */
 async function leaderboardUpdater() {
   try {
-    console.log('[Job] Running leaderboard updater...');
-    
+    logger.log('[Job] Running leaderboard updater...');
+
     const [activeRooms] = await db.execute('SELECT id FROM bull_pens WHERE state = "active"');
-    
+
     for (const room of activeRooms) {
       await createLeaderboardSnapshot(room.id);
     }
-    
-    console.log(`[Job] Leaderboard updater complete. Updated ${activeRooms.length} active rooms.`);
+
+    logger.log(`[Job] Leaderboard updater complete. Updated ${activeRooms.length} active rooms.`);
   } catch (err) {
-    console.error('[Job] Error in leaderboard updater:', err);
+    logger.error('[Job] Error in leaderboard updater:', err);
   }
 }
 
@@ -131,17 +132,17 @@ async function leaderboardUpdater() {
  * Start all background jobs
  */
 function startJobs() {
-  console.log('[Jobs] Starting background jobs...');
-  
+  logger.log('[Jobs] Starting background jobs...');
+
   // Room state manager - every minute
   cron.schedule('* * * * *', roomStateManager);
-  console.log('[Jobs] Scheduled room state manager (every minute)');
-  
+  logger.log('[Jobs] Scheduled room state manager (every minute)');
+
   // Leaderboard updater - every 5 minutes
   cron.schedule('*/5 * * * *', leaderboardUpdater);
-  console.log('[Jobs] Scheduled leaderboard updater (every 5 minutes)');
-  
-  console.log('[Jobs] All background jobs started');
+  logger.log('[Jobs] Scheduled leaderboard updater (every 5 minutes)');
+
+  logger.log('[Jobs] All background jobs started');
 }
 
 module.exports = {

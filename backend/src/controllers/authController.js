@@ -2,16 +2,16 @@ const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const db = require('../db');
 const { badRequest, unauthorized, internalError } = require('../utils/apiError');
+const logger = require('../utils/logger');
 
 const { GOOGLE_CLIENT_ID, JWT_SECRET } = process.env;
 
 if (!GOOGLE_CLIENT_ID) {
-  // This log will help during backend setup; in production prefer proper logger
-  console.warn('GOOGLE_CLIENT_ID is not set. Google auth will not work correctly.');
+  logger.warn('GOOGLE_CLIENT_ID is not set. Google auth will not work correctly.');
 }
 
 if (!JWT_SECRET) {
-  console.warn('JWT_SECRET is not set. Tokens cannot be signed securely.');
+  logger.warn('JWT_SECRET is not set. Tokens cannot be signed securely.');
 }
 
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
