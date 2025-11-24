@@ -137,6 +137,9 @@ function setupFilters() {
 
 /**
  * Check if ticker is currently held or was held in the past
+ * Displays a notification in the Add Position modal with holding status
+ *
+ * @param {string} ticker - Stock ticker symbol to check
  */
 function checkHoldingStatus(ticker) {
     const holdingStatusNotification = document.getElementById('holdingStatusNotification');
@@ -146,11 +149,11 @@ function checkHoldingStatus(ticker) {
         return;
     }
 
-    // Check current holdings
+    // Check if ticker is currently in holdings
     const currentHolding = appState.holdings.find(h => h.ticker === ticker);
 
     if (currentHolding) {
-        // Currently holding this ticker
+        // Display warning for current holding
         holdingStatusNotification.className = 'holding-status-notification warning';
         holdingStatusContent.innerHTML = `
             <strong>⚠️ Currently Holding</strong>
@@ -160,18 +163,18 @@ function checkHoldingStatus(ticker) {
         return;
     }
 
-    // Check past holdings from transactions
+    // Check transaction history for past holdings
     const tickerTransactions = appState.transactions.filter(t => t.ticker === ticker);
 
     if (tickerTransactions.length > 0) {
-        // Calculate if this was a past holding
         const pastHolding = calculatePastHolding(tickerTransactions);
 
-        if (pastHolding && pastHolding.wasClosed) {
+        if (pastHolding) {
             const profitLossText = pastHolding.profitLoss >= 0
                 ? `profit of $${pastHolding.profitLoss.toFixed(2)}`
                 : `loss of $${Math.abs(pastHolding.profitLoss).toFixed(2)}`;
 
+            // Display info for past holding
             holdingStatusNotification.className = 'holding-status-notification';
             holdingStatusContent.innerHTML = `
                 <strong>📊 Past Holding</strong>
@@ -186,17 +189,26 @@ function checkHoldingStatus(ticker) {
         }
     }
 
-    // No current or past holding
+    // No current or past holding - hide notification
     holdingStatusNotification.style.display = 'none';
 }
 
 /**
- * Calculate past holding details from transactions
+ * Calculate past holding details from transaction history
+ * Analyzes buy/sell transactions to determine if position was fully closed
+ * and calculates profit/loss
+ *
+ * @param {Array} transactions - Array of transaction objects for a specific ticker
+ * @returns {Object|null} Past holding details or null if position not fully closed
+ * @returns {number} return.maxShares - Maximum shares held at any point
+ * @returns {string} return.startDate - Date of first purchase
+ * @returns {string} return.endDate - Date position was fully closed
+ * @returns {number} return.profitLoss - Total profit/loss (revenue - cost)
  */
 function calculatePastHolding(transactions) {
     if (!transactions || transactions.length === 0) return null;
 
-    // Sort by date
+    // Sort transactions chronologically
     const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
 
     let currentShares = 0;
@@ -207,10 +219,11 @@ function calculatePastHolding(transactions) {
     let endDate = null;
     let wasClosed = false;
 
+    // Process each transaction to track position lifecycle
     for (const tx of sorted) {
         if (tx.type === 'buy') {
             if (currentShares === 0) {
-                startDate = tx.date;
+                startDate = tx.date; // First purchase date
             }
             currentShares += tx.shares;
             totalBuyCost += (tx.shares * tx.price) + (tx.fees || 0);
@@ -220,23 +233,20 @@ function calculatePastHolding(transactions) {
             totalSellRevenue += (tx.shares * tx.price) - (tx.fees || 0);
 
             if (currentShares === 0) {
-                endDate = tx.date;
+                endDate = tx.date; // Position fully closed
                 wasClosed = true;
             }
         }
     }
 
-    // Only return if position was fully closed
+    // Only return data if position was fully closed (all shares sold)
     if (!wasClosed) return null;
-
-    const profitLoss = totalSellRevenue - totalBuyCost;
 
     return {
         maxShares,
         startDate,
         endDate,
-        profitLoss,
-        wasClosed: true
+        profitLoss: totalSellRevenue - totalBuyCost
     };
 }
 

@@ -186,17 +186,23 @@
                 <button class="close-btn" id="closeModal">&times;</button>
             </div>
             <form id="addPositionForm">
+                <!-- Ticker Symbol with Autocomplete -->
                 <div class="form-group">
                     <label class="form-label">Ticker Symbol</label>
                     <div class="autocomplete-wrapper">
                         <input type="text" class="form-input" id="ticker" required autocomplete="off" placeholder="Search ticker or company...">
+                        <!-- Autocomplete dropdown populated by tickerAutocomplete.js -->
                         <div class="autocomplete-dropdown" id="tickerAutocomplete"></div>
                     </div>
                 </div>
+
+                <!-- Company Name (auto-populated from autocomplete) -->
                 <div class="form-group">
                     <label class="form-label">Company Name</label>
                     <input type="text" class="form-input" id="companyName" required readonly>
                 </div>
+
+                <!-- Current Price Display (shown after ticker selection) -->
                 <div class="form-group" id="currentPriceGroup" style="display: none;">
                     <label class="form-label">Current Price</label>
                     <div class="current-price-display" id="currentPriceDisplay">
@@ -204,7 +210,8 @@
                         <span class="price-change">--</span>
                     </div>
                 </div>
-                <!-- Holding Status Notification -->
+
+                <!-- Holding Status Notification (current or past holdings) -->
                 <div class="holding-status-notification" id="holdingStatusNotification" style="display: none;">
                     <div class="notification-icon">ℹ️</div>
                     <div class="notification-content" id="holdingStatusContent"></div>

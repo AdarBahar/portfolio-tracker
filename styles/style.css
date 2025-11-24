@@ -613,7 +613,10 @@ tr:hover {
     font-size: var(--font-size-sm);
 }
 
-/* Current Price Display */
+/* ============================================================================
+   Current Price Display
+   Shows real-time price and change when ticker is selected
+   ============================================================================ */
 .current-price-display {
     display: flex;
     align-items: center;
@@ -635,7 +638,12 @@ tr:hover {
     font-weight: var(--font-weight-medium);
 }
 
-/* Holding Status Notification */
+/* ============================================================================
+   Holding Status Notification
+   Displays info about current or past holdings in Add Position modal
+   - Default (blue): Past holdings with profit/loss
+   - Warning (orange): Currently held ticker
+   ============================================================================ */
 .holding-status-notification {
     display: flex;
     align-items: flex-start;
@@ -648,6 +656,7 @@ tr:hover {
     color: var(--color-info-text, #1565c0);
 }
 
+/* Warning variant for currently held tickers */
 .holding-status-notification.warning {
     background: var(--color-warning-bg, #fff3e0);
     border-color: var(--color-warning-border, #ffb74d);

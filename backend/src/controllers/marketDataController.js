@@ -287,8 +287,34 @@ async function getMultipleMarketData(req, res) {
 }
 
 /**
+ * Search for stock symbols using Finnhub symbol lookup API
+ *
  * GET /api/market-data/search?q=AAPL
- * Search for stock symbols using Finnhub symbol lookup
+ *
+ * Query Parameters:
+ * @param {string} q - Search query (ticker symbol or company name)
+ *
+ * Returns:
+ * @returns {Object} JSON response with search results
+ * @returns {number} count - Number of results returned
+ * @returns {Array} result - Array of matching symbols
+ * @returns {string} result[].symbol - Stock ticker symbol
+ * @returns {string} result[].description - Company name
+ * @returns {string} result[].displaySymbol - Display symbol (may differ from symbol)
+ * @returns {string} result[].type - Security type (Common Stock or ETF)
+ *
+ * Example Response:
+ * {
+ *   "count": 2,
+ *   "result": [
+ *     {
+ *       "symbol": "AAPL",
+ *       "description": "Apple Inc",
+ *       "displaySymbol": "AAPL",
+ *       "type": "Common Stock"
+ *     }
+ *   ]
+ * }
  */
 async function searchSymbols(req, res) {
   const { q } = req.query;
@@ -301,15 +327,13 @@ async function searchSymbols(req, res) {
 
   try {
     // Call Finnhub symbol search endpoint
-    // Endpoint: /search?q=apple
     const results = await finnhubRequest(`/search?q=${encodeURIComponent(query)}`);
 
     if (!results || !results.result) {
       return res.json({ count: 0, result: [] });
     }
 
-    // Filter and format results
-    // Prioritize US stocks and limit to 10 results
+    // Filter to Common Stocks and ETFs only, limit to top 10 results
     const filteredResults = results.result
       .filter(item => item.type === 'Common Stock' || item.type === 'ETF')
       .slice(0, 10)
