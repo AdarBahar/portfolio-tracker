@@ -913,6 +913,98 @@
           }
         }
       }
+    },
+    "/api/market-data/{symbol}": {
+      "get": {
+        "summary": "Get market data for a stock symbol",
+        "description": "Returns real-time market data for a single stock symbol from Finnhub API. Data is cached for 15 minutes to minimize API calls.",
+        "tags": ["Market Data"],
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "path",
+            "required": true,
+            "description": "Stock ticker symbol (e.g., AAPL, GOOGL, TSLA)",
+            "schema": {
+              "type": "string",
+              "example": "AAPL"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Market data for the requested symbol",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketData"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch market data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/market-data": {
+      "get": {
+        "summary": "Get market data for multiple stock symbols",
+        "description": "Returns real-time market data for multiple stock symbols from Finnhub API. Maximum 50 symbols per request. Data is cached for 15 minutes.",
+        "tags": ["Market Data"],
+        "parameters": [
+          {
+            "name": "symbols",
+            "in": "query",
+            "required": true,
+            "description": "Comma-separated list of stock ticker symbols (e.g., AAPL,GOOGL,TSLA)",
+            "schema": {
+              "type": "string",
+              "example": "AAPL,GOOGL,TSLA"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Market data for the requested symbols",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/MarketData" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request (missing symbols or too many symbols)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to fetch market data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1023,6 +1115,45 @@
           "createdAt": { "type": "string", "format": "date-time" }
         },
         "required": ["id", "type", "ticker", "shares", "price", "date"]
+      },
+      "MarketData": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Stock ticker symbol",
+            "example": "AAPL"
+          },
+          "currentPrice": {
+            "type": "number",
+            "format": "double",
+            "description": "Current stock price in USD",
+            "example": 271.49
+          },
+          "companyName": {
+            "type": "string",
+            "description": "Company name",
+            "example": "Apple Inc"
+          },
+          "changePercent": {
+            "type": "number",
+            "format": "double",
+            "description": "Percentage change from previous close",
+            "example": 1.97,
+            "nullable": true
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when data was last updated"
+          },
+          "cached": {
+            "type": "boolean",
+            "description": "Whether the data was served from cache (true) or fetched fresh from API (false)",
+            "example": false
+          }
+        },
+        "required": ["symbol", "currentPrice", "companyName", "lastUpdated"]
       }
     }
   }

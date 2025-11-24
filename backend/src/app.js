@@ -7,6 +7,12 @@ const holdingsRoutes = require('./routes/holdingsRoutes');
 const portfolioRoutes = require('./routes/portfolioRoutes');
 const dividendsRoutes = require('./routes/dividendsRoutes');
 const transactionsRoutes = require('./routes/transactionsRoutes');
+const bullPensRoutes = require('./routes/bullPensRoutes');
+const bullPenMembershipsRoutes = require('./routes/bullPenMembershipsRoutes');
+const bullPenOrdersRoutes = require('./routes/bullPenOrdersRoutes');
+const myBullPensRoutes = require('./routes/myBullPensRoutes');
+const marketDataRoutes = require('./routes/marketDataRoutes');
+const leaderboardRoutes = require('./routes/leaderboardRoutes');
 const openapi = require('../openapi.json');
 const db = require('./db');
 const { internalError } = require('./utils/apiError');
@@ -50,6 +56,12 @@ app.use(`${BASE_PATH}/api/holdings`, authenticateToken, holdingsRoutes);
 app.use(`${BASE_PATH}/api/portfolio`, authenticateToken, portfolioRoutes);
 app.use(`${BASE_PATH}/api/dividends`, authenticateToken, dividendsRoutes);
 app.use(`${BASE_PATH}/api/transactions`, authenticateToken, transactionsRoutes);
+app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, bullPensRoutes);
+app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, bullPenMembershipsRoutes);
+app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, bullPenOrdersRoutes);
+app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, leaderboardRoutes);
+app.use(`${BASE_PATH}/api/my`, authenticateToken, myBullPensRoutes);
+app.use(`${BASE_PATH}/api/market-data`, marketDataRoutes);
 
 // Global error handler (basic)
 // eslint-disable-next-line no-unused-vars
