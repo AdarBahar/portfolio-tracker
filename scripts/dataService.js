@@ -523,6 +523,46 @@ class ApiAdapter extends DataAdapter {
         return true;
     }
 
+    /**
+     * Fetch real-time market data from API
+     * @param {Array<string>} symbols - Array of ticker symbols
+     * @returns {Promise<Object>} - Object with symbol keys and price data
+     */
+    async getMarketData(symbols) {
+        if (!Array.isArray(symbols) || symbols.length === 0) {
+            return {};
+        }
+
+        try {
+            const symbolsParam = symbols.join(',');
+            const data = await this._fetch(`/market-data?symbols=${symbolsParam}`);
+
+            if (!data || !Array.isArray(data.data)) {
+                console.warn('Invalid market data response:', data);
+                return {};
+            }
+
+            // Convert array response to object keyed by symbol
+            const priceMap = {};
+            data.data.forEach(item => {
+                if (item.symbol && typeof item.currentPrice === 'number') {
+                    priceMap[item.symbol] = {
+                        currentPrice: item.currentPrice,
+                        companyName: item.companyName,
+                        changePercent: item.changePercent,
+                        lastUpdated: item.lastUpdated,
+                        cached: item.cached,
+                    };
+                }
+            });
+
+            return priceMap;
+        } catch (error) {
+            console.error('Error fetching market data:', error);
+            return {};
+        }
+    }
+
     async getCurrentPrices() { return this.localAdapter.getCurrentPrices(); }
     async saveCurrentPrices(prices) { return this.localAdapter.saveCurrentPrices(prices); }
     async getPreviousPrices() { return this.localAdapter.getPreviousPrices(); }

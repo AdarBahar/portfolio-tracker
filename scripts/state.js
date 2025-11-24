@@ -126,6 +126,36 @@ export class AppState {
                 }
             });
 
+            // Fetch real prices from API if available (for authenticated users)
+            const adapter = this.dataService?.adapter;
+            const hasApiAdapter = adapter && typeof adapter.getMarketData === 'function';
+
+            if (hasApiAdapter && this.holdings.length > 0) {
+                try {
+                    console.info('Fetching initial real-time prices for', this.holdings.length, 'holdings...');
+                    const symbols = this.holdings.map(h => h.ticker);
+                    const marketData = await adapter.getMarketData(symbols);
+
+                    // Update prices with real data
+                    let updatedCount = 0;
+                    this.holdings.forEach(holding => {
+                        const data = marketData[holding.ticker];
+                        if (data && typeof data.currentPrice === 'number') {
+                            this.previousPrices[holding.ticker] = this.currentPrices[holding.ticker];
+                            this.currentPrices[holding.ticker] = data.currentPrice;
+                            updatedCount++;
+                        }
+                    });
+
+                    console.info(`Updated ${updatedCount} prices from API`);
+
+                    // Save updated prices
+                    await this.save();
+                } catch (error) {
+                    console.warn('Failed to fetch initial market data, using cached prices:', error);
+                }
+            }
+
             this.notify();
         } catch (error) {
             console.error('Error initializing state:', error);
@@ -158,8 +188,8 @@ export class AppState {
      */
     async addHolding(holding) {
         this.holdings.push(holding);
-        
-        // Initialize price and trend data
+
+        // Initialize price and trend data with calculated price
         this.currentPrices[holding.ticker] = calculateInitialPrice(holding.purchase_price);
         this.previousPrices[holding.ticker] = this.currentPrices[holding.ticker];
         this.trendData[holding.ticker] = generateTrendData(
@@ -167,7 +197,25 @@ export class AppState {
             holding.purchase_price,
             this.currentPrices[holding.ticker]
         );
-        
+
+        // Try to fetch real price from API if available
+        const adapter = this.dataService?.adapter;
+        const hasApiAdapter = adapter && typeof adapter.getMarketData === 'function';
+
+        if (hasApiAdapter) {
+            try {
+                const marketData = await adapter.getMarketData([holding.ticker]);
+                const data = marketData[holding.ticker];
+
+                if (data && typeof data.currentPrice === 'number') {
+                    this.currentPrices[holding.ticker] = data.currentPrice;
+                    console.info(`Fetched real price for ${holding.ticker}: $${data.currentPrice}`);
+                }
+            } catch (error) {
+                console.warn(`Failed to fetch real price for ${holding.ticker}, using calculated price:`, error);
+            }
+        }
+
         await this.save();
         this.notify();
     }

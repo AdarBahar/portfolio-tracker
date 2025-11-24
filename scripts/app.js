@@ -31,24 +31,54 @@ function updateDashboard() {
 }
 
 /**
- * Simulate price updates
+ * Update prices - uses real API data if available, otherwise simulates
  */
-function updatePrices() {
+async function updatePrices() {
     try {
         const newPrices = {};
         const newTrendData = {};
-        
-        appState.holdings.forEach(holding => {
-            // Update price
-            newPrices[holding.ticker] = simulatePriceChange(appState.currentPrices[holding.ticker]);
-            
-            // Update trend data - shift left and add new price
-            const trendArray = [...appState.trendData[holding.ticker]];
-            trendArray.shift();
-            trendArray.push(newPrices[holding.ticker]);
-            newTrendData[holding.ticker] = trendArray;
-        });
-        
+
+        // Check if we have API adapter with market data capability
+        const adapter = appState.dataService?.adapter;
+        const hasApiAdapter = adapter && typeof adapter.getMarketData === 'function';
+
+        if (hasApiAdapter && appState.holdings.length > 0) {
+            // Fetch real market data from API
+            const symbols = appState.holdings.map(h => h.ticker);
+            const marketData = await adapter.getMarketData(symbols);
+
+            // Update prices from API response
+            appState.holdings.forEach(holding => {
+                const data = marketData[holding.ticker];
+
+                if (data && typeof data.currentPrice === 'number') {
+                    // Use real price from API
+                    newPrices[holding.ticker] = data.currentPrice;
+                } else {
+                    // Fallback to previous price if API fails
+                    newPrices[holding.ticker] = appState.currentPrices[holding.ticker];
+                }
+
+                // Update trend data - shift left and add new price
+                const trendArray = [...appState.trendData[holding.ticker]];
+                trendArray.shift();
+                trendArray.push(newPrices[holding.ticker]);
+                newTrendData[holding.ticker] = trendArray;
+            });
+        } else {
+            // Simulation mode (demo users or no API)
+            appState.holdings.forEach(holding => {
+                // Update price with simulation
+                newPrices[holding.ticker] = simulatePriceChange(appState.currentPrices[holding.ticker]);
+
+                // Update trend data - shift left and add new price
+                const trendArray = [...appState.trendData[holding.ticker]];
+                trendArray.shift();
+                trendArray.push(newPrices[holding.ticker]);
+                newTrendData[holding.ticker] = trendArray;
+            });
+        }
+
         appState.updatePrices(newPrices, newTrendData);
     } catch (error) {
         console.error('Error updating prices:', error);
@@ -260,8 +290,23 @@ async function initializeApp() {
         setupSparklineInteractions(appState);
         setupModals(appState);
 
-        // Start price simulation
-        priceUpdateInterval = setInterval(updatePrices, PRICE_SIMULATION.UPDATE_INTERVAL_MS);
+        // Fetch initial real prices if using API adapter
+        const dataAdapter = appState.dataService?.adapter;
+        const hasApiAdapter = dataAdapter && typeof dataAdapter.getMarketData === 'function';
+
+        if (hasApiAdapter && appState.holdings.length > 0) {
+            console.info('Fetching initial real-time prices from API...');
+            await updatePrices(); // Initial fetch
+        }
+
+        // Start price updates
+        // Use longer interval for API mode (1 minute), shorter for simulation (5 seconds)
+        const updateInterval = hasApiAdapter
+            ? PRICE_SIMULATION.API_UPDATE_INTERVAL_MS
+            : PRICE_SIMULATION.UPDATE_INTERVAL_MS;
+
+        priceUpdateInterval = setInterval(updatePrices, updateInterval);
+        console.info(`Price updates started (interval: ${updateInterval / 1000}s, mode: ${hasApiAdapter ? 'API' : 'simulation'})`);
 
         // Remove loading state
         document.body.classList.remove('loading');

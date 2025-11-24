@@ -11,7 +11,8 @@ export const PRICE_SIMULATION = {
     TREND_VOLATILITY_MIN: 0.02,      // 2%
     TREND_VOLATILITY_MAX: 0.05,      // 5%
     TREND_DAYS: 30,
-    UPDATE_INTERVAL_MS: 5000,        // 5 seconds
+    UPDATE_INTERVAL_MS: 5000,        // 5 seconds (for simulation mode)
+    API_UPDATE_INTERVAL_MS: 60000,   // 60 seconds (1 minute for real API data)
 };
 
 // Chart configuration
