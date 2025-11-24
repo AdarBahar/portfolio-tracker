@@ -1,6 +1,7 @@
 const db = require('../db');
 const { sendError, internalError, badRequest } = require('../utils/apiError');
 const { fetchPriceFromAPI } = require('./marketDataController');
+const logger = require('../utils/logger');
 
 class OrderError extends Error {
   constructor(status, message) {
@@ -240,12 +241,12 @@ async function placeOrder(req, res) {
       newPosition,
     });
   } catch (err) {
-    console.error('Error placing bull pen order:', err);
+    logger.error('Error placing bull pen order:', err);
     if (connection) {
       try {
         await connection.rollback();
       } catch (rollbackErr) {
-        console.error('Rollback failed in placeOrder:', rollbackErr);
+        logger.error('Rollback failed in placeOrder:', rollbackErr);
       }
     }
     if (err instanceof OrderError) {
@@ -278,7 +279,7 @@ async function listOrders(req, res) {
 
     return res.json({ orders: rows });
   } catch (err) {
-    console.error('Error listing bull pen orders:', err);
+    logger.error('Error listing bull pen orders:', err);
     return internalError(res, 'Failed to list orders');
   }
 }
@@ -302,7 +303,7 @@ async function listPositions(req, res) {
 
     return res.json({ positions: rows });
   } catch (err) {
-    console.error('Error listing bull pen positions:', err);
+    logger.error('Error listing bull pen positions:', err);
     return internalError(res, 'Failed to list positions');
   }
 }

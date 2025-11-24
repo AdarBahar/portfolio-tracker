@@ -1,5 +1,6 @@
 const db = require('../db');
 const { internalError } = require('../utils/apiError');
+const logger = require('../utils/logger');
 
 async function getPortfolioAll(req, res) {
   try {
@@ -26,7 +27,7 @@ async function getPortfolioAll(req, res) {
 
     return res.json({ holdings, dividends, transactions });
   } catch (err) {
-    console.error('Error fetching full portfolio:', err);
+    logger.error('Error fetching full portfolio:', err);
     return internalError(res, 'Failed to fetch portfolio data');
   }
 }

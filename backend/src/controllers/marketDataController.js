@@ -1,6 +1,7 @@
 const https = require('https');
 const db = require('../db');
 const { badRequest, notFound, internalError } = require('../utils/apiError');
+const logger = require('../utils/logger');
 
 // Finnhub API configuration
 const FINNHUB_API_KEY = process.env.FINNHUB_API_KEY || 'd4ectrhr01qrumpesmm0d4ectrhr01qrumpesmmg';
@@ -14,9 +15,9 @@ const IS_DEBUG_MODE = MARKET_DATA_MODE === 'debug';
 
 // Log the current mode on startup
 if (IS_DEBUG_MODE) {
-  console.warn('⚠️  MARKET_DATA_MODE=debug - Finnhub API calls are throttled (only first call per symbol is real)');
+  logger.warn('⚠️  MARKET_DATA_MODE=debug - Finnhub API calls are throttled (only first call per symbol is real)');
 } else {
-  console.info('✅ MARKET_DATA_MODE=production - Normal Finnhub API behavior (15-minute cache)');
+  logger.info('✅ MARKET_DATA_MODE=production - Normal Finnhub API behavior (15-minute cache)');
 }
 
 /**
@@ -90,7 +91,7 @@ async function fetchPriceFromAPI(symbol) {
         companyName = profile.name;
       }
     } catch (profileErr) {
-      console.warn(`Failed to fetch company profile for ${symbol}:`, profileErr.message);
+      logger.warn(`Failed to fetch company profile for ${symbol}:`, profileErr.message);
       // Continue with default company name
     }
 
@@ -100,10 +101,10 @@ async function fetchPriceFromAPI(symbol) {
       changePercent,
     };
   } catch (err) {
-    console.error(`Error fetching price from Finnhub for ${symbol}:`, err.message);
+    logger.error(`Error fetching price from Finnhub for ${symbol}:`, err.message);
 
     // Fallback to stub data if API fails
-    console.warn(`Using fallback stub data for ${symbol}`);
+    logger.warn(`Using fallback stub data for ${symbol}`);
     const symbolHash = symbol.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const basePrice = 50 + (symbolHash % 200);
     const changePercent = ((symbolHash % 20) - 10) / 10;
@@ -150,7 +151,7 @@ async function getMarketData(req, res) {
       const cacheAge = Math.floor((Date.now() - new Date(data.last_updated).getTime()) / 1000);
 
       if (IS_DEBUG_MODE) {
-        console.info(`[DEBUG MODE] Using cached data for ${upperSymbol} (age: ${cacheAge}s, last updated: ${data.last_updated})`);
+        logger.info(`[DEBUG MODE] Using cached data for ${upperSymbol} (age: ${cacheAge}s, last updated: ${data.last_updated})`);
       }
 
       return res.json({
@@ -164,7 +165,7 @@ async function getMarketData(req, res) {
     }
 
     // Fetch fresh data from API
-    console.info(`${IS_DEBUG_MODE ? '[DEBUG MODE] ' : ''}Fetching fresh data from Finnhub for ${upperSymbol}`);
+    logger.info(`${IS_DEBUG_MODE ? '[DEBUG MODE] ' : ''}Fetching fresh data from Finnhub for ${upperSymbol}`);
     const apiData = await fetchPriceFromAPI(upperSymbol);
     
     // Upsert into market_data table
@@ -188,7 +189,7 @@ async function getMarketData(req, res) {
       cached: false,
     });
   } catch (err) {
-    console.error('Error fetching market data:', err);
+    logger.error('Error fetching market data:', err);
     return internalError(res, 'Failed to fetch market data');
   }
 }
@@ -276,11 +277,11 @@ async function getMultipleMarketData(req, res) {
     }
 
     // Log cache statistics
-    console.info(`${IS_DEBUG_MODE ? '[DEBUG MODE] ' : ''}Market data batch: ${symbolList.length} symbols, ${cacheHits} cached, ${apiCalls} API calls`);
+    logger.info(`${IS_DEBUG_MODE ? '[DEBUG MODE] ' : ''}Market data batch: ${symbolList.length} symbols, ${cacheHits} cached, ${apiCalls} API calls`);
 
     return res.json({ data: results });
   } catch (err) {
-    console.error('Error fetching multiple market data:', err);
+    logger.error('Error fetching multiple market data:', err);
     return internalError(res, 'Failed to fetch market data');
   }
 }

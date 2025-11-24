@@ -47,7 +47,7 @@ async function googleAuth(req, res) {
   try {
     payload = await verifyGoogleToken(credential);
   } catch (err) {
-    console.error('Google token verification failed:', err);
+    logger.error('Google token verification failed:', err);
     return unauthorized(res, 'Invalid or expired Google token');
   }
 
@@ -110,7 +110,7 @@ async function googleAuth(req, res) {
       token
     });
   } catch (err) {
-    console.error('Database error during Google auth:', err);
+    logger.error('Database error during Google auth:', err);
     return internalError(res);
   }
 }

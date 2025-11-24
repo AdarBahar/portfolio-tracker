@@ -1,5 +1,6 @@
 const db = require('../db');
 const { badRequest, internalError, notFound } = require('../utils/apiError');
+const logger = require('../utils/logger');
 
 async function getHoldings(req, res) {
   try {
@@ -10,7 +11,7 @@ async function getHoldings(req, res) {
     );
     return res.json({ holdings: rows });
   } catch (err) {
-    console.error('Error fetching holdings:', err);
+    logger.error('Error fetching holdings:', err);
     return internalError(res, 'Failed to fetch holdings');
   }
 }
@@ -53,7 +54,7 @@ async function createHolding(req, res) {
 
     return res.status(201).json({ holding: rows[0] });
   } catch (err) {
-    console.error('Error creating holding:', err);
+    logger.error('Error creating holding:', err);
     return internalError(res, 'Failed to create holding');
   }
 }
@@ -106,7 +107,7 @@ async function updateHolding(req, res) {
 
     return res.json({ holding: rows[0] });
   } catch (err) {
-    console.error('Error updating holding:', err);
+    logger.error('Error updating holding:', err);
     return internalError(res, 'Failed to update holding');
   }
 }
@@ -131,7 +132,7 @@ async function deleteHolding(req, res) {
 
     return res.status(204).send();
   } catch (err) {
-    console.error('Error deleting holding:', err);
+    logger.error('Error deleting holding:', err);
     return internalError(res, 'Failed to delete holding');
   }
 }

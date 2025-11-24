@@ -1,5 +1,6 @@
 const db = require('../db');
 const { badRequest, forbidden, internalError, notFound } = require('../utils/apiError');
+const logger = require('../utils/logger');
 
 function mapMembershipRow(row) {
   if (!row) return null;
@@ -77,7 +78,7 @@ async function joinBullPen(req, res) {
 
     return res.status(201).json({ membership: mapMembershipRow(membership) });
   } catch (err) {
-    console.error('Error joining bull pen:', err);
+    logger.error('Error joining bull pen:', err);
     return internalError(res, 'Failed to join bull pen');
   }
 }
@@ -93,7 +94,7 @@ async function listBullPenMembers(req, res) {
 
     return res.json({ members: members.map(mapMembershipRow) });
   } catch (err) {
-    console.error('Error listing bull pen members:', err);
+    logger.error('Error listing bull pen members:', err);
     return internalError(res, 'Failed to list bull pen members');
   }
 }
@@ -138,7 +139,7 @@ async function approveMembership(req, res) {
 
     return res.json({ membership: mapMembershipRow(updated) });
   } catch (err) {
-    console.error('Error approving membership:', err);
+    logger.error('Error approving membership:', err);
     return internalError(res, 'Failed to approve membership');
   }
 }
@@ -183,7 +184,7 @@ async function rejectMembership(req, res) {
 
     return res.json({ membership: mapMembershipRow(updated) });
   } catch (err) {
-    console.error('Error rejecting membership:', err);
+    logger.error('Error rejecting membership:', err);
     return internalError(res, 'Failed to reject membership');
   }
 }
@@ -218,7 +219,7 @@ async function leaveBullPen(req, res) {
 
     return res.json({ membership: mapMembershipRow(updated) });
   } catch (err) {
-    console.error('Error leaving bull pen:', err);
+    logger.error('Error leaving bull pen:', err);
     return internalError(res, 'Failed to leave bull pen');
   }
 }
@@ -238,7 +239,7 @@ async function listMyBullPens(req, res) {
 
     return res.json({ bullPens: rows.map(mapBullPenRow) });
   } catch (err) {
-    console.error('Error listing my bull pens:', err);
+    logger.error('Error listing my bull pens:', err);
     return internalError(res, 'Failed to list my bull pens');
   }
 }

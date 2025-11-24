@@ -1,5 +1,6 @@
 const db = require('../db');
 const { badRequest, forbidden, notFound, internalError } = require('../utils/apiError');
+const logger = require('../utils/logger');
 
 /**
  * Calculate portfolio value for a user in a bull pen
@@ -136,7 +137,7 @@ async function getLeaderboard(req, res) {
       leaderboard,
     });
   } catch (err) {
-    console.error('Error fetching leaderboard:', err);
+    logger.error('Error fetching leaderboard:', err);
     return internalError(res, 'Failed to fetch leaderboard');
   }
 }

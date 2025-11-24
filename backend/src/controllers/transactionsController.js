@@ -1,5 +1,6 @@
 const db = require('../db');
 const { badRequest, internalError, notFound } = require('../utils/apiError');
+const logger = require('../utils/logger');
 
 const VALID_TYPES = new Set(['buy', 'sell', 'dividend']);
 
@@ -13,7 +14,7 @@ async function getTransactions(req, res) {
 
     return res.json({ transactions: rows });
   } catch (err) {
-    console.error('Error fetching transactions:', err);
+    logger.error('Error fetching transactions:', err);
     return internalError(res, 'Failed to fetch transactions');
   }
 }
@@ -58,7 +59,7 @@ async function createTransaction(req, res) {
 
     return res.status(201).json({ transaction: rows[0] });
   } catch (err) {
-    console.error('Error creating transaction:', err);
+    logger.error('Error creating transaction:', err);
     return internalError(res, 'Failed to create transaction');
   }
 }
@@ -113,7 +114,7 @@ async function updateTransaction(req, res) {
 
     return res.json({ transaction: rows[0] });
   } catch (err) {
-    console.error('Error updating transaction:', err);
+    logger.error('Error updating transaction:', err);
     return internalError(res, 'Failed to update transaction');
   }
 }
@@ -138,7 +139,7 @@ async function deleteTransaction(req, res) {
 
     return res.status(204).send();
   } catch (err) {
-    console.error('Error deleting transaction:', err);
+    logger.error('Error deleting transaction:', err);
     return internalError(res, 'Failed to delete transaction');
   }
 }

@@ -1,5 +1,6 @@
 const db = require('../db');
 const { badRequest, forbidden, internalError, notFound } = require('../utils/apiError');
+const logger = require('../utils/logger');
 
 // Helper: build Bull Pen response object
 function mapBullPenRow(row) {
@@ -82,12 +83,12 @@ async function createBullPen(req, res) {
 
     return res.status(201).json({ bullPen: mapBullPenRow(rows[0]) });
   } catch (err) {
-    console.error('Error creating bull pen:', err);
+    logger.error('Error creating bull pen:', err);
     if (connection) {
       try {
         await connection.rollback();
       } catch (rollbackErr) {
-        console.error('Rollback failed for createBullPen:', rollbackErr);
+        logger.error('Rollback failed for createBullPen:', rollbackErr);
       }
     }
     return internalError(res, 'Failed to create bull pen');
@@ -129,7 +130,7 @@ async function listBullPens(req, res) {
 
     return res.json({ bullPens: rows.map(mapBullPenRow) });
   } catch (err) {
-    console.error('Error listing bull pens:', err);
+    logger.error('Error listing bull pens:', err);
     return internalError(res, 'Failed to list bull pens');
   }
 }
@@ -145,7 +146,7 @@ async function getBullPen(req, res) {
 
     return res.json({ bullPen: mapBullPenRow(rows[0]) });
   } catch (err) {
-    console.error('Error fetching bull pen:', err);
+    logger.error('Error fetching bull pen:', err);
     return internalError(res, 'Failed to fetch bull pen');
   }
 }
@@ -230,7 +231,7 @@ async function updateBullPen(req, res) {
 
     return res.json({ bullPen: mapBullPenRow(rows[0]) });
   } catch (err) {
-    console.error('Error updating bull pen:', err);
+    logger.error('Error updating bull pen:', err);
     return internalError(res, 'Failed to update bull pen');
   }
 }

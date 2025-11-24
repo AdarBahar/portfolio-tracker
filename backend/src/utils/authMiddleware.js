@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { unauthorized } = require('./apiError');
+const logger = require('./logger');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'changeme-in-env';
 
@@ -16,7 +17,7 @@ function authenticateToken(req, res, next) {
     req.user = decoded;
     return next();
   } catch (err) {
-    console.error('JWT verification failed:', err.message || err);
+    logger.error('JWT verification failed:', err.message || err);
     return unauthorized(res, 'Invalid or expired token');
   }
 }

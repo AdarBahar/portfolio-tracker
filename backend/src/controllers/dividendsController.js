@@ -1,5 +1,6 @@
 const db = require('../db');
 const { badRequest, internalError, notFound } = require('../utils/apiError');
+const logger = require('../utils/logger');
 
 async function getDividends(req, res) {
   try {
@@ -11,7 +12,7 @@ async function getDividends(req, res) {
 
     return res.json({ dividends: rows });
   } catch (err) {
-    console.error('Error fetching dividends:', err);
+    logger.error('Error fetching dividends:', err);
     return internalError(res, 'Failed to fetch dividends');
   }
 }
@@ -48,7 +49,7 @@ async function createDividend(req, res) {
 
     return res.status(201).json({ dividend: rows[0] });
   } catch (err) {
-    console.error('Error creating dividend:', err);
+    logger.error('Error creating dividend:', err);
     return internalError(res, 'Failed to create dividend');
   }
 }
@@ -95,7 +96,7 @@ async function updateDividend(req, res) {
 
     return res.json({ dividend: rows[0] });
   } catch (err) {
-    console.error('Error updating dividend:', err);
+    logger.error('Error updating dividend:', err);
     return internalError(res, 'Failed to update dividend');
   }
 }
@@ -120,7 +121,7 @@ async function deleteDividend(req, res) {
 
     return res.status(204).send();
   } catch (err) {
-    console.error('Error deleting dividend:', err);
+    logger.error('Error deleting dividend:', err);
     return internalError(res, 'Failed to delete dividend');
   }
 }
