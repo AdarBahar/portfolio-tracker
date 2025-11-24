@@ -1,5 +1,5 @@
 const db = require('../db');
-const { sendError, internalError } = require('../utils/apiError');
+const { sendError, internalError, badRequest } = require('../utils/apiError');
 const { fetchPriceFromAPI } = require('./marketDataController');
 
 class OrderError extends Error {
