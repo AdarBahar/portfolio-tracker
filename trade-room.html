@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade Room - Fantasy Broker</title>
+    <meta name="description" content="Compete in real-time stock trading tournaments">
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/trade-room.css">
+    <!-- Theme manager - loads immediately to prevent flash -->
+    <script type="module" src="scripts/theme.js"></script>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <div class="header">
+        <div>
+            <h1>
+                🎮 Trade Room
+                <span class="subtitle" id="pageSubtitle">Dashboard</span>
+            </h1>
+            <p class="last-updated" id="lastUpdated">Last updated: --</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" id="backToPortfolioBtn">← Back to Portfolio</button>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"></button>
+            <div class="user-info" id="userInfo">
+                <span id="userName">Loading...</span>
+                <button class="btn btn-secondary btn-sm" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <main id="main-content">
+        <!-- Dashboard View -->
+        <div id="dashboardView" class="view">
+            <div class="dashboard-header">
+                <h2>Your BullPens</h2>
+                <div class="dashboard-actions">
+                    <button class="btn btn-primary" id="createBullPenBtn">
+                        <span>+ Create BullPen</span>
+                    </button>
+                    <button class="btn btn-secondary" id="joinBullPenBtn">
+                        <span>Join BullPen</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bullpen-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="active">Active</button>
+                <button class="filter-btn" data-filter="scheduled">Scheduled</button>
+                <button class="filter-btn" data-filter="completed">Completed</button>
+            </div>
+
+            <div id="bullpenList" class="bullpen-grid">
+                <div class="loading-state">Loading your BullPens...</div>
+            </div>
+        </div>
+
+        <!-- BullPen Detail View -->
+        <div id="bullpenDetailView" class="view" style="display: none;">
+            <!-- Header -->
+            <div class="bullpen-header" id="bullpenHeader">
+                <div class="bullpen-info">
+                    <h2 id="bullpenName">Loading...</h2>
+                    <div class="bullpen-meta">
+                        <span id="bullpenStatus" class="status-badge">Active</span>
+                        <span id="bullpenTime">Time remaining: --</span>
+                        <span id="bullpenParticipants">-- participants</span>
+                    </div>
+                </div>
+                <div class="bullpen-actions">
+                    <button class="btn btn-secondary" id="backToDashboardBtn">← Back to Dashboard</button>
+                    <button class="btn btn-secondary" id="inviteCodeBtn" style="display: none;">
+                        <span id="inviteCodeText">Invite Code: ------</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Portfolio Summary -->
+            <div class="portfolio-summary" id="portfolioSummary">
+                <div class="summary-card">
+                    <div class="summary-label">Cash Balance</div>
+                    <div class="summary-value" id="cashBalance">$0.00</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Portfolio Value</div>
+                    <div class="summary-value" id="portfolioValue">$0.00</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Total Return</div>
+                    <div class="summary-value" id="totalReturn">$0.00</div>
+                    <div class="summary-change" id="totalReturnPercent">0.00%</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Rank</div>
+                    <div class="summary-value" id="userRank">#--</div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="bullpen-content-grid">
+                <!-- Trading Panel -->
+                <div class="panel trading-panel">
+                    <h3 class="panel-title">Trading</h3>
+                    <div id="tradingPanel"></div>
+                </div>
+
+                <!-- Portfolio Positions -->
+                <div class="panel portfolio-panel">
+                    <h3 class="panel-title">Your Positions</h3>
+                    <div id="portfolioPanel"></div>
+                </div>
+            </div>
+
+            <!-- Leaderboard -->
+            <div class="panel leaderboard-panel">
+                <h3 class="panel-title">Leaderboard</h3>
+                <div id="leaderboardPanel"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals will be injected by JavaScript -->
+    <div id="modalContainer"></div>
+
+    <!-- Toast Notifications -->
+    <div id="errorToast" class="error-toast" role="alert" aria-live="assertive"></div>
+    <div id="successToast" class="success-toast" role="status" aria-live="polite"></div>
+
+    <!-- Load Trade Room App -->
+    <script type="module" src="scripts/tradeRoom/app.js"></script>
+</body>
+</html>
+

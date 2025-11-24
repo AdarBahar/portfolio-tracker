@@ -8,8 +8,22 @@
     <link rel="stylesheet" href="styles/style.css">
     <link rel="stylesheet" href="styles/login.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Theme manager - loads immediately to prevent flash -->
+    <script type="module">
+        import { initTheme, setupThemeToggle } from './scripts/theme.js';
+        // Theme is already initialized by theme.js auto-init
+        // Setup toggle when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => setupThemeToggle());
+        } else {
+            setupThemeToggle();
+        }
+    </script>
 </head>
 <body class="login-page">
+    <!-- Theme Toggle -->
+    <button class="theme-toggle login-theme-toggle" id="themeToggle" aria-label="Toggle dark mode"></button>
+
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">

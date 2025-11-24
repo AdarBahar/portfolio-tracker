@@ -13,6 +13,7 @@ import { PRICE_SIMULATION, DEFAULT_TRANSACTION_FEE, ERROR_MESSAGES } from './con
 import { debounce } from './utils.js';
 import { setupSparklineInteractions } from './interactions.js';
 import { setupModals } from './modals.js';
+import { setupThemeToggle } from './theme.js';
 
 // Global app state
 let appState;
@@ -85,24 +86,7 @@ async function updatePrices() {
     }
 }
 
-/**
- * Setup theme toggle
- */
-function setupThemeToggle() {
-    const themeToggle = document.getElementById('themeToggle');
-    if (!themeToggle) return;
-    
-    // Load saved theme
-    const savedTheme = localStorage.getItem('portfolio_theme') || 'light';
-    document.documentElement.setAttribute('data-color-scheme', savedTheme);
-    
-    themeToggle.addEventListener('click', () => {
-        const currentScheme = document.documentElement.getAttribute('data-color-scheme');
-        const newScheme = currentScheme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-color-scheme', newScheme);
-        localStorage.setItem('portfolio_theme', newScheme);
-    });
-}
+
 
 /**
  * Setup table sorting

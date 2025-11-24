@@ -9,6 +9,15 @@
     justify-content: center;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     padding: var(--space-24);
+    position: relative;
+}
+
+/* Theme toggle on login page */
+.login-theme-toggle {
+    position: fixed;
+    top: var(--space-24);
+    right: var(--space-24);
+    z-index: 1000;
 }
 
 .login-container {

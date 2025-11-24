@@ -10,7 +10,7 @@ const defaultConfig = {
     // Google OAuth Client ID
     // This is PUBLIC and safe to expose in frontend code
     // Get yours at: https://console.cloud.google.com/apis/credentials
-    googleClientId: 'YOUR_GOOGLE_CLIENT_ID',
+    googleClientId: '539842594800-bpqtcpi56vaf7nkiqcf1796socl2cjqp.apps.googleusercontent.com',
 
     // API endpoint for backend integration
     // Default: local backend on port 4000
@@ -25,14 +25,21 @@ const defaultConfig = {
 async function loadConfig() {
     let localConfig = {};
 
-    try {
-        // Try to import local config
-        const module = await import('./config.local.js');
-        localConfig = module.default || {};
-        console.info('✅ Loaded configuration from config.local.js');
-    } catch (error) {
-        // config.local.js doesn't exist, use defaults
-        console.info('ℹ️ Using default configuration. Create config.local.js to override.');
+    // Only try to load config.local.js in development
+    const isDevelopment = window.location.hostname === 'localhost' ||
+                         window.location.hostname === '127.0.0.1' ||
+                         window.location.hostname === '';
+
+    if (isDevelopment) {
+        try {
+            // Try to import local config
+            const module = await import('./config.local.js');
+            localConfig = module.default || {};
+            console.info('✅ Loaded configuration from config.local.js');
+        } catch (error) {
+            // config.local.js doesn't exist, use defaults
+            console.info('ℹ️ Using default configuration. Create config.local.js to override.');
+        }
     }
 
     // Merge configurations (local overrides default)
@@ -50,7 +57,7 @@ async function loadConfig() {
     }
 
     // Validate configuration
-    if (config.googleClientId === 'YOUR_GOOGLE_CLIENT_ID') {
+    if (!config.googleClientId || config.googleClientId === 'YOUR_GOOGLE_CLIENT_ID') {
         console.warn('⚠️ Google Client ID not configured!');
         console.info('📝 Create scripts/config.local.js to set your Client ID');
         console.info('📖 See GOOGLE_OAUTH_SETUP.md for instructions');
