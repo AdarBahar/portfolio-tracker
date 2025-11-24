@@ -109,6 +109,41 @@ body {
     font-size: var(--font-size-4xl);
     font-weight: var(--font-weight-bold);
     color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: var(--space-12);
+    flex-wrap: wrap;
+}
+
+.debug-mode-badge {
+    display: inline-block;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    padding: 4px 10px;
+    background: linear-gradient(135deg, #ff9800, #ff5722);
+    color: white;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+    cursor: help;
+    animation: pulse-debug 2s ease-in-out infinite;
+}
+
+@keyframes pulse-debug {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.85;
+        transform: scale(1.02);
+    }
+}
+
+.debug-mode-badge:hover {
+    background: linear-gradient(135deg, #ff5722, #ff9800);
+    box-shadow: 0 4px 8px rgba(255, 152, 0, 0.4);
 }
 
 .header-actions {

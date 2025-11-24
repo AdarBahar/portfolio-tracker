@@ -27,13 +27,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Health check (includes DB connectivity check)
+// Health check (includes DB connectivity check and market data mode)
 app.get(`${BASE_PATH}/api/health`, async (req, res) => {
   try {
     // Simple lightweight query to verify DB connectivity
     await db.execute('SELECT 1');
 
-    return res.json({ status: 'ok', db: 'ok' });
+    return res.json({
+      status: 'ok',
+      db: 'ok',
+      marketDataMode: process.env.MARKET_DATA_MODE || 'production'
+    });
   } catch (err) {
     console.error('Health check DB connectivity failed:', err);
     return internalError(res, 'Database connection failed');

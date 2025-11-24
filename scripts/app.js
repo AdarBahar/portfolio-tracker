@@ -242,6 +242,30 @@ function setupUserProfile() {
 }
 
 /**
+ * Check if backend is in debug mode and show badge
+ */
+async function checkDebugMode(apiUrl) {
+    try {
+        const healthUrl = `${apiUrl.replace('/api', '')}/api/health`;
+        const response = await fetch(healthUrl);
+
+        if (response.ok) {
+            const data = await response.json();
+
+            if (data.marketDataMode === 'debug') {
+                const badge = document.getElementById('debugModeBadge');
+                if (badge) {
+                    badge.style.display = 'inline-block';
+                    console.warn('⚠️  Backend is in DEBUG MODE - Market data API calls are throttled');
+                }
+            }
+        }
+    } catch (error) {
+        console.warn('Could not check backend debug mode:', error);
+    }
+}
+
+/**
  * Initialize the application
  */
 async function initializeApp() {
@@ -259,6 +283,11 @@ async function initializeApp() {
         // Initialize state with user context
         const user = authManager.getUser();
         const config = await configPromise;
+
+        // Check if backend is in debug mode
+        if (config.apiUrl) {
+            await checkDebugMode(config.apiUrl);
+        }
 
         let adapter = null;
         const token = authManager.getToken();
