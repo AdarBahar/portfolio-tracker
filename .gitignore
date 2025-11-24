@@ -11,6 +11,9 @@ scripts/config.local.js
 # OAuth / API client secrets
 client_secret_*.json
 
+# Test token cache
+backend/.token-cache.json
+
 # Dependencies
 node_modules/
 package-lock.json

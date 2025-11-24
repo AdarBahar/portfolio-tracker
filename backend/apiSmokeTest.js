@@ -14,6 +14,7 @@
 const http = require('http');
 const https = require('https');
 const { URL } = require('url');
+const { getValidToken, isTokenExpired } = require('./tokenRefresher');
 
 // ANSI color codes
 const colors = {
@@ -24,6 +25,61 @@ const colors = {
   cyan: '\x1b[36m',
   bold: '\x1b[1m',
 };
+
+/**
+ * Decode JWT token payload without verification
+ * @param {string} token - JWT token
+ * @returns {object|null} - Decoded payload or null if invalid
+ */
+function decodeJWT(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = Buffer.from(parts[1], 'base64').toString();
+    return JSON.parse(payload);
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * Check if JWT token is expired
+ * @param {string} token - JWT token
+ * @returns {object} - { expired: boolean, expiresAt: Date|null, timeLeft: number|null }
+ */
+function checkTokenExpiry(token) {
+  const payload = decodeJWT(token);
+  if (!payload || !payload.exp) {
+    return { expired: true, expiresAt: null, timeLeft: null };
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const timeLeft = payload.exp - now;
+  const expiresAt = new Date(payload.exp * 1000);
+
+  return {
+    expired: timeLeft <= 0,
+    expiresAt,
+    timeLeft,
+    email: payload.email || payload.sub,
+  };
+}
+
+/**
+ * Format time duration in human-readable format
+ * @param {number} seconds - Duration in seconds
+ * @returns {string} - Formatted duration
+ */
+function formatDuration(seconds) {
+  if (seconds < 0) return 'expired';
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${secs}s`;
+  return `${secs}s`;
+}
 
 function httpRequest(method, urlString, options = {}) {
   return new Promise((resolve, reject) => {
@@ -76,10 +132,11 @@ function getArg(name) {
 }
 
 const baseUrl = getArg('--base-url') || process.env.API_BASE_URL || 'http://localhost:4000';
-const googleCredential = getArg('--google-credential') || process.env.TEST_GOOGLE_CREDENTIAL || null;
-const secondGoogleCredential =
+let googleCredential = getArg('--google-credential') || process.env.TEST_GOOGLE_CREDENTIAL || null;
+let secondGoogleCredential =
   getArg('--google-credential-2') || process.env.TEST_GOOGLE_CREDENTIAL_2 || null;
 const listOnly = process.argv.includes('--list') || process.argv.includes('-l');
+const interactiveRefresh = process.argv.includes('--interactive') || process.argv.includes('-i');
 
 const tests = [];
 
@@ -174,7 +231,21 @@ addTest(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ credential: ctx.googleCredential }),
     });
-    if (res.status !== 200) throw new Error(`Expected 200, got ${res.status}`);
+
+    if (res.status !== 200) {
+      const tokenInfo = checkTokenExpiry(ctx.googleCredential);
+      let errorMsg = `Expected 200, got ${res.status}`;
+
+      if (res.status === 401 && tokenInfo.expired) {
+        errorMsg += ` (Token expired at ${tokenInfo.expiresAt?.toISOString()}. Run: node backend/getTokenFromBrowser.js)`;
+      } else if (res.status === 401) {
+        const body = res.json || {};
+        errorMsg += ` (${body.error || 'Invalid token'})`;
+      }
+
+      throw new Error(errorMsg);
+    }
+
     const body = res.json || {};
     if (!body.user || !body.token) throw new Error('Response missing user or token');
     if (!body.user.email || typeof body.user.id === 'undefined') {
@@ -1133,8 +1204,58 @@ async function main() {
     return;
   }
 
-  const ctx = { baseUrl, googleCredential, secondGoogleCredential };
   console.log(`${colors.cyan}Running API tests against ${baseUrl}...${colors.reset}`);
+
+  // Try to refresh tokens if expired and interactive mode is enabled
+  if (interactiveRefresh) {
+    console.log(`${colors.cyan}Interactive token refresh enabled${colors.reset}`);
+
+    if (!googleCredential || isTokenExpired(googleCredential)) {
+      const freshToken = await getValidToken('TEST_GOOGLE_CREDENTIAL', true);
+      if (freshToken) {
+        googleCredential = freshToken;
+        console.log(`${colors.green}✓${colors.reset} Refreshed TEST_GOOGLE_CREDENTIAL`);
+      }
+    }
+
+    if (!secondGoogleCredential || isTokenExpired(secondGoogleCredential)) {
+      const freshToken = await getValidToken('TEST_GOOGLE_CREDENTIAL_2', true);
+      if (freshToken) {
+        secondGoogleCredential = freshToken;
+        console.log(`${colors.green}✓${colors.reset} Refreshed TEST_GOOGLE_CREDENTIAL_2`);
+      }
+    }
+  }
+
+  // Validate Google credentials
+  if (googleCredential) {
+    const tokenInfo = checkTokenExpiry(googleCredential);
+    if (tokenInfo.expired) {
+      console.log(`\n${colors.yellow}⚠️  WARNING: TEST_GOOGLE_CREDENTIAL has expired!${colors.reset}`);
+      console.log(`   Expired at: ${tokenInfo.expiresAt?.toISOString() || 'unknown'}`);
+      console.log(`   User: ${tokenInfo.email || 'unknown'}`);
+      console.log(`\n   ${colors.bold}To get a fresh token:${colors.reset}`);
+      console.log(`   1. Run: ${colors.cyan}node backend/getTokenFromBrowser.js${colors.reset}`);
+      console.log(`   2. Or run tests with: ${colors.cyan}node backend/apiSmokeTest.js --interactive${colors.reset}`);
+      console.log(`   3. Or visit: https://www.bahar.co.il/fantasybroker/login.html\n`);
+    } else {
+      console.log(`${colors.green}✓${colors.reset} TEST_GOOGLE_CREDENTIAL valid (expires in ${formatDuration(tokenInfo.timeLeft)})`);
+    }
+  }
+
+  if (secondGoogleCredential) {
+    const tokenInfo = checkTokenExpiry(secondGoogleCredential);
+    if (tokenInfo.expired) {
+      console.log(`${colors.yellow}⚠️  WARNING: TEST_GOOGLE_CREDENTIAL_2 has expired!${colors.reset}`);
+      console.log(`   Expired at: ${tokenInfo.expiresAt?.toISOString() || 'unknown'}`);
+      console.log(`   User: ${tokenInfo.email || 'unknown'}\n`);
+    } else {
+      console.log(`${colors.green}✓${colors.reset} TEST_GOOGLE_CREDENTIAL_2 valid (expires in ${formatDuration(tokenInfo.timeLeft)})`);
+    }
+  }
+
+  const ctx = { baseUrl, googleCredential, secondGoogleCredential };
+  console.log(''); // Empty line before tests start
 
   let passCount = 0;
   let failCount = 0;
