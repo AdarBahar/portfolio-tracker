@@ -1,5 +1,301 @@
 # Project History
 
+## 2025-11-25 – Documentation Update - Database Schema & OpenAPI Spec
+
+- **Git reference**: `main` branch, uncommitted changes
+- **Summary**: Comprehensive update to `docs/DATABASE_SCHEMA.md` and `backend/openapi.json` to reflect recent database changes including audit logging, soft delete functionality, and user/holding status management.
+
+- **Details**:
+  - **DATABASE_SCHEMA.md Updates**:
+    - Updated table count from 10 to 11 (added `user_audit_log` table)
+    - Added complete documentation for `user_audit_log` table with all columns, indexes, constraints, and usage examples
+    - Added `deleted_at` column documentation to all 9 tables (soft delete pattern)
+    - Added `status` column documentation to `users` table (7 states: active, inactive, archived, pending_verification, invited, suspended, deleted)
+    - Added `status` column documentation to `holdings` table (4 states: active, pending_settlement, locked, archived)
+    - Added 15 new indexes: 9 for `deleted_at`, 2 for `status`, 4 for `user_audit_log`
+    - Updated schema version from 1.0 to 1.1
+    - Updated "Last Updated" date to 2025-11-25
+    - Added "Recent Changes" section documenting all updates
+    - Added soft delete behavior documentation to all applicable tables
+    - Added user status values and holding status values documentation
+
+  - **backend/openapi.json Updates**:
+    - Added `status` field to User schema with enum of 7 values
+    - Added `createdAt` field to User schema (account creation timestamp)
+    - Added `lastLogin` field to User schema (last login timestamp)
+    - Added `status` field to Holding schema with enum of 4 values
+    - Created new `AuditLog` schema component with all fields (id, userId, eventType, eventCategory, description, ipAddress, userAgent, previousValues, newValues, createdAt)
+    - Updated `/api/admin/users/{id}/logs` endpoint response to reference AuditLog schema
+    - Updated API version from 1.0.0 to 1.1.0
+    - Updated API description to mention audit logging, soft delete, and status management
+
+- **Files Modified**:
+  - `docs/DATABASE_SCHEMA.md` - Added user_audit_log table, soft delete columns, status columns, updated version to 1.1
+  - `backend/openapi.json` - Added status/timestamp fields to User/Holding schemas, created AuditLog schema, updated version to 1.1.0
+  - `DOCUMENTATION_REVIEW_FINDINGS.md` - Created comprehensive review findings document
+
+- **Impact**:
+  - Documentation now accurately reflects the current database schema (11 tables, 33 indexes)
+  - API documentation now includes all fields returned by admin endpoints
+  - Developers can reference accurate schema documentation for all audit logging features
+  - OpenAPI spec can be used to generate accurate client SDKs
+
+- **Verification**:
+  - [ ] Review DATABASE_SCHEMA.md for accuracy
+  - [ ] Review openapi.json for completeness
+  - [ ] Test Swagger UI at `/api/docs` to verify schema changes
+  - [ ] Verify admin endpoints return fields matching the updated schemas
+
+## 2025-11-25 – Accessibility Fix - Audit Logs Modal
+
+- **Git reference**: `main` branch, uncommitted changes
+- **Summary**: Fixed accessibility issue in audit logs modal where `aria-hidden` attribute was blocking focus on the close button, causing browser warnings and screen reader issues.
+
+- **Details**:
+  - **Issue**: Browser warning "Blocked aria-hidden on an element because its descendant retained focus"
+  - **Root Cause**: Modal was using `aria-hidden="false"` when open, but ARIA spec requires removing the attribute entirely
+  - **Fix**: Changed `modal.setAttribute('aria-hidden', 'false')` to `modal.removeAttribute('aria-hidden')`
+  - **Enhancements**:
+    - Added auto-focus to close button when modal opens
+    - Added Escape key support to close modal
+    - Added focus management to return focus to triggering button when modal closes
+    - Extracted close logic to dedicated `closeLogsModal()` function
+    - Improved keyboard navigation and screen reader support
+
+- **Files Modified**:
+  - `scripts/admin.js` - Fixed modal accessibility and added keyboard support
+  - `ACCESSIBILITY_FIX_AUDIT_MODAL.md` - Documentation of the fix
+
+- **WCAG 2.1 Compliance**:
+  - ✅ 2.1.1 Keyboard - All functionality available via keyboard
+  - ✅ 2.4.3 Focus Order - Logical focus order maintained
+  - ✅ 4.1.2 Name, Role, Value - Proper ARIA attributes
+
+- **Testing checklist**:
+  - [ ] Open audit logs modal and verify close button receives focus
+  - [ ] Press Escape key and verify modal closes
+  - [ ] Click background and verify modal closes
+  - [ ] Test with screen reader (VoiceOver/NVDA/JAWS)
+  - [ ] Verify no aria-hidden warnings in browser console
+
+## 2025-11-25 – Audit Logging System - Extended Coverage
+
+- **Git reference**: `main` branch, uncommitted changes
+- **Summary**: Extended audit logging system to cover all major user actions including portfolio data operations (holdings, dividends, transactions) and bull pen activities (creation, memberships, orders). Now tracking 21 different event types across 5 categories.
+
+- **Details**:
+  - **Holdings Events** (`backend/src/controllers/holdingsController.js`):
+    - Added `holding_created` event logging when user creates a new holding
+    - Added `holding_updated` event logging when user updates a holding (captures previous and new values)
+    - Added `holding_deleted` event logging when user deletes a holding (soft delete)
+    - Logs include ticker, name, shares, purchase price, purchase date, sector, asset class
+    - Fetches old values before update/delete to capture previous state
+
+  - **Dividends Events** (`backend/src/controllers/dividendsController.js`):
+    - Added `dividend_created` event logging when user creates a new dividend
+    - Added `dividend_updated` event logging when user updates a dividend (captures previous and new values)
+    - Added `dividend_deleted` event logging when user deletes a dividend (soft delete)
+    - Logs include ticker, amount, shares, date
+    - Fetches old values before update/delete to capture previous state
+
+  - **Transactions Events** (`backend/src/controllers/transactionsController.js`):
+    - Added `transaction_created` event logging when user creates a new transaction
+    - Added `transaction_updated` event logging when user updates a transaction (captures previous and new values)
+    - Added `transaction_deleted` event logging when user deletes a transaction (soft delete)
+    - Logs include type (buy/sell/dividend), ticker, shares, price, fees, date
+    - Fetches old values before update/delete to capture previous state
+
+  - **Bull Pen Events** (`backend/src/controllers/bullPensController.js`):
+    - Added `bull_pen_created` event logging when user creates a new bull pen
+    - Logs include bull pen ID, name, duration, max players, starting cash, settings
+
+  - **Bull Pen Membership Events** (`backend/src/controllers/bullPenMembershipsController.js`):
+    - Added `bull_pen_joined` event logging when user joins a bull pen
+    - Added `bull_pen_left` event logging when user leaves a bull pen
+    - Added `bull_pen_membership_approved` event logging when host approves a membership (dual logging)
+    - Added `bull_pen_membership_rejected` event logging when host rejects a membership (dual logging)
+    - Dual logging: logs event for both target user AND host who made the change
+    - Logs include bull pen ID, bull pen name, status, role
+
+  - **Bull Pen Order Events** (`backend/src/controllers/bullPenOrdersController.js`):
+    - Added `bull_pen_order_placed` event logging when user places an order
+    - Logs include bull pen ID, order ID, symbol, side (buy/sell), quantity, fill price, new cash, new position
+    - Logged after transaction commit to avoid rollback issues
+
+  - **Documentation Updates**:
+    - Updated `AUDIT_LOGGING_IMPLEMENTATION_SUMMARY.md` with all 21 implemented event types
+    - Updated `backend/AUDIT_LOGGING_QUICK_REFERENCE.md` with examples for data and bull pen events
+    - Updated event category descriptions to clarify `data` category includes portfolio data
+
+- **Event Coverage Summary**:
+  - **Authentication & Account**: 5 events (login_success, login_failed, user_created, admin_privilege_granted, admin_privilege_revoked)
+  - **Portfolio Data**: 9 events (holding_created/updated/deleted, dividend_created/updated/deleted, transaction_created/updated/deleted)
+  - **Bull Pen**: 7 events (bull_pen_created, bull_pen_joined, bull_pen_left, membership_approved/rejected, order_placed)
+  - **Total**: 21 event types across 5 categories (authentication, account, admin, data, bull_pen)
+
+- **Reasoning / Motivation**:
+  - **Complete Audit Trail**: Track all user actions that modify data in the system
+  - **Data Integrity**: Capture previous and new values for all updates to enable rollback and investigation
+  - **User Behavior Analysis**: Understand how users interact with portfolio and bull pen features
+  - **Compliance**: Meet regulatory requirements for tracking financial data changes
+  - **Debugging**: Investigate data inconsistencies by reviewing user action history
+  - **Dual Logging for Admin Actions**: Track both the action on the target user and the admin who performed it
+
+- **Deployment / Ops notes**:
+  - No database changes required - uses existing `user_audit_log` table
+  - No breaking changes - all changes are additive
+  - Audit logging failures are gracefully handled and won't crash the app
+  - Monitor backend logs for `[AuditLog]` messages to verify logging is working
+  - Consider implementing retention policy for old audit logs (e.g., keep 90 days)
+
+- **Testing checklist**:
+  - [ ] Create/update/delete holdings and verify events in database
+  - [ ] Create/update/delete dividends and verify events in database
+  - [ ] Create/update/delete transactions and verify events in database
+  - [ ] Create bull pen and verify event in database
+  - [ ] Join/leave bull pen and verify events in database
+  - [ ] Approve/reject membership and verify dual logging (2 events)
+  - [ ] Place order in bull pen and verify event in database
+  - [ ] Verify all events include IP address and user agent
+  - [ ] Verify previous/new values are captured correctly
+  - [ ] View events in admin panel and verify they display correctly
+
+## 2025-11-25 – Audit Logging System Implementation
+
+- **Git reference**: `main` branch, uncommitted changes
+- **Summary**: Implemented comprehensive audit logging system with centralized utility module for tracking all user-related events to the `user_audit_log` table. Integrated audit logging into authentication and admin controllers.
+
+- **Details**:
+  - **Audit Log Utility** (`backend/src/utils/auditLog.js`):
+    - Created centralized `auditLog.log()` function for writing audit logs
+    - Automatic IP address extraction from Express requests (handles proxies: X-Forwarded-For, X-Real-IP)
+    - Automatic user agent extraction from request headers
+    - JSON serialization for `previousValues` and `newValues` fields
+    - Graceful error handling - logging failures never crash the app
+    - Exported helper functions: `extractIpAddress()`, `extractUserAgent()`
+    - Comprehensive JSDoc documentation
+
+  - **Authentication Events** (`backend/src/controllers/authController.js`):
+    - Added `login_success` event logging for successful Google OAuth logins
+    - Added `login_failed` event logging for failed login attempts (non-active account status)
+    - Added `user_created` event logging for new user registrations
+    - Logs include IP address, user agent, email, and auth provider
+    - Separate tracking for new users vs. returning users
+
+  - **Admin Events** (`backend/src/controllers/adminController.js`):
+    - Added `admin_privilege_granted` event logging when admin status is granted
+    - Added `admin_privilege_revoked` event logging when admin status is removed
+    - Dual logging: logs event for both target user AND admin who made the change
+    - Includes previous/new values with `is_admin` status and `changed_by` email
+    - Fetches target user info before update to capture previous state
+
+  - **Documentation** (`backend/AUDIT_LOGGING_GUIDE.md`):
+    - Comprehensive 389-line guide covering all aspects of audit logging
+    - Architecture explanation (centralized utility vs. endpoint approach)
+    - Complete API reference with parameter descriptions
+    - Implementation examples for all event types
+    - Best practices for logging events
+    - Troubleshooting guide
+    - Security considerations
+    - Performance optimization tips
+    - Database schema reference
+
+- **Reasoning / Motivation**:
+  - **Security Monitoring**: Track all user actions for security analysis and threat detection
+  - **Compliance**: Meet regulatory requirements (GDPR, SOC2, HIPAA) for audit trails
+  - **Debugging**: Investigate user issues by reviewing their action history
+  - **Analytics**: Understand user behavior and system usage patterns
+  - **Accountability**: Create immutable record of who did what and when
+  - **Centralized Approach**: Single utility module ensures consistency and simplicity
+  - **Graceful Degradation**: Audit logging failures don't impact user experience
+
+- **Impact**:
+  - **New Utility Module**: `backend/src/utils/auditLog.js` available for all controllers
+  - **Authentication Tracking**: All login attempts and new registrations now logged
+  - **Admin Action Tracking**: All admin privilege changes now logged with full context
+  - **Database Writes**: Audit logs written to `user_audit_log` table on every tracked event
+  - **Admin Panel**: Existing admin panel can now display real audit log data
+  - **No Breaking Changes**: Purely additive - no changes to existing API contracts
+  - **Performance**: Direct database writes, no HTTP overhead, minimal performance impact
+  - **IP Address Handling**: Correctly extracts client IP even behind proxies/load balancers
+
+- **Deployment / Ops notes**:
+  - **No Database Migration Required**: Uses existing `user_audit_log` table
+  - **No Environment Variables Required**: No new configuration needed
+  - **Backend Restart Required**: New utility module requires server restart
+  - **Backward Compatible**: No breaking changes to existing functionality
+  - **Monitoring**: Watch for `[AuditLog]` entries in backend logs
+  - **Verification**:
+    ```sql
+    -- Check audit logs are being written
+    SELECT COUNT(*) FROM user_audit_log;
+
+    -- View recent login events
+    SELECT * FROM user_audit_log
+    WHERE event_type = 'login_success'
+    ORDER BY created_at DESC LIMIT 10;
+
+    -- View admin privilege changes
+    SELECT * FROM user_audit_log
+    WHERE event_category = 'admin'
+    ORDER BY created_at DESC LIMIT 10;
+    ```
+  - **Production Deployment**:
+    1. Deploy backend code with new utility and updated controllers
+    2. Restart backend server
+    3. Test login to verify `login_success` events are logged
+    4. Test admin privilege changes to verify admin events are logged
+    5. Check admin panel to view audit logs
+
+- **Testing**:
+  - **Manual Testing Required**:
+    - [ ] Login with Google OAuth and verify `login_success` event in database
+    - [ ] Login with suspended account and verify `login_failed` event
+    - [ ] Create new user and verify `user_created` event
+    - [ ] Grant admin privileges and verify `admin_privilege_granted` events (2 entries)
+    - [ ] Revoke admin privileges and verify `admin_privilege_revoked` events (2 entries)
+    - [ ] View audit logs in admin panel and verify events display correctly
+    - [ ] Check IP addresses are correctly extracted (not `::1` in production)
+    - [ ] Check user agents are captured correctly
+    - [ ] Verify `previousValues` and `newValues` JSON is valid
+  - **Database Verification**:
+    ```sql
+    -- Check event types
+    SELECT event_type, COUNT(*) as count
+    FROM user_audit_log
+    GROUP BY event_type;
+
+    -- Check event categories
+    SELECT event_category, COUNT(*) as count
+    FROM user_audit_log
+    GROUP BY event_category;
+
+    -- View sample log entry
+    SELECT * FROM user_audit_log ORDER BY created_at DESC LIMIT 1;
+    ```
+  - **Error Handling**:
+    - [ ] Verify app doesn't crash if audit logging fails
+    - [ ] Check backend logs for `[AuditLog]` error messages
+    - [ ] Test with invalid user ID (should log error but not crash)
+
+- **Open questions / next steps**:
+  - **Profile Events**: Add audit logging for profile updates, email changes, picture updates
+  - **Security Events**: Log suspicious activity, account locks, 2FA changes
+  - **Bull Pen Events**: Log room creation, joins, leaves, kicks, orders
+  - **Data Events**: Log data exports, imports, GDPR requests
+  - **Automatic Request Logging**: Create middleware to log all API requests
+  - **Batching**: Implement batching for high-volume events to reduce database writes
+  - **Retention Policy**: Define and implement automatic cleanup of old audit logs (e.g., keep 90 days)
+  - **Alerting**: Send notifications for suspicious activity (multiple failed logins, etc.)
+  - **Export Functionality**: Add ability to export audit logs to CSV/JSON
+  - **Filtering**: Add date range and event type filters to admin panel audit log viewer
+  - **Pagination**: Add pagination to audit log viewer for users with many events
+  - **Real-time Monitoring**: Create dashboard for monitoring security events in real-time
+  - **Compliance Reports**: Generate compliance reports from audit logs
+  - **Async Logging**: Consider making audit logging async for high-traffic endpoints
+
+---
+
 ## 2025-11-25 – Soft Delete and User Status Management Implementation
 
 - **Git reference**: `code-review-fixes` branch, commits `de34847`, `fdf501f`

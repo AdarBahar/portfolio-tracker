@@ -26,8 +26,10 @@ The Portfolio Tracker database supports:
 - **Trade Room (Bull Pen) sessions** - Competitive trading game rooms
 - **Real-time market data caching** (Finnhub API integration)
 - **Leaderboard rankings** for trade room performance
+- **Audit logging** for security monitoring and compliance
+- **Soft delete pattern** for data retention and recovery
 
-**Total Tables:** 10
+**Total Tables:** 11
 
 ---
 
@@ -56,30 +58,100 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 | `google_token_expiry` | DATETIME | | Token expiration timestamp |
 | `is_demo` | BOOLEAN | DEFAULT FALSE | TRUE for demo/guest users |
 | `is_admin` | BOOLEAN | DEFAULT FALSE | TRUE for admin users with elevated privileges |
+| `status` | VARCHAR(30) | NOT NULL, DEFAULT 'active' | Account status (see below) |
 | `last_login` | DATETIME | | Last login timestamp |
 | `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Account creation time |
 | `updated_at` | DATETIME | ON UPDATE CURRENT_TIMESTAMP | Last update time |
+| `deleted_at` | DATETIME | NULL | Soft delete timestamp |
 
 **Constraints:**
 - `auth_provider` must be one of: `email`, `google`, `demo`
 - Email auth requires `password_hash`
 - Google auth requires `google_id`
 - Demo auth requires `is_demo = TRUE`
+- `status` must be one of: `active`, `inactive`, `archived`, `pending_verification`, `invited`, `suspended`, `deleted`
+
+**User Status Values:**
+- `active` - User can log in and use the product
+- `inactive` - User exists but cannot log in
+- `archived` - Permanently disabled, hidden from most views
+- `pending_verification` - Awaiting email or phone verification
+- `invited` - Invitation sent, signup not completed
+- `suspended` - Policy violations or temporary blocks
+- `deleted` - Soft deleted, retained for logs/audits
 
 **Admin Privileges:**
 - Admin users (`is_admin = TRUE`) can:
   - Access admin pages
   - Assign/remove admin privileges from other users
+  - View audit logs for all users
+
+**Soft Delete:**
+- Records are soft deleted by setting `deleted_at = NOW()`
+- Soft deleted records are excluded from queries with `WHERE deleted_at IS NULL`
+- Can be restored by setting `deleted_at = NULL`
 
 **Indexes:**
 - `idx_users_google_id` on `google_id`
 - `idx_users_auth_provider` on `auth_provider`
 - `idx_users_email` on `email`
 - `idx_users_is_admin` on `is_admin`
+- `idx_users_status` on `status`
+- `idx_users_deleted_at` on `deleted_at`
 
 ---
 
-### 2. `holdings`
+### 2. `user_audit_log`
+**Purpose:** Immutable audit trail of all user-related events for security monitoring, compliance, and debugging
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | INT | PRIMARY KEY, AUTO_INCREMENT | Audit log entry ID |
+| `user_id` | INT | FOREIGN KEY → users(id), NOT NULL | User who performed the action |
+| `event_type` | VARCHAR(100) | NOT NULL | Event type identifier (e.g., `login_success`, `holding_created`) |
+| `event_category` | VARCHAR(50) | NOT NULL | Event category: `authentication`, `admin`, `data`, `bull_pen`, etc. |
+| `description` | TEXT | | Human-readable event description |
+| `ip_address` | VARCHAR(45) | | IP address of the request (IPv4 or IPv6) |
+| `user_agent` | TEXT | | Browser/client user agent string |
+| `previous_values` | JSON | NULL | Previous state before the action (for updates/deletes) |
+| `new_values` | JSON | NULL | New state after the action (for creates/updates) |
+| `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Event timestamp |
+
+**Event Categories:**
+- `authentication` - Login, logout, registration events
+- `admin` - Admin privilege changes, user management
+- `account` - Profile updates, account status changes
+- `data` - Holdings, dividends, transactions CRUD operations
+- `bull_pen` - Bull pen creation, membership, orders
+- `security` - Password changes, suspicious activity
+
+**Common Event Types:**
+- **Authentication:** `login_success`, `login_failed`, `user_created`, `logout`
+- **Admin:** `admin_privilege_granted`, `admin_privilege_revoked`
+- **Data:** `holding_created`, `holding_updated`, `holding_deleted`, `dividend_created`, `transaction_created`
+- **Bull Pen:** `bull_pen_created`, `bull_pen_joined`, `bull_pen_left`, `bull_pen_order_placed`
+
+**Constraints:**
+- Immutable - records should never be updated or deleted
+- CASCADE DELETE when user is deleted (to comply with GDPR right to be forgotten)
+- `event_type` and `event_category` are required for all events
+- `ip_address` supports both IPv4 (15 chars) and IPv6 (45 chars)
+
+**Indexes:**
+- `idx_user_audit_log_user_id` on `user_id`
+- `idx_user_audit_log_event_type` on `event_type`
+- `idx_user_audit_log_event_category` on `event_category`
+- `idx_user_audit_log_created_at` on `created_at`
+
+**Usage:**
+- Security monitoring - Track failed login attempts, suspicious activity
+- Compliance - GDPR, SOC2, audit requirements
+- Debugging - Investigate user issues, trace action history
+- Analytics - Understand user behavior patterns
+
+---
+
+### 3. `holdings`
 **Purpose:** User's stock holdings (personal portfolio)
 
 | Column | Type | Constraints | Description |
@@ -93,18 +165,33 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 | `purchase_date` | DATE | NOT NULL | Date of purchase |
 | `sector` | VARCHAR(50) | | Industry sector |
 | `asset_class` | VARCHAR(50) | | Asset classification |
+| `status` | VARCHAR(30) | NOT NULL, DEFAULT 'active' | Holding status (see below) |
 | `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Record creation time |
 | `updated_at` | DATETIME | ON UPDATE CURRENT_TIMESTAMP | Last update time |
+| `deleted_at` | DATETIME | NULL | Soft delete timestamp |
 
 **Constraints:**
 - UNIQUE constraint on `(user_id, ticker)` - one holding per ticker per user
 - `shares > 0`
 - `purchase_price > 0`
+- `status` must be one of: `active`, `pending_settlement`, `locked`, `archived`
 - CASCADE DELETE when user is deleted
+
+**Holding Status Values:**
+- `active` - Currently held position
+- `pending_settlement` - Trade executed but not settled (T+2)
+- `locked` - Temporarily locked (transfer, legal hold)
+- `archived` - Historical record, no longer active
+
+**Soft Delete:**
+- Records are soft deleted by setting `deleted_at = NOW()`
+- Soft deleted records are excluded from queries with `WHERE deleted_at IS NULL`
 
 **Indexes:**
 - `idx_holdings_user_id` on `user_id`
 - `idx_holdings_ticker` on `ticker`
+- `idx_holdings_status` on `status`
+- `idx_holdings_deleted_at` on `deleted_at`
 
 ---
 
@@ -120,15 +207,21 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 | `shares` | DECIMAL(10,4) | NOT NULL, > 0 | Number of shares |
 | `date` | DATE | NOT NULL | Dividend payment date |
 | `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Record creation time |
+| `deleted_at` | DATETIME | NULL | Soft delete timestamp |
 
 **Constraints:**
 - `amount > 0`
 - `shares > 0`
 - CASCADE DELETE when user is deleted
 
+**Soft Delete:**
+- Records are soft deleted by setting `deleted_at = NOW()`
+- Soft deleted records are excluded from queries with `WHERE deleted_at IS NULL`
+
 **Indexes:**
 - `idx_dividends_user_id` on `user_id`
 - `idx_dividends_ticker` on `ticker`
+- `idx_dividends_deleted_at` on `deleted_at`
 
 ---
 
@@ -146,6 +239,7 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 | `fees` | DECIMAL(10,2) | DEFAULT 0, >= 0 | Transaction fees |
 | `date` | DATE | NOT NULL | Transaction date |
 | `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Record creation time |
+| `deleted_at` | DATETIME | NULL | Soft delete timestamp |
 
 **Constraints:**
 - `type` must be one of: `buy`, `sell`, `dividend`
@@ -154,11 +248,16 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 - `fees >= 0`
 - CASCADE DELETE when user is deleted
 
+**Soft Delete:**
+- Records are soft deleted by setting `deleted_at = NOW()`
+- Soft deleted records are excluded from queries with `WHERE deleted_at IS NULL`
+
 **Indexes:**
 - `idx_transactions_user_id` on `user_id`
 - `idx_transactions_ticker` on `ticker`
 - `idx_transactions_date` on `date`
 - `idx_transactions_type` on `type`
+- `idx_transactions_deleted_at` on `deleted_at`
 
 ---
 
@@ -183,6 +282,7 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 | `invite_code` | VARCHAR(16) | UNIQUE | Invite code for joining |
 | `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Room creation time |
 | `updated_at` | DATETIME | ON UPDATE CURRENT_TIMESTAMP | Last update time |
+| `deleted_at` | DATETIME | NULL | Soft delete timestamp |
 
 **State Values:**
 - `draft` - Being configured by host
@@ -198,9 +298,14 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 - `starting_cash > 0`
 - CASCADE DELETE when host user is deleted
 
+**Soft Delete:**
+- Records are soft deleted by setting `deleted_at = NOW()`
+- Soft deleted records are excluded from queries with `WHERE deleted_at IS NULL`
+
 **Indexes:**
 - `idx_bull_pens_state_start_time` on `(state, start_time)`
 - `idx_bull_pens_host_user_id` on `host_user_id`
+- `idx_bull_pens_deleted_at` on `deleted_at`
 
 ---
 
@@ -216,6 +321,7 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 | `status` | VARCHAR(20) | NOT NULL, DEFAULT 'pending' | Membership status (see below) |
 | `cash` | DECIMAL(18,2) | NOT NULL, >= 0 | Current cash balance |
 | `joined_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Join timestamp |
+| `deleted_at` | DATETIME | NULL | Soft delete timestamp |
 
 **Status Values:**
 - `pending` - Awaiting host approval (if `approval_required = TRUE`)
@@ -230,9 +336,14 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 - `cash >= 0`
 - CASCADE DELETE when bull pen or user is deleted
 
+**Soft Delete:**
+- Records are soft deleted by setting `deleted_at = NOW()`
+- Soft deleted records are excluded from queries with `WHERE deleted_at IS NULL`
+
 **Indexes:**
 - `idx_bull_pen_memberships_bull_pen_id_status` on `(bull_pen_id, status)`
 - `idx_bull_pen_memberships_user_id` on `user_id`
+- `idx_bull_pen_memberships_deleted_at` on `deleted_at`
 
 ---
 
@@ -249,13 +360,19 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 | `avg_cost` | DECIMAL(18,6) | NOT NULL | Average cost basis |
 | `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Position creation time |
 | `updated_at` | DATETIME | ON UPDATE CURRENT_TIMESTAMP | Last update time |
+| `deleted_at` | DATETIME | NULL | Soft delete timestamp |
 
 **Constraints:**
 - `qty >= 0` (can be 0 after selling all shares)
 - CASCADE DELETE when bull pen or user is deleted
 
+**Soft Delete:**
+- Records are soft deleted by setting `deleted_at = NOW()`
+- Soft deleted records are excluded from queries with `WHERE deleted_at IS NULL`
+
 **Indexes:**
 - `idx_bull_pen_positions_room_user_symbol` on `(bull_pen_id, user_id, symbol)`
+- `idx_bull_pen_positions_deleted_at` on `deleted_at`
 
 ---
 
@@ -280,6 +397,7 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 | `filled_at` | DATETIME | NULL | Order fill time |
 | `server_ts` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Server timestamp |
 | `feed_ts` | DATETIME | NULL | Market data feed timestamp |
+| `deleted_at` | DATETIME | NULL | Soft delete timestamp |
 
 **Status Values:**
 - `new` - Order placed, not yet filled
@@ -295,8 +413,13 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 - `qty > 0`
 - CASCADE DELETE when bull pen or user is deleted
 
+**Soft Delete:**
+- Records are soft deleted by setting `deleted_at = NOW()`
+- Soft deleted records are excluded from queries with `WHERE deleted_at IS NULL`
+
 **Indexes:**
 - `idx_bull_pen_orders_room_user` on `(bull_pen_id, user_id, placed_at)`
+- `idx_bull_pen_orders_deleted_at` on `deleted_at`
 - `idx_bull_pen_orders_room_symbol` on `(bull_pen_id, symbol, placed_at)`
 
 ---
@@ -335,15 +458,21 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 | `pnl_abs` | DECIMAL(18,2) | NOT NULL | Absolute P&L (profit/loss) |
 | `pnl_pct` | DECIMAL(10,4) | NOT NULL | Percentage P&L |
 | `last_trade_at` | TIMESTAMP | NULL | Last trade timestamp |
+| `deleted_at` | DATETIME | NULL | Soft delete timestamp |
 
 **Snapshot Frequency:** Every 5 minutes for active rooms (via background job)
 
 **Constraints:**
 - CASCADE DELETE when bull pen or user is deleted
 
+**Soft Delete:**
+- Records are soft deleted by setting `deleted_at = NOW()`
+- Soft deleted records are excluded from queries with `WHERE deleted_at IS NULL`
+
 **Indexes:**
 - `idx_leaderboard_room_snapshot` on `(bull_pen_id, snapshot_at DESC)`
 - `idx_leaderboard_user` on `(user_id, snapshot_at DESC)`
+- `idx_leaderboard_snapshots_deleted_at` on `deleted_at`
 
 ---
 
@@ -442,9 +571,16 @@ All foreign key relationships use `ON DELETE CASCADE`, meaning:
 
 ## Schema Version
 
-**Version:** 1.0
-**Last Updated:** 2025-11-24
+**Version:** 1.1
+**Last Updated:** 2025-11-25
 **Schema File:** `schema.mysql.sql`
+
+**Recent Changes:**
+- Added `user_audit_log` table for comprehensive audit logging
+- Added `deleted_at` column to all tables for soft delete functionality
+- Added `status` column to `users` table (7 states)
+- Added `status` column to `holdings` table (4 states)
+- Added indexes for `deleted_at` and `status` columns
 
 ---
 

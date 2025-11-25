@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Portfolio Tracker API",
-    "version": "1.0.0",
-    "description": "Backend API for the Portfolio Tracker application (Node.js + Express + MySQL)."
+    "version": "1.1.0",
+    "description": "Backend API for the Portfolio Tracker application (Node.js + Express + MySQL). Includes comprehensive audit logging, soft delete functionality, and user/holding status management."
   },
   "servers": [
     {
@@ -1107,19 +1107,7 @@
                     "logs": {
                       "type": "array",
                       "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": { "type": "integer" },
-                          "userId": { "type": "integer" },
-                          "eventType": { "type": "string" },
-                          "eventCategory": { "type": "string" },
-                          "description": { "type": "string" },
-                          "ipAddress": { "type": "string", "nullable": true },
-                          "userAgent": { "type": "string", "nullable": true },
-                          "previousValues": { "type": "object", "nullable": true },
-                          "newValues": { "type": "object", "nullable": true },
-                          "createdAt": { "type": "string", "format": "date-time" }
-                        }
+                        "$ref": "#/components/schemas/AuditLog"
                       }
                     },
                     "total": { "type": "integer" }
@@ -1301,6 +1289,25 @@
             "type": "boolean",
             "description": "TRUE if user has admin privileges",
             "example": false
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "inactive", "archived", "pending_verification", "invited", "suspended", "deleted"],
+            "description": "User account status",
+            "example": "active"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation timestamp",
+            "example": "2025-01-15T10:30:00Z"
+          },
+          "lastLogin": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Last login timestamp",
+            "example": "2025-11-25T14:22:00Z"
           }
         },
         "required": ["id", "email", "authProvider", "isDemo"]
@@ -1339,6 +1346,12 @@
           "purchaseDate": { "type": "string", "format": "date" },
           "sector": { "type": ["string", "null"] },
           "assetClass": { "type": ["string", "null"] },
+          "status": {
+            "type": "string",
+            "enum": ["active", "pending_settlement", "locked", "archived"],
+            "description": "Holding status",
+            "example": "active"
+          },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" }
         },
@@ -1408,6 +1421,70 @@
           }
         },
         "required": ["symbol", "currentPrice", "companyName", "lastUpdated"]
+      },
+      "AuditLog": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Audit log entry ID",
+            "example": 12345
+          },
+          "userId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User who performed the action",
+            "example": 42
+          },
+          "eventType": {
+            "type": "string",
+            "description": "Event type identifier",
+            "example": "login_success"
+          },
+          "eventCategory": {
+            "type": "string",
+            "enum": ["authentication", "admin", "account", "data", "bull_pen", "security"],
+            "description": "Event category",
+            "example": "authentication"
+          },
+          "description": {
+            "type": "string",
+            "description": "Human-readable event description",
+            "example": "User logged in successfully via Google OAuth"
+          },
+          "ipAddress": {
+            "type": "string",
+            "nullable": true,
+            "description": "IP address of the request (IPv4 or IPv6)",
+            "example": "192.168.1.100"
+          },
+          "userAgent": {
+            "type": "string",
+            "nullable": true,
+            "description": "Browser/client user agent string",
+            "example": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+          },
+          "previousValues": {
+            "type": "object",
+            "nullable": true,
+            "description": "Previous state before the action (for updates/deletes)",
+            "example": { "is_admin": false }
+          },
+          "newValues": {
+            "type": "object",
+            "nullable": true,
+            "description": "New state after the action (for creates/updates)",
+            "example": { "is_admin": true, "changed_by": "admin@example.com" }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Event timestamp",
+            "example": "2025-11-25T14:22:00Z"
+          }
+        },
+        "required": ["id", "userId", "eventType", "eventCategory", "createdAt"]
       }
     }
   }
