@@ -11,6 +11,11 @@ You have two testing approaches:
 
 Both use real Google authentication to test the full user experience.
 
+**✨ New: Automatic Cleanup**
+- All test artifacts are prefixed with `SmokeTest_` for easy identification
+- BullPens, dividends, and transactions are automatically deleted after tests complete
+- No manual cleanup required!
+
 ---
 
 ## Option 1: Backend API Tests (Automated)

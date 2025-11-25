@@ -444,7 +444,7 @@ addTest(
     const createRes = await httpRequest('POST', `${ctx.baseUrl}/api/dividends`, {
       headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
-        ticker: 'TEST',
+        ticker: 'SmokeTest_DIV',
         amount: 1.23,
         shares: 10,
         date: '2024-01-01',
@@ -461,7 +461,7 @@ addTest(
     const updateRes = await httpRequest('PUT', `${ctx.baseUrl}/api/dividends/${created.id}`, {
       headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
-        ticker: 'TEST',
+        ticker: 'SmokeTest_DIV',
         amount: 2.34,
         shares: 20,
         date: '2024-02-02',
@@ -508,7 +508,7 @@ addTest(
       headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
         type: 'buy',
-        ticker: 'TEST',
+        ticker: 'SmokeTest_TXN',
         shares: 5,
         price: 10.5,
         fees: 0.25,
@@ -527,7 +527,7 @@ addTest(
       headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
         type: 'sell',
-        ticker: 'TEST',
+        ticker: 'SmokeTest_TXN',
         shares: 3,
         price: 11.0,
         fees: 0.1,
@@ -593,8 +593,8 @@ addTest(
     const createRes = await httpRequest('POST', `${ctx.baseUrl}/api/bull-pens`, {
       headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
-        name: 'Smoke Test Bull Pen',
-        description: 'Smoke test room',
+        name: 'SmokeTest_BasicCRUD',
+        description: 'Smoke test room - basic CRUD operations',
         durationSec: 3600,
         maxPlayers: 10,
         startingCash: 10000,
@@ -616,6 +616,9 @@ addTest(
 
     const bullPenId = created.id;
 
+    // Track for cleanup
+    ctx.createdArtifacts.bullPens.push({ id: bullPenId, authHeader });
+
     const getRes = await httpRequest('GET', `${ctx.baseUrl}/api/bull-pens/${bullPenId}`, {
       headers: authHeader,
     });
@@ -629,13 +632,13 @@ addTest(
 
     const patchRes = await httpRequest('PATCH', `${ctx.baseUrl}/api/bull-pens/${bullPenId}`, {
       headers: { 'Content-Type': 'application/json', ...authHeader },
-      body: JSON.stringify({ name: 'Updated Smoke Test Bull Pen' }),
+      body: JSON.stringify({ name: 'SmokeTest_BasicCRUD_Updated' }),
     });
     if (patchRes.status !== 200) {
       throw new Error(`Expected 200 from update bull pen, got ${patchRes.status}`);
     }
     const patched = (patchRes.json || {}).bullPen;
-    if (!patched || patched.name !== 'Updated Smoke Test Bull Pen') {
+    if (!patched || patched.name !== 'SmokeTest_BasicCRUD_Updated') {
       throw new Error('Updated bull pen has unexpected name');
     }
 
@@ -745,8 +748,8 @@ addTest(
     const createRes = await httpRequest('POST', `${ctx.baseUrl}/api/bull-pens`, {
       headers: { 'Content-Type': 'application/json', ...hostHeader },
       body: JSON.stringify({
-        name: 'Membership Flow Bull Pen',
-        description: 'Membership approval flow room',
+        name: 'SmokeTest_MembershipFlow',
+        description: 'Smoke test - membership approval flow',
         durationSec: 1800,
         maxPlayers: 5,
         startingCash: 5000,
@@ -764,6 +767,9 @@ addTest(
     }
 
     const bullPenId = created.id;
+
+    // Track for cleanup
+    ctx.createdArtifacts.bullPens.push({ id: bullPenId, authHeader: hostHeader });
 
     const joinRes = await httpRequest('POST', `${ctx.baseUrl}/api/bull-pens/${bullPenId}/join`, {
       headers: playerHeader,
@@ -897,8 +903,8 @@ addTest(
     const createRes = await httpRequest('POST', `${ctx.baseUrl}/api/bull-pens`, {
       headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
-        name: 'Orders Test Bull Pen',
-        description: 'Testing order execution',
+        name: 'SmokeTest_OrdersBuySell',
+        description: 'Smoke test - order execution (buy/sell)',
         durationSec: 3600,
         maxPlayers: 10,
         startingCash: 10000,
@@ -916,6 +922,9 @@ addTest(
     }
 
     const bullPenId = created.id;
+
+    // Track for cleanup
+    ctx.createdArtifacts.bullPens.push({ id: bullPenId, authHeader });
 
     // Transition bull pen to active state so we can place orders
     const activateRes = await httpRequest('PATCH', `${ctx.baseUrl}/api/bull-pens/${bullPenId}`, {
@@ -1059,8 +1068,8 @@ addTest(
     const createRes = await httpRequest('POST', `${ctx.baseUrl}/api/bull-pens`, {
       headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
-        name: 'Rejection Test Bull Pen',
-        description: 'Testing order rejections',
+        name: 'SmokeTest_InsufficientCash',
+        description: 'Smoke test - order rejection (insufficient cash)',
         durationSec: 3600,
         maxPlayers: 10,
         startingCash: 100,
@@ -1074,6 +1083,9 @@ addTest(
     }
     const created = (createRes.json || {}).bullPen;
     const bullPenId = created.id;
+
+    // Track for cleanup
+    ctx.createdArtifacts.bullPens.push({ id: bullPenId, authHeader });
 
     const activateRes = await httpRequest('PATCH', `${ctx.baseUrl}/api/bull-pens/${bullPenId}`, {
       headers: { 'Content-Type': 'application/json', ...authHeader },
@@ -1140,8 +1152,8 @@ addTest(
     const createRes = await httpRequest('POST', `${ctx.baseUrl}/api/bull-pens`, {
       headers: { 'Content-Type': 'application/json', ...authHeader },
       body: JSON.stringify({
-        name: 'Sell Rejection Test Bull Pen',
-        description: 'Testing sell order rejections',
+        name: 'SmokeTest_InsufficientShares',
+        description: 'Smoke test - order rejection (insufficient shares)',
         durationSec: 3600,
         maxPlayers: 10,
         startingCash: 10000,
@@ -1155,6 +1167,9 @@ addTest(
     }
     const created = (createRes.json || {}).bullPen;
     const bullPenId = created.id;
+
+    // Track for cleanup
+    ctx.createdArtifacts.bullPens.push({ id: bullPenId, authHeader });
 
     const activateRes = await httpRequest('PATCH', `${ctx.baseUrl}/api/bull-pens/${bullPenId}`, {
       headers: { 'Content-Type': 'application/json', ...authHeader },
@@ -1254,7 +1269,12 @@ async function main() {
     }
   }
 
-  const ctx = { baseUrl, googleCredential, secondGoogleCredential };
+  // Track created artifacts for cleanup
+  const createdArtifacts = {
+    bullPens: [], // Array of { id, authHeader }
+  };
+
+  const ctx = { baseUrl, googleCredential, secondGoogleCredential, createdArtifacts };
   console.log(''); // Empty line before tests start
 
   let passCount = 0;
@@ -1281,6 +1301,35 @@ async function main() {
   }
 
   console.log(`\n${colors.bold}Summary:${colors.reset} ${colors.green}${passCount} passed${colors.reset}, ${colors.red}${failCount} failed${colors.reset}, ${colors.yellow}${skipCount} skipped${colors.reset}`);
+
+  // Cleanup phase: delete all created artifacts
+  if (createdArtifacts.bullPens.length > 0) {
+    console.log(`\n${colors.cyan}Cleaning up ${createdArtifacts.bullPens.length} test BullPen(s)...${colors.reset}`);
+    let cleanupCount = 0;
+    let failCount = 0;
+    for (const { id, authHeader } of createdArtifacts.bullPens) {
+      try {
+        const deleteRes = await httpRequest('DELETE', `${baseUrl}/api/bull-pens/${id}`, {
+          headers: authHeader
+        });
+        if (deleteRes.status === 204) {
+          cleanupCount++;
+        } else {
+          failCount++;
+          console.log(`${colors.yellow}⚠️  Failed to delete BullPen ${id}: HTTP ${deleteRes.status}${colors.reset}`);
+        }
+      } catch (err) {
+        failCount++;
+        console.log(`${colors.yellow}⚠️  Failed to delete BullPen ${id}: ${err.message}${colors.reset}`);
+      }
+    }
+    if (cleanupCount === createdArtifacts.bullPens.length) {
+      console.log(`${colors.green}✓${colors.reset} Cleanup complete (${cleanupCount}/${createdArtifacts.bullPens.length} BullPens deleted)`);
+    } else {
+      console.log(`${colors.yellow}⚠️${colors.reset} Partial cleanup (${cleanupCount}/${createdArtifacts.bullPens.length} BullPens deleted, ${failCount} failed)`);
+    }
+  }
+
   if (failCount > 0) {
     process.exitCode = 1;
   }

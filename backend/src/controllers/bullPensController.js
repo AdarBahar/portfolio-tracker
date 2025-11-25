@@ -236,10 +236,51 @@ async function updateBullPen(req, res) {
   }
 }
 
+async function deleteBullPen(req, res) {
+  const userId = req.user && req.user.id;
+  const bullPenId = req.params.id;
+
+  if (!bullPenId) {
+    return badRequest(res, 'Missing bull pen id');
+  }
+
+  try {
+    const [existingRows] = await db.execute(
+      'SELECT * FROM bull_pens WHERE id = ?',
+      [bullPenId]
+    );
+
+    const existing = existingRows[0];
+    if (!existing) {
+      return notFound(res, 'Bull pen not found');
+    }
+
+    if (existing.host_user_id !== userId) {
+      return forbidden(res, 'Only the host can delete this bull pen');
+    }
+
+    // Delete the bull pen (cascade will delete memberships, positions, orders, leaderboard)
+    const [result] = await db.execute(
+      'DELETE FROM bull_pens WHERE id = ?',
+      [bullPenId]
+    );
+
+    if (result.affectedRows === 0) {
+      return internalError(res, 'Failed to delete bull pen');
+    }
+
+    return res.status(204).send();
+  } catch (err) {
+    logger.error('Error deleting bull pen:', err);
+    return internalError(res, 'Failed to delete bull pen');
+  }
+}
+
 module.exports = {
   createBullPen,
   listBullPens,
   getBullPen,
   updateBullPen,
+  deleteBullPen,
 };
 
