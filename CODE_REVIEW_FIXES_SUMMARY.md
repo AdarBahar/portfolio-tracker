@@ -203,11 +203,16 @@
 
 ## 🔧 Configuration
 
-All new features are configurable via `.env.example`. Copy to `.env` and adjust:
+All new features are configurable via **frontend configuration**. See [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md) for details.
+
+### Frontend Configuration Setup
 
 ```bash
-cp .env.example .env
-# Edit .env with your preferred values
+# Copy the example file
+cp scripts/config.local.example.js scripts/config.local.js
+
+# Edit with your preferred values
+nano scripts/config.local.js
 ```
 
 **Key Configuration Options:**
@@ -217,6 +222,8 @@ cp .env.example .env
 - Performance flags (DOM batching, metrics caching)
 - Security settings (strict header validation)
 - Debug options (verbose API logging, performance monitoring)
+
+**Note:** This is separate from backend configuration (`backend/.env`). See [CONFIGURATION_GUIDE.md](CONFIGURATION_GUIDE.md) for the difference.
 
 ## 🧪 Testing Checklist
 
