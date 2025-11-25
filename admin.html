@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Fantasy Broker</title>
+    <meta name="description" content="Admin panel for managing users and viewing audit logs">
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/admin.css">
+    <script type="module" src="scripts/theme.js"></script>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div class="header">
+        <div>
+            <h1>
+                ⚙️ Admin Panel
+            </h1>
+            <p class="last-updated" id="lastUpdated">Last updated: --</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" id="backToPortfolioBtn">← Back to Portfolio</button>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"></button>
+            <button class="btn btn-secondary logout-btn" id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <main id="main-content">
+        <!-- Users Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Users</h2>
+                <div class="section-actions">
+                    <input type="text" id="userSearch" class="search-input" placeholder="Search users...">
+                    <span class="user-count" id="userCount">Loading...</span>
+                </div>
+            </div>
+
+            <div id="usersTableContainer">
+                <table class="data-table" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Provider</th>
+                            <th>Status</th>
+                            <th>Admin</th>
+                            <th>Created</th>
+                            <th>Last Login</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr>
+                            <td colspan="8" class="loading-cell">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- User Logs Modal -->
+    <div id="logsModal" class="modal" role="dialog" aria-labelledby="logsModalTitle" aria-hidden="true">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="logsModalTitle">User Audit Logs</h2>
+                <button class="modal-close" id="closeLogsModal" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="logs-user-info" id="logsUserInfo">
+                    <strong>User:</strong> <span id="logsUserName">--</span> (<span id="logsUserEmail">--</span>)
+                </div>
+                <div class="logs-container" id="logsContainer">
+                    <p class="loading-text">Loading logs...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="scripts/admin.js"></script>
+</body>
+</html>
+

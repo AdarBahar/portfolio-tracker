@@ -209,11 +209,32 @@ body {
     gap: var(--space-8);
 }
 
+.user-avatar-container {
+    position: relative;
+    display: inline-block;
+}
+
 .user-avatar {
     width: 32px;
     height: 32px;
     border-radius: 50%;
     object-fit: cover;
+}
+
+.admin-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    font-size: 0.75rem;
+    background: var(--color-teal-500);
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--color-surface);
+    cursor: help;
 }
 
 .user-details {
@@ -226,6 +247,19 @@ body {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-primary);
+}
+
+.admin-link {
+    font-size: 0.75rem;
+    color: var(--color-teal-500);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.admin-link:hover {
+    color: var(--color-teal-600);
+    text-decoration: underline;
 }
 
 .demo-badge {

@@ -22,6 +22,7 @@ export class User {
         this.name = data.name;
         this.picture = data.picture;
         this.isDemo = data.isDemo || false;
+        this.isAdmin = data.isAdmin || false;
     }
 
     toJSON() {
@@ -31,6 +32,7 @@ export class User {
             name: this.name,
             picture: this.picture,
             isDemo: this.isDemo,
+            isAdmin: this.isAdmin,
         };
     }
 }
@@ -135,6 +137,7 @@ export class AuthManager {
             name: userData.name,
             picture: userData.profilePicture || userData.picture || null,
             isDemo: !!userData.isDemo,
+            isAdmin: !!userData.isAdmin,
         });
 
         localStorage.setItem(AUTH_STORAGE_KEYS.USER, JSON.stringify(user.toJSON()));

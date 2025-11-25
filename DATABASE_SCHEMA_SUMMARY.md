@@ -34,6 +34,7 @@ google_access_token   -- Optional, for future API calls
 google_refresh_token  -- Optional, for token refresh
 google_token_expiry   -- Token expiration timestamp
 is_demo               -- TRUE for demo users
+is_admin              -- TRUE for admin users with elevated privileges
 last_login            -- Last login timestamp
 created_at            -- Account creation timestamp
 updated_at            -- Last update timestamp

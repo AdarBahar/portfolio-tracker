@@ -1,0 +1,227 @@
+/* Admin Panel Styles */
+
+.section-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-12);
+}
+
+.search-input {
+    padding: var(--space-8) var(--space-12);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-base);
+    font-size: 0.875rem;
+    min-width: 250px;
+    background: var(--color-surface);
+    color: var(--text-primary);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.user-count {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Data Table */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.data-table thead {
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--color-border);
+}
+
+.data-table th {
+    padding: var(--space-12);
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.data-table td {
+    padding: var(--space-12);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.data-table tbody tr:hover {
+    background: var(--bg-secondary);
+}
+
+.loading-cell {
+    text-align: center;
+    padding: var(--space-24) !important;
+    color: var(--text-secondary);
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background: var(--color-green-400);
+    color: white;
+}
+
+.status-badge.inactive {
+    background: var(--color-gray-300);
+    color: white;
+}
+
+.status-badge.suspended {
+    background: var(--color-red-400);
+    color: white;
+}
+
+.status-badge.pending {
+    background: var(--color-orange-400);
+    color: white;
+}
+
+/* Admin Badge in Table */
+.admin-indicator {
+    color: var(--color-teal-500);
+    font-weight: 600;
+}
+
+/* Action Buttons */
+.action-btn {
+    padding: var(--space-4) var(--space-8);
+    font-size: 0.75rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.action-btn-primary {
+    background: var(--color-teal-500);
+    color: white;
+}
+
+.action-btn-primary:hover {
+    background: var(--color-teal-600);
+}
+
+.action-btn-secondary {
+    background: var(--color-gray-300);
+    color: white;
+}
+
+.action-btn-secondary:hover {
+    background: var(--color-gray-400);
+}
+
+.action-btn-danger {
+    background: var(--color-red-400);
+    color: white;
+}
+
+.action-btn-danger:hover {
+    background: var(--color-red-500);
+}
+
+/* Logs Modal */
+.modal-large {
+    max-width: 900px;
+    max-height: 80vh;
+}
+
+.logs-user-info {
+    padding: var(--space-12);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-base);
+    margin-bottom: var(--space-16);
+    font-size: 0.875rem;
+}
+
+.logs-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.loading-text {
+    text-align: center;
+    padding: var(--space-24);
+    color: var(--text-secondary);
+}
+
+/* Log Entry */
+.log-entry {
+    padding: var(--space-12);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-base);
+    margin-bottom: var(--space-12);
+    background: var(--color-surface);
+}
+
+.log-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-8);
+}
+
+.log-event-type {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.log-timestamp {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.log-description {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    margin-bottom: var(--space-8);
+}
+
+.log-details {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    gap: var(--space-16);
+    flex-wrap: wrap;
+}
+
+.log-detail-item {
+    display: flex;
+    gap: var(--space-4);
+}
+
+.log-detail-label {
+    font-weight: 500;
+}
+
+.log-changes {
+    margin-top: var(--space-8);
+    padding: var(--space-8);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-family: monospace;
+}
+
+.no-logs {
+    text-align: center;
+    padding: var(--space-24);
+    color: var(--text-secondary);
+    font-style: italic;
+}
+

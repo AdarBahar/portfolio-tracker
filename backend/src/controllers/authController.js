@@ -32,7 +32,8 @@ function buildUserResponse(dbUser) {
     name: dbUser.name,
     profilePicture: dbUser.profile_picture || null,
     authProvider: dbUser.auth_provider,
-    isDemo: !!dbUser.is_demo
+    isDemo: !!dbUser.is_demo,
+    isAdmin: !!dbUser.is_admin
   };
 }
 
@@ -63,7 +64,7 @@ async function googleAuth(req, res) {
   try {
     // Try to find existing user by google_id or email (exclude soft deleted)
     const [rows] = await db.execute(
-      'SELECT id, email, name, auth_provider, is_demo, profile_picture, status FROM users WHERE (google_id = ? OR email = ?) AND deleted_at IS NULL LIMIT 1',
+      'SELECT id, email, name, auth_provider, is_demo, is_admin, profile_picture, status FROM users WHERE (google_id = ? OR email = ?) AND deleted_at IS NULL LIMIT 1',
       [googleId, email]
     );
 
@@ -96,6 +97,7 @@ async function googleAuth(req, res) {
         name,
         auth_provider: 'google',
         is_demo: 0,
+        is_admin: 0,
         profile_picture: picture,
         status: 'active'
       };
@@ -105,7 +107,8 @@ async function googleAuth(req, res) {
       id: dbUser.id,
       email: dbUser.email,
       authProvider: 'google',
-      isDemo: !!dbUser.is_demo
+      isDemo: !!dbUser.is_demo,
+      isAdmin: !!dbUser.is_admin
     };
 
     const token = jwt.sign(tokenPayload, JWT_SECRET || 'changeme-in-env', {

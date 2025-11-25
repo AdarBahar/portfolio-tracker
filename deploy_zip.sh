@@ -21,11 +21,17 @@ set -euo pipefail
 # index.html
 # login.html
 # trade-room.html
+# admin.html
 #
 # New files included (code review fixes):
 # - scripts/apiRetry.js (API retry with exponential backoff)
 # - scripts/notifications.js (toast notification system)
 # - styles/notifications.css (toast styles)
+#
+# New files included (admin feature):
+# - admin.html (admin panel page)
+# - scripts/admin.js (admin panel functionality)
+# - styles/admin.css (admin panel styles)
 #
 # Configuration:
 # - Frontend: Uses defaults from scripts/config.js (auto-detects production domain)
@@ -83,11 +89,13 @@ cp "$ROOT_DIR"/scripts/tradeRoom/*.js "$TMP_DIR/scripts/tradeRoom/"
 cp "$ROOT_DIR/index.html" "$TMP_DIR/index.html"
 cp "$ROOT_DIR/login.html" "$TMP_DIR/login.html"
 cp "$ROOT_DIR/trade-room.html" "$TMP_DIR/trade-room.html"
+cp "$ROOT_DIR/admin.html" "$TMP_DIR/admin.html"
 
 # Ensure HTML files have 644 permissions inside the archive
 chmod 644 "$TMP_DIR/index.html"
 chmod 644 "$TMP_DIR/login.html"
 chmod 644 "$TMP_DIR/trade-room.html"
+chmod 644 "$TMP_DIR/admin.html"
 
 # Verify critical files are present
 echo "[deploy_zip] Verifying critical files..."
@@ -95,8 +103,9 @@ MISSING_FILES=()
 
 # Check critical frontend files
 for file in "scripts/config.js" "scripts/apiRetry.js" "scripts/notifications.js" \
-            "scripts/app.js" "scripts/auth.js" "styles/notifications.css" \
-            "index.html" "login.html" "trade-room.html"; do
+            "scripts/app.js" "scripts/auth.js" "scripts/admin.js" \
+            "styles/notifications.css" "styles/admin.css" \
+            "index.html" "login.html" "trade-room.html" "admin.html"; do
     if [[ ! -f "$TMP_DIR/$file" ]]; then
         MISSING_FILES+=("$file")
     fi
@@ -141,6 +150,11 @@ echo "New files (code review fixes):"
 echo "  ✅ scripts/apiRetry.js"
 echo "  ✅ scripts/notifications.js"
 echo "  ✅ styles/notifications.css"
+echo ""
+echo "New files (admin feature):"
+echo "  ✅ admin.html"
+echo "  ✅ scripts/admin.js"
+echo "  ✅ styles/admin.css"
 echo ""
 echo "Configuration:"
 echo "  - Frontend: Uses defaults from config.js (auto-detects production)"

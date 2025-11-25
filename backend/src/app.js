@@ -13,10 +13,12 @@ const bullPenOrdersRoutes = require('./routes/bullPenOrdersRoutes');
 const myBullPensRoutes = require('./routes/myBullPensRoutes');
 const marketDataRoutes = require('./routes/marketDataRoutes');
 const leaderboardRoutes = require('./routes/leaderboardRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const openapi = require('../openapi.json');
 const db = require('./db');
 const { internalError } = require('./utils/apiError');
 const { authenticateToken } = require('./utils/authMiddleware');
+const { requireAdmin } = require('./utils/adminMiddleware');
 const logger = require('./utils/logger');
 
 // Optional base path for when the app is mounted under a sub-path
@@ -55,6 +57,9 @@ app.use(`${BASE_PATH}/api/docs`, swaggerUi.serve, swaggerUi.setup(openapi));
 
 // Auth routes
 app.use(`${BASE_PATH}/api/auth`, authRoutes);
+
+// Admin routes (require authentication + admin privileges)
+app.use(`${BASE_PATH}/api/admin`, authenticateToken, requireAdmin, adminRoutes);
 
 // Authenticated portfolio routes
 app.use(`${BASE_PATH}/api/holdings`, authenticateToken, holdingsRoutes);

@@ -33,6 +33,7 @@ CREATE TABLE users (
 
     -- Metadata
     is_demo BOOLEAN DEFAULT FALSE COMMENT 'TRUE for demo/guest users',
+    is_admin BOOLEAN DEFAULT FALSE COMMENT 'TRUE for admin users with elevated privileges',
     last_login DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -236,6 +237,7 @@ COMMENT='Orders placed by users within Bull Pen sessions';
 CREATE INDEX idx_users_google_id ON users(google_id);
 CREATE INDEX idx_users_auth_provider ON users(auth_provider);
 CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_is_admin ON users(is_admin);
 
 -- Per-user data queries
 CREATE INDEX idx_holdings_user_id ON holdings(user_id);

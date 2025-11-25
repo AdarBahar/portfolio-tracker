@@ -55,6 +55,7 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 | `google_refresh_token` | TEXT | | OAuth refresh token (optional) |
 | `google_token_expiry` | DATETIME | | Token expiration timestamp |
 | `is_demo` | BOOLEAN | DEFAULT FALSE | TRUE for demo/guest users |
+| `is_admin` | BOOLEAN | DEFAULT FALSE | TRUE for admin users with elevated privileges |
 | `last_login` | DATETIME | | Last login timestamp |
 | `created_at` | DATETIME | DEFAULT CURRENT_TIMESTAMP | Account creation time |
 | `updated_at` | DATETIME | ON UPDATE CURRENT_TIMESTAMP | Last update time |
@@ -65,10 +66,16 @@ See the interactive ER diagram rendered above, or view the Mermaid source in thi
 - Google auth requires `google_id`
 - Demo auth requires `is_demo = TRUE`
 
+**Admin Privileges:**
+- Admin users (`is_admin = TRUE`) can:
+  - Access admin pages
+  - Assign/remove admin privileges from other users
+
 **Indexes:**
 - `idx_users_google_id` on `google_id`
 - `idx_users_auth_provider` on `auth_provider`
 - `idx_users_email` on `email`
+- `idx_users_is_admin` on `is_admin`
 
 ---
 

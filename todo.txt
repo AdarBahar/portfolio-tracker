@@ -3,11 +3,14 @@ run code review on frontend and backend
 Login - add last used label
 Login - google opens devtools
 
+user_audit_log - still nothing is written 
+
 Admin page
-set user as Admin
 show users
 show logs per user
 show other data from tables
 
 UI automation testing to cover all flows
+
+update @/Users/adar.bahar/Code/portfolio-tracker/PROJECT_HISTORY.md based on the instructions on @/Users/adar.bahar/Code/portfolio-tracker/project_history_prompt.md 
 

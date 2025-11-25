@@ -454,12 +454,27 @@ function setupUserProfile() {
     // Create user profile element
     const userProfile = document.createElement('div');
     userProfile.className = 'user-profile';
+
+    // Build avatar HTML with optional admin badge
+    const avatarHTML = user.picture
+        ? `<div class="user-avatar-container">
+             <img src="${user.picture}" alt="${user.name}" class="user-avatar">
+             ${user.isAdmin ? '<span class="admin-badge" title="Admin">⭐</span>' : ''}
+           </div>`
+        : '';
+
+    // Build user details with optional admin link
+    const adminLinkHTML = user.isAdmin
+        ? '<a href="admin.html" class="admin-link">Admin Page</a>'
+        : '';
+
     userProfile.innerHTML = `
         <div class="user-info">
-            ${user.picture ? `<img src="${user.picture}" alt="${user.name}" class="user-avatar">` : ''}
+            ${avatarHTML}
             <div class="user-details">
                 <span class="user-name">${user.name}</span>
                 ${user.isDemo ? '<span class="demo-badge">Demo Mode</span>' : ''}
+                ${adminLinkHTML}
             </div>
         </div>
         <button class="btn btn-secondary logout-btn" id="logoutBtn">Logout</button>
