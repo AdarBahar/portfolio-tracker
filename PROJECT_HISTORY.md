@@ -579,13 +579,127 @@
     - Scripts help identify JWT_SECRET mismatches and configuration issues
 
 - **Open questions / next steps**:
-  - **Commit Changes**: Commit all admin feature files and fixes to git
-  - **Push to GitHub**: Push changes to remote repository
-  - **Production Deployment**: Deploy the fixed admin feature to production
-  - **Create Admin Users**: Set `is_admin = TRUE` for initial admin users in production database
+  - ✅ **Commit Changes**: Commit all admin feature files and fixes to git (completed - commit 447007d)
+  - ✅ **Push to GitHub**: Push changes to remote repository (completed)
+  - ✅ **Production Deployment**: Deploy the fixed admin feature to production (completed)
+  - ✅ **Create Admin Users**: Set `is_admin = TRUE` for initial admin users in production database (completed)
   - **Monitor Logs**: Watch backend logs for any JWT verification errors or admin access attempts
   - **Security Audit**: Review admin endpoints for additional security hardening
   - **Performance**: Monitor admin endpoint performance with larger user counts
   - **Cleanup Documentation**: Remove temporary debugging documentation files (DEBUG_*.md, FIX_*.md, TEST_*.md)
   - **Integration Tests**: Add automated tests for admin endpoints
   - **Error Handling**: Improve error messages in admin panel for better UX
+
+---
+
+## 2025-11-25 – User Audit Log Table Creation and Schema Fix
+
+- **Git reference**: `main` branch, uncommitted changes
+- **Summary**: Created the `user_audit_log` table that was missing from the database schema, causing 500 errors when viewing user audit logs in the admin panel.
+
+- **Details**:
+  - **Database Schema Updates** (`schema.mysql.sql`):
+    - Added `user_audit_log` table definition with all required columns:
+      - `id` - Auto-increment primary key
+      - `user_id` - Foreign key to users table
+      - `event_type` - Type of event (login, logout, profile_update, etc.)
+      - `event_category` - Category (authentication, profile, admin, security)
+      - `description` - Human-readable event description
+      - `ip_address` - User's IP address (supports IPv6)
+      - `user_agent` - Browser user agent string
+      - `previous_values` - JSON field for old values (for updates)
+      - `new_values` - JSON field for new values (for updates)
+      - `created_at` - Timestamp of event
+    - Added indexes for performance: user_id, event_type, event_category, created_at
+    - Added foreign key constraint with CASCADE delete
+    - Added DROP statement for table in cleanup section
+
+  - **Migration Scripts Created**:
+    - `backend/migrations/create-user-audit-log-table.sql` - Complete table creation script
+    - `backend/migrations/rollback-user-audit-log-table.sql` - Rollback script to drop table
+    - `COMPLETE_FIX_USER_AUDIT_LOG.sql` - Production fix script (DROP and CREATE)
+    - `FIX_USER_AUDIT_LOG_MISSING_COLUMN.sql` - ALTER TABLE to add missing columns
+
+  - **Documentation Created**:
+    - `DEPLOY_USER_AUDIT_LOG_TABLE.md` - Initial deployment guide
+    - `QUICK_FIX_AUDIT_LOG.md` - Quick fix guide for missing columns
+    - Links to relevant files:
+      - [Schema Definition](schema.mysql.sql) - Lines 52-86
+      - [Migration Script](backend/migrations/create-user-audit-log-table.sql)
+      - [Rollback Script](backend/migrations/rollback-user-audit-log-table.sql)
+      - [Complete Fix Script](COMPLETE_FIX_USER_AUDIT_LOG.sql)
+      - [Deployment Guide](DEPLOY_USER_AUDIT_LOG_TABLE.md)
+      - [Quick Fix Guide](QUICK_FIX_AUDIT_LOG.md)
+
+- **Reasoning / Motivation**:
+  - **Missing Table**: The `user_audit_log` table was documented in previous PROJECT_HISTORY.md entries but never actually created in the schema
+  - **500 Errors**: Admin panel "View Logs" feature was failing with 500 Internal Server Error
+  - **Backend Dependency**: The `adminController.js` getUserLogs() function queries this table (line 57-74)
+  - **Incomplete Initial Creation**: First production deployment attempt created table with missing columns (`event_category`, `description`, etc.)
+  - **Iterative Fixes**: Required multiple fixes as columns were discovered missing one by one
+  - **Complete Recreation**: Final solution was to DROP and CREATE table with all required columns
+
+- **Impact**:
+  - **Admin Panel Fixed**: "View Logs" feature now works without 500 errors
+  - **Empty Table**: Table exists but is empty (no audit logging implemented yet)
+  - **User Experience**: Admin panel shows "No audit logs found for this user" instead of crashing
+  - **Future Ready**: Table structure ready for audit logging implementation
+  - **No Breaking Changes**: Only affects admin panel, no impact on existing functionality
+  - **Database Integrity**: Foreign key constraint ensures referential integrity with users table
+
+- **Deployment / Ops notes**:
+  - **Production Deployment**:
+    - Run `COMPLETE_FIX_USER_AUDIT_LOG.sql` on production database
+    - Drops existing incomplete table and recreates with all columns
+    - Safe to run (table should be empty)
+  - **Verification**:
+    ```sql
+    SHOW COLUMNS FROM user_audit_log;
+    -- Should show 10 columns: id, user_id, event_type, event_category, description,
+    --                         ip_address, user_agent, previous_values, new_values, created_at
+
+    SELECT COUNT(*) FROM user_audit_log;
+    -- Should return 0 (empty table)
+    ```
+  - **Table Structure**:
+    - Engine: InnoDB
+    - Charset: utf8mb4_unicode_ci
+    - 4 indexes for query performance
+    - Foreign key with CASCADE delete
+    - JSON columns for storing change history
+  - **Future Audit Logging**:
+    - Table ready for audit log entries
+    - Will track: logins, logouts, profile changes, admin actions, security events
+    - Requires implementation in backend controllers (future work)
+
+- **Testing**:
+  - **Manual Testing**:
+    - ✅ Verified table creation with SHOW CREATE TABLE
+    - ✅ Verified all 10 columns exist with SHOW COLUMNS
+    - ✅ Verified table is empty with SELECT COUNT(*)
+    - ✅ Verified foreign key constraint exists
+    - ✅ Verified indexes created successfully
+    - ✅ Admin panel "View Logs" opens without errors
+    - ✅ Admin panel shows "No audit logs found for this user"
+    - ✅ No 500 errors in backend logs
+    - ✅ No JavaScript errors in browser console
+  - **API Testing**:
+    - ✅ `GET /api/admin/users/{id}/logs` returns 200 OK
+    - ✅ Response includes empty logs array: `{"user": {...}, "logs": [], "total": 0}`
+    - ✅ No SQL errors in backend logs
+  - **Error Cases**:
+    - ✅ Invalid user ID returns 404 Not Found
+    - ✅ Non-admin user returns 403 Forbidden
+    - ✅ Unauthenticated request returns 401 Unauthorized
+
+- **Open questions / next steps**:
+  - **Implement Audit Logging**: Add audit log entries in backend controllers
+    - `authController.js` - Log login/logout events
+    - `adminController.js` - Log admin status changes
+    - `userController.js` - Log profile updates (when implemented)
+  - **Audit Log Viewer Enhancements**: Add filtering, sorting, pagination for audit logs
+  - **Retention Policy**: Implement automatic cleanup of old audit logs (e.g., keep 90 days)
+  - **Export Functionality**: Add ability to export audit logs to CSV/JSON
+  - **Real-time Monitoring**: Add dashboard for monitoring security events
+  - **Alerting**: Send notifications for suspicious activity (multiple failed logins, etc.)
+  - **Compliance**: Ensure audit logging meets regulatory requirements (GDPR, SOC2, etc.)

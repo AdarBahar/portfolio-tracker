@@ -8,6 +8,7 @@
 DROP TABLE IF EXISTS transactions;
 DROP TABLE IF EXISTS dividends;
 DROP TABLE IF EXISTS holdings;
+DROP TABLE IF EXISTS user_audit_log;
 DROP TABLE IF EXISTS users;
 
 -- ============================================================================
@@ -47,6 +48,37 @@ CREATE TABLE users (
     )
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 COMMENT='User accounts supporting Google OAuth, email/password, and demo authentication';
+
+-- ============================================================================
+-- USER AUDIT LOG TABLE
+-- Tracks all user-related events for security monitoring and compliance
+-- ============================================================================
+
+CREATE TABLE user_audit_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    event_type VARCHAR(100) NOT NULL COMMENT 'Type of event (e.g., login, logout, profile_update)',
+    event_category VARCHAR(50) NOT NULL COMMENT 'Category: authentication, profile, admin, security, etc.',
+    description TEXT COMMENT 'Human-readable description of the event',
+    ip_address VARCHAR(45) COMMENT 'IP address of the user (supports IPv6)',
+    user_agent TEXT COMMENT 'User agent string from the request',
+    previous_values JSON COMMENT 'Previous values before the change (for updates)',
+    new_values JSON COMMENT 'New values after the change (for updates)',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'When the event occurred',
+
+    -- Indexes for performance
+    INDEX idx_user_audit_log_user_id (user_id),
+    INDEX idx_user_audit_log_event_type (event_type),
+    INDEX idx_user_audit_log_event_category (event_category),
+    INDEX idx_user_audit_log_created_at (created_at),
+
+    -- Foreign key constraint
+    CONSTRAINT fk_user_audit_log_user_id
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+COMMENT='Audit log for tracking all user-related events';
 
 -- ============================================================================
 -- HOLDINGS TABLE
