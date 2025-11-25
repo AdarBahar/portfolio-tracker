@@ -15,10 +15,12 @@ import { setupSparklineInteractions } from './interactions.js';
 import { setupModals } from './modals.js';
 import { setupThemeToggle } from './theme.js';
 import { TickerAutocomplete } from './tickerAutocomplete.js';
+import { showWarning } from './notifications.js';
 
 // Global app state
 let appState;
 let priceUpdateInterval;
+let priceUpdateFailureCount = 0;
 
 /**
  * Update entire dashboard
@@ -39,6 +41,9 @@ function updateDashboard() {
  */
 async function updatePrices() {
     if (!appState) return;
+
+    // Get config (will be available after initialization)
+    const config = await configPromise;
 
     try {
         const newPrices = {};
@@ -100,8 +105,22 @@ async function updatePrices() {
         }
 
         appState.updatePrices(newPrices, newTrendData);
+
+        // Reset failure count on success
+        priceUpdateFailureCount = 0;
     } catch (error) {
         console.error('Error updating prices:', error);
+
+        // Increment failure count
+        priceUpdateFailureCount++;
+
+        // Show notification if threshold reached
+        if (priceUpdateFailureCount >= config.priceUpdateFailureThreshold) {
+            showWarning(
+                `Price updates have failed ${priceUpdateFailureCount} times. Using cached prices.`,
+                config.notificationDurationMs
+            );
+        }
     }
 }
 

@@ -4,14 +4,26 @@
  */
 
 import { authManager } from '../auth.js';
+import { fetchWithRetry } from '../apiRetry.js';
+import configPromise, { validateAgainstConfig } from '../config.js';
 
 export class BullPenAPI {
     constructor(apiUrl) {
         this.apiUrl = apiUrl;
+        this.config = null;
+        this._initConfig();
+    }
+
+    /**
+     * Initialize configuration
+     */
+    async _initConfig() {
+        this.config = await configPromise;
     }
 
     /**
      * Get authorization headers
+     * Uses whitelisted headers from authManager to prevent header injection
      */
     _getHeaders() {
         const headers = {
@@ -30,6 +42,80 @@ export class BullPenAPI {
             throw new Error(error.error || `HTTP ${response.status}`);
         }
         return response.json();
+    }
+
+    /**
+     * Validate payload size and shape before sending
+     * @param {Object} data - Data to validate
+     * @param {string} operation - Operation name for error messages
+     * @throws {Error} If validation fails
+     */
+    async _validatePayload(data, operation) {
+        if (!this.config) {
+            this.config = await configPromise;
+        }
+
+        // Validate text fields
+        if (data.description) {
+            const result = validateAgainstConfig(
+                this.config,
+                'maxTextFieldLength',
+                data.description,
+                'Description'
+            );
+            if (!result.valid) {
+                throw new Error(`${operation}: ${result.error}`);
+            }
+        }
+
+        if (data.rules) {
+            const result = validateAgainstConfig(
+                this.config,
+                'maxTextFieldLength',
+                data.rules,
+                'Rules'
+            );
+            if (!result.valid) {
+                throw new Error(`${operation}: ${result.error}`);
+            }
+        }
+
+        if (data.notes) {
+            const result = validateAgainstConfig(
+                this.config,
+                'maxTextFieldLength',
+                data.notes,
+                'Notes'
+            );
+            if (!result.valid) {
+                throw new Error(`${operation}: ${result.error}`);
+            }
+        }
+
+        // Validate numeric fields for orders
+        if (data.shares !== undefined) {
+            const result = validateAgainstConfig(
+                this.config,
+                'maxSharesPerOrder',
+                data.shares,
+                'Shares'
+            );
+            if (!result.valid) {
+                throw new Error(`${operation}: ${result.error}`);
+            }
+        }
+
+        if (data.price !== undefined) {
+            const result = validateAgainstConfig(
+                this.config,
+                'maxPricePerShare',
+                data.price,
+                'Price'
+            );
+            if (!result.valid) {
+                throw new Error(`${operation}: ${result.error}`);
+            }
+        }
     }
 
     /**
@@ -67,7 +153,10 @@ export class BullPenAPI {
      * Create new BullPen
      */
     async createBullPen(data) {
-        const response = await fetch(`${this.apiUrl}/bull-pens`, {
+        // Validate payload before sending
+        await this._validatePayload(data, 'Create BullPen');
+
+        const response = await fetchWithRetry(`${this.apiUrl}/bull-pens`, {
             method: 'POST',
             headers: this._getHeaders(),
             body: JSON.stringify(data),
@@ -79,7 +168,10 @@ export class BullPenAPI {
      * Update BullPen
      */
     async updateBullPen(id, data) {
-        const response = await fetch(`${this.apiUrl}/bull-pens/${id}`, {
+        // Validate payload before sending
+        await this._validatePayload(data, 'Update BullPen');
+
+        const response = await fetchWithRetry(`${this.apiUrl}/bull-pens/${id}`, {
             method: 'PATCH',
             headers: this._getHeaders(),
             body: JSON.stringify(data),
@@ -124,7 +216,10 @@ export class BullPenAPI {
      * Place order
      */
     async placeOrder(bullPenId, orderData) {
-        const response = await fetch(`${this.apiUrl}/bull-pens/${bullPenId}/orders`, {
+        // Validate payload before sending
+        await this._validatePayload(orderData, 'Place Order');
+
+        const response = await fetchWithRetry(`${this.apiUrl}/bull-pens/${bullPenId}/orders`, {
             method: 'POST',
             headers: this._getHeaders(),
             body: JSON.stringify(orderData),
@@ -178,10 +273,26 @@ export class BullPenAPI {
      * Get market data for multiple symbols
      */
     async getMultipleMarketData(symbols) {
+        if (!this.config) {
+            this.config = await configPromise;
+        }
+
         // Deduplicate symbols to avoid wasting backend work
         const uniqueSymbols = [...new Set(symbols)];
+
+        // Validate symbol count
+        const result = validateAgainstConfig(
+            this.config,
+            'maxSymbolsPerRequest',
+            uniqueSymbols,
+            'Symbols'
+        );
+        if (!result.valid) {
+            throw new Error(`Get Market Data: ${result.error}`);
+        }
+
         const params = new URLSearchParams({ symbols: uniqueSymbols.join(',') });
-        const response = await fetch(`${this.apiUrl}/market-data?${params}`, {
+        const response = await fetchWithRetry(`${this.apiUrl}/market-data?${params}`, {
             headers: this._getHeaders(),
         });
         return this._handleResponse(response);

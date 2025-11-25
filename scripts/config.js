@@ -19,6 +19,37 @@ const defaultConfig = {
     // App settings
     appName: 'Portfolio Tracker',
     version: '1.0.0',
+
+    // Price update notifications
+    priceUpdateFailureThreshold: 5,
+    notificationDurationMs: 5000,
+
+    // API retry and backoff
+    apiMaxRetries: 3,
+    apiRetryInitialDelayMs: 1000,
+    apiRetryBackoffMultiplier: 2,
+    apiRetryMaxDelayMs: 10000,
+    apiRetryableStatusCodes: [408, 429, 500, 502, 503, 504],
+
+    // Payload size validation
+    maxSymbolsPerRequest: 50,
+    maxTextFieldLength: 5000,
+    maxSharesPerOrder: 1000000,
+    maxPricePerShare: 100000,
+    maxBulkItems: 100,
+
+    // Performance and caching
+    enableDomBatching: true,
+    enableMetricsCaching: true,
+    finnhubCacheTtlMs: 60000,
+
+    // Security
+    allowedAuthHeaderKeys: ['Authorization', 'X-App-Version'],
+    strictHeaderValidation: true,
+
+    // Development and debugging
+    verboseApiLogging: false,
+    enablePerformanceMonitoring: false,
 };
 
 // Load configuration asynchronously
@@ -68,4 +99,55 @@ async function loadConfig() {
 
 // Export the async loader
 export default loadConfig();
+
+/**
+ * Validate a value against config constraints
+ * @param {Object} config - Configuration object
+ * @param {string} configKey - Config key to use for validation
+ * @param {any} value - Value to validate
+ * @param {string} fieldName - Field name for error messages
+ * @returns {Object} { valid: boolean, error: string|null }
+ */
+export function validateAgainstConfig(config, configKey, value, fieldName = 'Value') {
+    const limit = config[configKey];
+
+    if (limit === undefined) {
+        return { valid: true, error: null };
+    }
+
+    // String length validation
+    if (configKey === 'maxTextFieldLength') {
+        if (typeof value !== 'string') {
+            return { valid: false, error: `${fieldName} must be a string` };
+        }
+        if (value.length > limit) {
+            return { valid: false, error: `${fieldName} exceeds maximum length of ${limit} characters` };
+        }
+    }
+
+    // Numeric validation
+    if (configKey === 'maxSharesPerOrder' || configKey === 'maxPricePerShare') {
+        if (typeof value !== 'number' || isNaN(value)) {
+            return { valid: false, error: `${fieldName} must be a number` };
+        }
+        if (value > limit) {
+            return { valid: false, error: `${fieldName} exceeds maximum of ${limit}` };
+        }
+        if (value <= 0) {
+            return { valid: false, error: `${fieldName} must be greater than 0` };
+        }
+    }
+
+    // Array length validation
+    if (configKey === 'maxSymbolsPerRequest' || configKey === 'maxBulkItems') {
+        if (!Array.isArray(value)) {
+            return { valid: false, error: `${fieldName} must be an array` };
+        }
+        if (value.length > limit) {
+            return { valid: false, error: `${fieldName} exceeds maximum of ${limit} items` };
+        }
+    }
+
+    return { valid: true, error: null };
+}
 
