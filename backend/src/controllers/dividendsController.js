@@ -6,7 +6,7 @@ async function getDividends(req, res) {
   try {
     const userId = req.user && req.user.id;
     const [rows] = await db.execute(
-      'SELECT id, ticker, amount, shares, date, created_at AS createdAt FROM dividends WHERE user_id = ? ORDER BY date DESC, id DESC',
+      'SELECT id, ticker, amount, shares, date, created_at AS createdAt FROM dividends WHERE user_id = ? AND deleted_at IS NULL ORDER BY date DESC, id DESC',
       [userId]
     );
 
@@ -43,7 +43,7 @@ async function createDividend(req, res) {
     );
 
     const [rows] = await db.execute(
-      'SELECT id, ticker, amount, shares, date, created_at AS createdAt FROM dividends WHERE id = ?',
+      'SELECT id, ticker, amount, shares, date, created_at AS createdAt FROM dividends WHERE id = ? AND deleted_at IS NULL',
       [result.insertId]
     );
 
@@ -74,7 +74,7 @@ async function updateDividend(req, res) {
 
   try {
     const [result] = await db.execute(
-      'UPDATE dividends SET ticker = ?, amount = ?, shares = ?, date = ? WHERE id = ? AND user_id = ?',
+      'UPDATE dividends SET ticker = ?, amount = ?, shares = ?, date = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
       [
         ticker,
         amount,
@@ -90,7 +90,7 @@ async function updateDividend(req, res) {
     }
 
     const [rows] = await db.execute(
-      'SELECT id, ticker, amount, shares, date, created_at AS createdAt FROM dividends WHERE id = ? AND user_id = ?',
+      'SELECT id, ticker, amount, shares, date, created_at AS createdAt FROM dividends WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
       [dividendId, userId]
     );
 
@@ -110,8 +110,9 @@ async function deleteDividend(req, res) {
   }
 
   try {
+    // Soft delete: set deleted_at timestamp
     const [result] = await db.execute(
-      'DELETE FROM dividends WHERE id = ? AND user_id = ?',
+      'UPDATE dividends SET deleted_at = NOW() WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
       [dividendId, userId]
     );
 

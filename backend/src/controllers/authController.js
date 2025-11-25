@@ -61,9 +61,9 @@ async function googleAuth(req, res) {
   }
 
   try {
-    // Try to find existing user by google_id or email
+    // Try to find existing user by google_id or email (exclude soft deleted)
     const [rows] = await db.execute(
-      'SELECT id, email, name, auth_provider, is_demo, profile_picture FROM users WHERE google_id = ? OR email = ? LIMIT 1',
+      'SELECT id, email, name, auth_provider, is_demo, profile_picture, status FROM users WHERE (google_id = ? OR email = ?) AND deleted_at IS NULL LIMIT 1',
       [googleId, email]
     );
 
@@ -72,15 +72,21 @@ async function googleAuth(req, res) {
     if (rows.length > 0) {
       dbUser = rows[0];
 
+      // Check user status
+      if (dbUser.status !== 'active') {
+        logger.warn(`Login attempt for non-active user: ${email}, status: ${dbUser.status}`);
+        return unauthorized(res, `Account is ${dbUser.status}. Please contact support.`);
+      }
+
       // Update user with latest Google data
       await db.execute(
         'UPDATE users SET google_id = ?, name = ?, profile_picture = ?, auth_provider = ?, last_login = NOW() WHERE id = ?',
         [googleId, name, picture, 'google', dbUser.id]
       );
     } else {
-      // Create new user
+      // Create new user with active status
       const [result] = await db.execute(
-        'INSERT INTO users (email, name, auth_provider, google_id, profile_picture, is_demo, last_login) VALUES (?, ?, ?, ?, ?, FALSE, NOW())',
+        'INSERT INTO users (email, name, auth_provider, google_id, profile_picture, is_demo, status, last_login) VALUES (?, ?, ?, ?, ?, FALSE, "active", NOW())',
         [email, name, 'google', googleId, picture]
       );
 
@@ -90,7 +96,8 @@ async function googleAuth(req, res) {
         name,
         auth_provider: 'google',
         is_demo: 0,
-        profile_picture: picture
+        profile_picture: picture,
+        status: 'active'
       };
     }
 

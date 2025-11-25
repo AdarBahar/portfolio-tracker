@@ -105,7 +105,7 @@ async function listBullPens(req, res) {
 
   try {
     const params = [];
-    let where = '1=1';
+    let where = 'deleted_at IS NULL';
 
     if (state) {
       where += ' AND state = ?';
@@ -139,7 +139,7 @@ async function getBullPen(req, res) {
   const bullPenId = req.params.id;
 
   try {
-    const [rows] = await db.execute('SELECT * FROM bull_pens WHERE id = ?', [bullPenId]);
+    const [rows] = await db.execute('SELECT * FROM bull_pens WHERE id = ? AND deleted_at IS NULL', [bullPenId]);
     if (!rows.length) {
       return notFound(res, 'Bull pen not found');
     }
@@ -246,7 +246,7 @@ async function deleteBullPen(req, res) {
 
   try {
     const [existingRows] = await db.execute(
-      'SELECT * FROM bull_pens WHERE id = ?',
+      'SELECT * FROM bull_pens WHERE id = ? AND deleted_at IS NULL',
       [bullPenId]
     );
 
@@ -259,9 +259,9 @@ async function deleteBullPen(req, res) {
       return forbidden(res, 'Only the host can delete this bull pen');
     }
 
-    // Delete the bull pen (cascade will delete memberships, positions, orders, leaderboard)
+    // Soft delete: set deleted_at timestamp
     const [result] = await db.execute(
-      'DELETE FROM bull_pens WHERE id = ?',
+      'UPDATE bull_pens SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL',
       [bullPenId]
     );
 

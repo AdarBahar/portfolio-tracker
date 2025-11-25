@@ -88,7 +88,7 @@ async function listBullPenMembers(req, res) {
 
   try {
     const [members] = await db.execute(
-      'SELECT * FROM bull_pen_memberships WHERE bull_pen_id = ? ORDER BY joined_at ASC',
+      'SELECT * FROM bull_pen_memberships WHERE bull_pen_id = ? AND deleted_at IS NULL ORDER BY joined_at ASC',
       [bullPenId]
     );
 
@@ -105,7 +105,7 @@ async function approveMembership(req, res) {
   const membershipId = req.params.membershipId;
 
   try {
-    const [[bullPen]] = await db.execute('SELECT * FROM bull_pens WHERE id = ?', [bullPenId]);
+    const [[bullPen]] = await db.execute('SELECT * FROM bull_pens WHERE id = ? AND deleted_at IS NULL', [bullPenId]);
     if (!bullPen) {
       return notFound(res, 'Bull pen not found');
     }
@@ -115,7 +115,7 @@ async function approveMembership(req, res) {
     }
 
     const [[membership]] = await db.execute(
-      'SELECT * FROM bull_pen_memberships WHERE id = ? AND bull_pen_id = ?',
+      'SELECT * FROM bull_pen_memberships WHERE id = ? AND bull_pen_id = ? AND deleted_at IS NULL',
       [membershipId, bullPenId]
     );
 
@@ -128,7 +128,7 @@ async function approveMembership(req, res) {
     }
 
     await db.execute(
-      'UPDATE bull_pen_memberships SET status = "active" WHERE id = ?',
+      'UPDATE bull_pen_memberships SET status = "active" WHERE id = ? AND deleted_at IS NULL',
       [membershipId]
     );
 
@@ -150,7 +150,7 @@ async function rejectMembership(req, res) {
   const membershipId = req.params.membershipId;
 
   try {
-    const [[bullPen]] = await db.execute('SELECT * FROM bull_pens WHERE id = ?', [bullPenId]);
+    const [[bullPen]] = await db.execute('SELECT * FROM bull_pens WHERE id = ? AND deleted_at IS NULL', [bullPenId]);
     if (!bullPen) {
       return notFound(res, 'Bull pen not found');
     }
@@ -160,7 +160,7 @@ async function rejectMembership(req, res) {
     }
 
     const [[membership]] = await db.execute(
-      'SELECT * FROM bull_pen_memberships WHERE id = ? AND bull_pen_id = ?',
+      'SELECT * FROM bull_pen_memberships WHERE id = ? AND bull_pen_id = ? AND deleted_at IS NULL',
       [membershipId, bullPenId]
     );
 
@@ -173,7 +173,7 @@ async function rejectMembership(req, res) {
     }
 
     await db.execute(
-      'UPDATE bull_pen_memberships SET status = "kicked" WHERE id = ?',
+      'UPDATE bull_pen_memberships SET status = "kicked" WHERE id = ? AND deleted_at IS NULL',
       [membershipId]
     );
 
@@ -195,7 +195,7 @@ async function leaveBullPen(req, res) {
 
   try {
     const [[membership]] = await db.execute(
-      'SELECT * FROM bull_pen_memberships WHERE bull_pen_id = ? AND user_id = ?',
+      'SELECT * FROM bull_pen_memberships WHERE bull_pen_id = ? AND user_id = ? AND deleted_at IS NULL',
       [bullPenId, userId]
     );
 
@@ -208,12 +208,12 @@ async function leaveBullPen(req, res) {
     }
 
     await db.execute(
-      'UPDATE bull_pen_memberships SET status = "left" WHERE id = ?',
+      'UPDATE bull_pen_memberships SET status = "left" WHERE id = ? AND deleted_at IS NULL',
       [membership.id]
     );
 
     const [[updated]] = await db.execute(
-      'SELECT * FROM bull_pen_memberships WHERE id = ?',
+      'SELECT * FROM bull_pen_memberships WHERE id = ? AND deleted_at IS NULL',
       [membership.id]
     );
 
@@ -232,7 +232,7 @@ async function listMyBullPens(req, res) {
       `SELECT bp.*
        FROM bull_pens bp
        JOIN bull_pen_memberships m ON m.bull_pen_id = bp.id
-       WHERE m.user_id = ?
+       WHERE m.user_id = ? AND bp.deleted_at IS NULL AND m.deleted_at IS NULL
        ORDER BY bp.start_time IS NULL, bp.start_time DESC, bp.id DESC`,
       [userId]
     );

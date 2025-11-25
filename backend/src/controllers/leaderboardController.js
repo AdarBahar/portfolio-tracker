@@ -11,41 +11,41 @@ const logger = require('../utils/logger');
  */
 async function calculatePortfolioValue(bullPenId, userId, connection) {
   const conn = connection || db;
-  
+
   // Get user's cash balance
   const [membershipRows] = await conn.execute(
-    'SELECT cash FROM bull_pen_memberships WHERE bull_pen_id = ? AND user_id = ? AND status = "active"',
+    'SELECT cash FROM bull_pen_memberships WHERE bull_pen_id = ? AND user_id = ? AND status = "active" AND deleted_at IS NULL',
     [bullPenId, userId]
   );
-  
+
   if (membershipRows.length === 0) {
     return { cash: 0, positionsValue: 0, totalValue: 0 };
   }
-  
+
   const cash = Number(membershipRows[0].cash);
-  
+
   // Get user's positions
   const [positionRows] = await conn.execute(
-    'SELECT symbol, qty FROM bull_pen_positions WHERE bull_pen_id = ? AND user_id = ?',
+    'SELECT symbol, qty FROM bull_pen_positions WHERE bull_pen_id = ? AND user_id = ? AND deleted_at IS NULL',
     [bullPenId, userId]
   );
-  
+
   let positionsValue = 0;
-  
+
   for (const position of positionRows) {
     // Get current price from market_data
     const [priceRows] = await conn.execute(
       'SELECT current_price FROM market_data WHERE symbol = ?',
       [position.symbol]
     );
-    
+
     if (priceRows.length > 0) {
       const currentPrice = Number(priceRows[0].current_price);
       const qty = Number(position.qty);
       positionsValue += qty * currentPrice;
     }
   }
-  
+
   return {
     cash,
     positionsValue,
@@ -67,29 +67,29 @@ async function getLeaderboard(req, res) {
   
   try {
     // Verify bull pen exists
-    const [bullPenRows] = await db.execute('SELECT * FROM bull_pens WHERE id = ?', [bullPenId]);
+    const [bullPenRows] = await db.execute('SELECT * FROM bull_pens WHERE id = ? AND deleted_at IS NULL', [bullPenId]);
     const bullPen = bullPenRows[0];
-    
+
     if (!bullPen) {
       return notFound(res, 'Bull pen not found');
     }
-    
+
     // Verify user is a member
     const [membershipRows] = await db.execute(
-      'SELECT * FROM bull_pen_memberships WHERE bull_pen_id = ? AND user_id = ?',
+      'SELECT * FROM bull_pen_memberships WHERE bull_pen_id = ? AND user_id = ? AND deleted_at IS NULL',
       [bullPenId, userId]
     );
-    
+
     if (membershipRows.length === 0) {
       return forbidden(res, 'You must be a member of this bull pen to view the leaderboard');
     }
-    
+
     // Get all active members
     const [members] = await db.execute(
       `SELECT m.user_id, m.cash, u.name, u.email
        FROM bull_pen_memberships m
        JOIN users u ON m.user_id = u.id
-       WHERE m.bull_pen_id = ? AND m.status = 'active'`,
+       WHERE m.bull_pen_id = ? AND m.status = 'active' AND m.deleted_at IS NULL AND u.deleted_at IS NULL`,
       [bullPenId]
     );
     
@@ -101,7 +101,7 @@ async function getLeaderboard(req, res) {
       
       // Get last trade timestamp
       const [lastTradeRows] = await db.execute(
-        'SELECT MAX(placed_at) as last_trade_at FROM bull_pen_orders WHERE bull_pen_id = ? AND user_id = ? AND status = "filled"',
+        'SELECT MAX(placed_at) as last_trade_at FROM bull_pen_orders WHERE bull_pen_id = ? AND user_id = ? AND status = "filled" AND deleted_at IS NULL',
         [bullPenId, member.user_id]
       );
       

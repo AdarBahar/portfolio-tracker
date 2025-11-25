@@ -6,7 +6,7 @@ async function getHoldings(req, res) {
   try {
     const userId = req.user && req.user.id;
     const [rows] = await db.execute(
-      'SELECT id, ticker, name, shares, purchase_price AS purchasePrice, purchase_date AS purchaseDate, sector, asset_class AS assetClass, created_at AS createdAt, updated_at AS updatedAt FROM holdings WHERE user_id = ? ORDER BY ticker',
+      'SELECT id, ticker, name, shares, purchase_price AS purchasePrice, purchase_date AS purchaseDate, sector, asset_class AS assetClass, created_at AS createdAt, updated_at AS updatedAt FROM holdings WHERE user_id = ? AND deleted_at IS NULL ORDER BY ticker',
       [userId]
     );
     return res.json({ holdings: rows });
@@ -34,7 +34,7 @@ async function createHolding(req, res) {
 
   try {
     const [result] = await db.execute(
-      'INSERT INTO holdings (user_id, ticker, name, shares, purchase_price, purchase_date, sector, asset_class) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO holdings (user_id, ticker, name, shares, purchase_price, purchase_date, sector, asset_class, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, "active")',
       [
         userId,
         ticker,
@@ -48,7 +48,7 @@ async function createHolding(req, res) {
     );
 
     const [rows] = await db.execute(
-      'SELECT id, ticker, name, shares, purchase_price AS purchasePrice, purchase_date AS purchaseDate, sector, asset_class AS assetClass, created_at AS createdAt, updated_at AS updatedAt FROM holdings WHERE id = ?',
+      'SELECT id, ticker, name, shares, purchase_price AS purchasePrice, purchase_date AS purchaseDate, sector, asset_class AS assetClass, created_at AS createdAt, updated_at AS updatedAt FROM holdings WHERE id = ? AND deleted_at IS NULL',
       [result.insertId]
     );
 
@@ -82,7 +82,7 @@ async function updateHolding(req, res) {
 
   try {
     const [result] = await db.execute(
-      'UPDATE holdings SET ticker = ?, name = ?, shares = ?, purchase_price = ?, purchase_date = ?, sector = ?, asset_class = ? WHERE id = ? AND user_id = ?',
+      'UPDATE holdings SET ticker = ?, name = ?, shares = ?, purchase_price = ?, purchase_date = ?, sector = ?, asset_class = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
       [
         ticker,
         name,
@@ -101,7 +101,7 @@ async function updateHolding(req, res) {
     }
 
     const [rows] = await db.execute(
-      'SELECT id, ticker, name, shares, purchase_price AS purchasePrice, purchase_date AS purchaseDate, sector, asset_class AS assetClass, created_at AS createdAt, updated_at AS updatedAt FROM holdings WHERE id = ? AND user_id = ?',
+      'SELECT id, ticker, name, shares, purchase_price AS purchasePrice, purchase_date AS purchaseDate, sector, asset_class AS assetClass, created_at AS createdAt, updated_at AS updatedAt FROM holdings WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
       [holdingId, userId]
     );
 
@@ -121,8 +121,9 @@ async function deleteHolding(req, res) {
   }
 
   try {
+    // Soft delete: set deleted_at timestamp
     const [result] = await db.execute(
-      'DELETE FROM holdings WHERE id = ? AND user_id = ?',
+      'UPDATE holdings SET deleted_at = NOW() WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
       [holdingId, userId]
     );
 
