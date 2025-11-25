@@ -1,7 +1,13 @@
-Add to smoketest - Google credentials for test user
 save cache for tikers data, to reduce API calls
-
+run code review on frontend and backend
 Login - add last used label
 Login - google opens devtools
 
-prod log file - no timestamp
+Admin page
+set user as Admin
+show users
+show logs per user
+show other data from tables
+
+UI automation testing to cover all flows
+
