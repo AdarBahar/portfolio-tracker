@@ -3,6 +3,7 @@ const { OAuth2Client } = require('google-auth-library');
 const db = require('../db');
 const { badRequest, unauthorized, internalError } = require('../utils/apiError');
 const logger = require('../utils/logger');
+const auditLog = require('../utils/auditLog');
 
 const { GOOGLE_CLIENT_ID, JWT_SECRET } = process.env;
 
@@ -70,12 +71,25 @@ async function googleAuth(req, res) {
 
     let dbUser;
 
+    let isNewUser = false;
+
     if (rows.length > 0) {
       dbUser = rows[0];
 
       // Check user status
       if (dbUser.status !== 'active') {
         logger.warn(`Login attempt for non-active user: ${email}, status: ${dbUser.status}`);
+
+        // Log failed login attempt
+        await auditLog.log({
+          userId: dbUser.id,
+          eventType: 'login_failed',
+          eventCategory: 'authentication',
+          description: `Login attempt failed: account status is ${dbUser.status}`,
+          req,
+          newValues: { reason: `account_${dbUser.status}`, email }
+        });
+
         return unauthorized(res, `Account is ${dbUser.status}. Please contact support.`);
       }
 
@@ -86,6 +100,7 @@ async function googleAuth(req, res) {
       );
     } else {
       // Create new user with active status
+      isNewUser = true;
       const [result] = await db.execute(
         'INSERT INTO users (email, name, auth_provider, google_id, profile_picture, is_demo, status, last_login) VALUES (?, ?, ?, ?, ?, FALSE, "active", NOW())',
         [email, name, 'google', googleId, picture]
@@ -101,6 +116,21 @@ async function googleAuth(req, res) {
         profile_picture: picture,
         status: 'active'
       };
+
+      // Log user creation
+      await auditLog.log({
+        userId: dbUser.id,
+        eventType: 'user_created',
+        eventCategory: 'account',
+        description: `New user account created via Google OAuth`,
+        req,
+        newValues: {
+          email: dbUser.email,
+          name: dbUser.name,
+          auth_provider: 'google',
+          status: 'active'
+        }
+      });
     }
 
     const tokenPayload = {
@@ -114,6 +144,21 @@ async function googleAuth(req, res) {
     const token = jwt.sign(tokenPayload, JWT_SECRET || 'changeme-in-env', {
       expiresIn: '7d'
     });
+
+    // Log successful login (only for existing users, not new registrations)
+    if (!isNewUser) {
+      await auditLog.log({
+        userId: dbUser.id,
+        eventType: 'login_success',
+        eventCategory: 'authentication',
+        description: `User logged in successfully via Google OAuth`,
+        req,
+        newValues: {
+          auth_provider: 'google',
+          email: dbUser.email
+        }
+      });
+    }
 
     return res.json({
       user: buildUserResponse(dbUser),

@@ -1,6 +1,7 @@
 const db = require('../db');
 const { internalError, notFound } = require('../utils/apiError');
 const logger = require('../utils/logger');
+const auditLog = require('../utils/auditLog');
 
 /**
  * List all users (admin only)
@@ -113,6 +114,20 @@ async function updateUserAdminStatus(req, res) {
   }
 
   try {
+    // Get target user info before update
+    const [targetUserRows] = await db.execute(
+      'SELECT id, email, name, is_admin FROM users WHERE id = ? AND deleted_at IS NULL',
+      [userId]
+    );
+
+    if (targetUserRows.length === 0) {
+      return notFound(res, 'User not found');
+    }
+
+    const targetUser = targetUserRows[0];
+    const previousIsAdmin = !!targetUser.is_admin;
+
+    // Update admin status
     const [result] = await db.execute(
       'UPDATE users SET is_admin = ? WHERE id = ? AND deleted_at IS NULL',
       [isAdmin, userId]
@@ -124,9 +139,40 @@ async function updateUserAdminStatus(req, res) {
 
     logger.log(`[Admin] User ${req.user.id} (${req.user.email}) ${isAdmin ? 'granted' : 'revoked'} admin privileges for user ${userId}`);
 
-    return res.json({ 
-      success: true, 
-      message: `Admin privileges ${isAdmin ? 'granted' : 'revoked'}` 
+    // Log admin privilege change for the target user
+    await auditLog.log({
+      userId: parseInt(userId),
+      eventType: isAdmin ? 'admin_privilege_granted' : 'admin_privilege_revoked',
+      eventCategory: 'admin',
+      description: `Admin privileges ${isAdmin ? 'granted' : 'revoked'} by ${req.user.email}`,
+      req,
+      previousValues: {
+        is_admin: previousIsAdmin,
+        changed_by: req.user.email
+      },
+      newValues: {
+        is_admin: isAdmin,
+        changed_by: req.user.email
+      }
+    });
+
+    // Also log the action for the admin who made the change
+    await auditLog.log({
+      userId: req.user.id,
+      eventType: isAdmin ? 'admin_privilege_granted' : 'admin_privilege_revoked',
+      eventCategory: 'admin',
+      description: `${isAdmin ? 'Granted' : 'Revoked'} admin privileges for user ${targetUser.email}`,
+      req,
+      newValues: {
+        target_user_id: parseInt(userId),
+        target_user_email: targetUser.email,
+        is_admin: isAdmin
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: `Admin privileges ${isAdmin ? 'granted' : 'revoked'}`
     });
   } catch (err) {
     logger.error('[Admin] Error updating user admin status:', err);

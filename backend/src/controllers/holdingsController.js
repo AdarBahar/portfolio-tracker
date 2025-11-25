@@ -1,6 +1,7 @@
 const db = require('../db');
 const { badRequest, internalError, notFound } = require('../utils/apiError');
 const logger = require('../utils/logger');
+const auditLog = require('../utils/auditLog');
 
 async function getHoldings(req, res) {
   try {
@@ -52,6 +53,16 @@ async function createHolding(req, res) {
       [result.insertId]
     );
 
+    // Log holding creation
+    await auditLog.log({
+      userId,
+      eventType: 'holding_created',
+      eventCategory: 'data',
+      description: `Created holding for ${ticker}`,
+      req,
+      newValues: { ticker, name, shares, purchasePrice, purchaseDate, sector, assetClass }
+    });
+
     return res.status(201).json({ holding: rows[0] });
   } catch (err) {
     logger.error('Error creating holding:', err);
@@ -81,6 +92,18 @@ async function updateHolding(req, res) {
   }
 
   try {
+    // Fetch old values before update
+    const [oldRows] = await db.execute(
+      'SELECT ticker, name, shares, purchase_price AS purchasePrice, purchase_date AS purchaseDate, sector, asset_class AS assetClass FROM holdings WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
+      [holdingId, userId]
+    );
+
+    if (oldRows.length === 0) {
+      return notFound(res, 'Holding not found');
+    }
+
+    const oldHolding = oldRows[0];
+
     const [result] = await db.execute(
       'UPDATE holdings SET ticker = ?, name = ?, shares = ?, purchase_price = ?, purchase_date = ?, sector = ?, asset_class = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
       [
@@ -105,6 +128,17 @@ async function updateHolding(req, res) {
       [holdingId, userId]
     );
 
+    // Log holding update
+    await auditLog.log({
+      userId,
+      eventType: 'holding_updated',
+      eventCategory: 'data',
+      description: `Updated holding for ${ticker}`,
+      req,
+      previousValues: oldHolding,
+      newValues: { ticker, name, shares, purchasePrice, purchaseDate, sector, assetClass }
+    });
+
     return res.json({ holding: rows[0] });
   } catch (err) {
     logger.error('Error updating holding:', err);
@@ -121,6 +155,18 @@ async function deleteHolding(req, res) {
   }
 
   try {
+    // Fetch holding info before deletion
+    const [oldRows] = await db.execute(
+      'SELECT ticker, name, shares FROM holdings WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
+      [holdingId, userId]
+    );
+
+    if (oldRows.length === 0) {
+      return notFound(res, 'Holding not found');
+    }
+
+    const oldHolding = oldRows[0];
+
     // Soft delete: set deleted_at timestamp
     const [result] = await db.execute(
       'UPDATE holdings SET deleted_at = NOW() WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
@@ -130,6 +176,16 @@ async function deleteHolding(req, res) {
     if (result.affectedRows === 0) {
       return notFound(res, 'Holding not found');
     }
+
+    // Log holding deletion
+    await auditLog.log({
+      userId,
+      eventType: 'holding_deleted',
+      eventCategory: 'data',
+      description: `Deleted holding for ${oldHolding.ticker}`,
+      req,
+      previousValues: oldHolding
+    });
 
     return res.status(204).send();
   } catch (err) {

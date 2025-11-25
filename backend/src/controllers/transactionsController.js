@@ -1,6 +1,7 @@
 const db = require('../db');
 const { badRequest, internalError, notFound } = require('../utils/apiError');
 const logger = require('../utils/logger');
+const auditLog = require('../utils/auditLog');
 
 const VALID_TYPES = new Set(['buy', 'sell', 'dividend']);
 
@@ -57,6 +58,16 @@ async function createTransaction(req, res) {
       [result.insertId]
     );
 
+    // Log transaction creation
+    await auditLog.log({
+      userId,
+      eventType: 'transaction_created',
+      eventCategory: 'data',
+      description: `Created ${type} transaction for ${ticker}`,
+      req,
+      newValues: { type, ticker, shares, price, fees, date }
+    });
+
     return res.status(201).json({ transaction: rows[0] });
   } catch (err) {
     logger.error('Error creating transaction:', err);
@@ -89,6 +100,18 @@ async function updateTransaction(req, res) {
   }
 
   try {
+    // Fetch old values before update
+    const [oldRows] = await db.execute(
+      'SELECT type, ticker, shares, price, fees, date FROM transactions WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
+      [transactionId, userId]
+    );
+
+    if (oldRows.length === 0) {
+      return notFound(res, 'Transaction not found');
+    }
+
+    const oldTransaction = oldRows[0];
+
     const [result] = await db.execute(
       'UPDATE transactions SET type = ?, ticker = ?, shares = ?, price = ?, fees = ?, date = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
       [
@@ -112,6 +135,17 @@ async function updateTransaction(req, res) {
       [transactionId, userId]
     );
 
+    // Log transaction update
+    await auditLog.log({
+      userId,
+      eventType: 'transaction_updated',
+      eventCategory: 'data',
+      description: `Updated ${type} transaction for ${ticker}`,
+      req,
+      previousValues: oldTransaction,
+      newValues: { type, ticker, shares, price, fees, date }
+    });
+
     return res.json({ transaction: rows[0] });
   } catch (err) {
     logger.error('Error updating transaction:', err);
@@ -128,6 +162,18 @@ async function deleteTransaction(req, res) {
   }
 
   try {
+    // Fetch transaction info before deletion
+    const [oldRows] = await db.execute(
+      'SELECT type, ticker, shares, price, fees, date FROM transactions WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
+      [transactionId, userId]
+    );
+
+    if (oldRows.length === 0) {
+      return notFound(res, 'Transaction not found');
+    }
+
+    const oldTransaction = oldRows[0];
+
     // Soft delete: set deleted_at timestamp
     const [result] = await db.execute(
       'UPDATE transactions SET deleted_at = NOW() WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
@@ -137,6 +183,16 @@ async function deleteTransaction(req, res) {
     if (result.affectedRows === 0) {
       return notFound(res, 'Transaction not found');
     }
+
+    // Log transaction deletion
+    await auditLog.log({
+      userId,
+      eventType: 'transaction_deleted',
+      eventCategory: 'data',
+      description: `Deleted ${oldTransaction.type} transaction for ${oldTransaction.ticker}`,
+      req,
+      previousValues: oldTransaction
+    });
 
     return res.status(204).send();
   } catch (err) {

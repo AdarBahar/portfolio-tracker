@@ -1,6 +1,7 @@
 const db = require('../db');
 const { badRequest, forbidden, internalError, notFound } = require('../utils/apiError');
 const logger = require('../utils/logger');
+const auditLog = require('../utils/auditLog');
 
 function mapMembershipRow(row) {
   if (!row) return null;
@@ -76,6 +77,16 @@ async function joinBullPen(req, res) {
       [result.insertId]
     );
 
+    // Log bull pen join
+    await auditLog.log({
+      userId,
+      eventType: 'bull_pen_joined',
+      eventCategory: 'bull_pen',
+      description: `Joined bull pen "${bullPen.name}" (status: ${status})`,
+      req,
+      newValues: { bullPenId, bullPenName: bullPen.name, status, role: 'player' }
+    });
+
     return res.status(201).json({ membership: mapMembershipRow(membership) });
   } catch (err) {
     logger.error('Error joining bull pen:', err);
@@ -137,6 +148,33 @@ async function approveMembership(req, res) {
       [membershipId]
     );
 
+    // Get target user info for logging
+    const [[targetUser]] = await db.execute(
+      'SELECT email FROM users WHERE id = ?',
+      [membership.user_id]
+    );
+
+    // Log membership approval (for target user)
+    await auditLog.log({
+      userId: membership.user_id,
+      eventType: 'bull_pen_membership_approved',
+      eventCategory: 'bull_pen',
+      description: `Membership approved for bull pen "${bullPen.name}"`,
+      req,
+      previousValues: { status: 'pending' },
+      newValues: { status: 'active', bullPenId, bullPenName: bullPen.name }
+    });
+
+    // Log membership approval (for host)
+    await auditLog.log({
+      userId,
+      eventType: 'bull_pen_membership_approved',
+      eventCategory: 'bull_pen',
+      description: `Approved ${targetUser?.email || 'user'} for bull pen "${bullPen.name}"`,
+      req,
+      newValues: { targetUserId: membership.user_id, targetUserEmail: targetUser?.email, bullPenId, bullPenName: bullPen.name }
+    });
+
     return res.json({ membership: mapMembershipRow(updated) });
   } catch (err) {
     logger.error('Error approving membership:', err);
@@ -182,6 +220,33 @@ async function rejectMembership(req, res) {
       [membershipId]
     );
 
+    // Get target user info for logging
+    const [[targetUser]] = await db.execute(
+      'SELECT email FROM users WHERE id = ?',
+      [membership.user_id]
+    );
+
+    // Log membership rejection (for target user)
+    await auditLog.log({
+      userId: membership.user_id,
+      eventType: 'bull_pen_membership_rejected',
+      eventCategory: 'bull_pen',
+      description: `Membership rejected for bull pen "${bullPen.name}"`,
+      req,
+      previousValues: { status: 'pending' },
+      newValues: { status: 'kicked', bullPenId, bullPenName: bullPen.name }
+    });
+
+    // Log membership rejection (for host)
+    await auditLog.log({
+      userId,
+      eventType: 'bull_pen_membership_rejected',
+      eventCategory: 'bull_pen',
+      description: `Rejected ${targetUser?.email || 'user'} for bull pen "${bullPen.name}"`,
+      req,
+      newValues: { targetUserId: membership.user_id, targetUserEmail: targetUser?.email, bullPenId, bullPenName: bullPen.name }
+    });
+
     return res.json({ membership: mapMembershipRow(updated) });
   } catch (err) {
     logger.error('Error rejecting membership:', err);
@@ -207,6 +272,12 @@ async function leaveBullPen(req, res) {
       return badRequest(res, 'Host cannot leave their own bull pen');
     }
 
+    // Get bull pen info for logging
+    const [[bullPen]] = await db.execute(
+      'SELECT name FROM bull_pens WHERE id = ?',
+      [bullPenId]
+    );
+
     await db.execute(
       'UPDATE bull_pen_memberships SET status = "left" WHERE id = ? AND deleted_at IS NULL',
       [membership.id]
@@ -216,6 +287,17 @@ async function leaveBullPen(req, res) {
       'SELECT * FROM bull_pen_memberships WHERE id = ? AND deleted_at IS NULL',
       [membership.id]
     );
+
+    // Log bull pen leave
+    await auditLog.log({
+      userId,
+      eventType: 'bull_pen_left',
+      eventCategory: 'bull_pen',
+      description: `Left bull pen "${bullPen?.name || 'Unknown'}"`,
+      req,
+      previousValues: { status: membership.status },
+      newValues: { status: 'left', bullPenId, bullPenName: bullPen?.name }
+    });
 
     return res.json({ membership: mapMembershipRow(updated) });
   } catch (err) {

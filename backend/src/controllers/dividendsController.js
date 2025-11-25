@@ -1,6 +1,7 @@
 const db = require('../db');
 const { badRequest, internalError, notFound } = require('../utils/apiError');
 const logger = require('../utils/logger');
+const auditLog = require('../utils/auditLog');
 
 async function getDividends(req, res) {
   try {
@@ -47,6 +48,16 @@ async function createDividend(req, res) {
       [result.insertId]
     );
 
+    // Log dividend creation
+    await auditLog.log({
+      userId,
+      eventType: 'dividend_created',
+      eventCategory: 'data',
+      description: `Created dividend for ${ticker}`,
+      req,
+      newValues: { ticker, amount, shares, date }
+    });
+
     return res.status(201).json({ dividend: rows[0] });
   } catch (err) {
     logger.error('Error creating dividend:', err);
@@ -73,6 +84,18 @@ async function updateDividend(req, res) {
   }
 
   try {
+    // Fetch old values before update
+    const [oldRows] = await db.execute(
+      'SELECT ticker, amount, shares, date FROM dividends WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
+      [dividendId, userId]
+    );
+
+    if (oldRows.length === 0) {
+      return notFound(res, 'Dividend not found');
+    }
+
+    const oldDividend = oldRows[0];
+
     const [result] = await db.execute(
       'UPDATE dividends SET ticker = ?, amount = ?, shares = ?, date = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
       [
@@ -94,6 +117,17 @@ async function updateDividend(req, res) {
       [dividendId, userId]
     );
 
+    // Log dividend update
+    await auditLog.log({
+      userId,
+      eventType: 'dividend_updated',
+      eventCategory: 'data',
+      description: `Updated dividend for ${ticker}`,
+      req,
+      previousValues: oldDividend,
+      newValues: { ticker, amount, shares, date }
+    });
+
     return res.json({ dividend: rows[0] });
   } catch (err) {
     logger.error('Error updating dividend:', err);
@@ -110,6 +144,18 @@ async function deleteDividend(req, res) {
   }
 
   try {
+    // Fetch dividend info before deletion
+    const [oldRows] = await db.execute(
+      'SELECT ticker, amount, shares, date FROM dividends WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
+      [dividendId, userId]
+    );
+
+    if (oldRows.length === 0) {
+      return notFound(res, 'Dividend not found');
+    }
+
+    const oldDividend = oldRows[0];
+
     // Soft delete: set deleted_at timestamp
     const [result] = await db.execute(
       'UPDATE dividends SET deleted_at = NOW() WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
@@ -119,6 +165,16 @@ async function deleteDividend(req, res) {
     if (result.affectedRows === 0) {
       return notFound(res, 'Dividend not found');
     }
+
+    // Log dividend deletion
+    await auditLog.log({
+      userId,
+      eventType: 'dividend_deleted',
+      eventCategory: 'data',
+      description: `Deleted dividend for ${oldDividend.ticker}`,
+      req,
+      previousValues: oldDividend
+    });
 
     return res.status(204).send();
   } catch (err) {

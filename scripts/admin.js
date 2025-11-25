@@ -73,17 +73,32 @@ function setupEventListeners() {
     const logsModal = document.getElementById('logsModal');
     if (closeLogsBtn && logsModal) {
         closeLogsBtn.addEventListener('click', () => {
-            logsModal.style.display = 'none';
-            logsModal.setAttribute('aria-hidden', 'true');
+            closeLogsModal();
         });
 
         // Close on background click
         logsModal.addEventListener('click', (e) => {
             if (e.target === logsModal) {
-                logsModal.style.display = 'none';
-                logsModal.setAttribute('aria-hidden', 'true');
+                closeLogsModal();
             }
         });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && logsModal.style.display === 'flex') {
+                closeLogsModal();
+            }
+        });
+    }
+
+    function closeLogsModal() {
+        logsModal.style.display = 'none';
+        logsModal.setAttribute('aria-hidden', 'true');
+        // Return focus to the button that opened the modal
+        const lastFocusedButton = document.activeElement;
+        if (lastFocusedButton && lastFocusedButton.classList.contains('action-btn')) {
+            lastFocusedButton.focus();
+        }
     }
 }
 
@@ -189,8 +204,14 @@ async function viewLogs(userId) {
 
     // Show modal
     modal.style.display = 'flex';
-    modal.setAttribute('aria-hidden', 'false');
+    modal.removeAttribute('aria-hidden');
     container.innerHTML = '<p class="loading-text">Loading logs...</p>';
+
+    // Focus the close button for accessibility
+    setTimeout(() => {
+        const closeBtn = document.getElementById('closeLogsModal');
+        if (closeBtn) closeBtn.focus();
+    }, 100);
 
     try {
         const response = await fetch(`${config.apiUrl}/admin/users/${userId}/logs`, {

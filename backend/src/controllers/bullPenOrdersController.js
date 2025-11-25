@@ -2,6 +2,7 @@ const db = require('../db');
 const { sendError, internalError, badRequest } = require('../utils/apiError');
 const { fetchPriceFromAPI } = require('./marketDataController');
 const logger = require('../utils/logger');
+const auditLog = require('../utils/auditLog');
 
 class OrderError extends Error {
   constructor(status, message) {
@@ -232,6 +233,26 @@ async function placeOrder(req, res) {
     );
 
     await connection.commit();
+
+    // Log order placement (outside transaction to avoid rollback issues)
+    await auditLog.log({
+      userId,
+      eventType: 'bull_pen_order_placed',
+      eventCategory: 'bull_pen',
+      description: `Placed ${side} order for ${numericQty} shares of ${symbol} in bull pen`,
+      req,
+      newValues: {
+        bullPenId,
+        orderId,
+        symbol,
+        side,
+        type,
+        qty: numericQty,
+        fillPrice: effectivePrice,
+        newCash,
+        newPosition: newPosition ? { symbol: newPosition.symbol, qty: newPosition.qty } : null
+      }
+    });
 
     return res.status(200).json({
       orderId,

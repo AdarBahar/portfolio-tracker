@@ -1,6 +1,7 @@
 const db = require('../db');
 const { badRequest, forbidden, internalError, notFound } = require('../utils/apiError');
 const logger = require('../utils/logger');
+const auditLog = require('../utils/auditLog');
 
 // Helper: build Bull Pen response object
 function mapBullPenRow(row) {
@@ -80,6 +81,16 @@ async function createBullPen(req, res) {
     );
 
     await connection.commit();
+
+    // Log bull pen creation
+    await auditLog.log({
+      userId,
+      eventType: 'bull_pen_created',
+      eventCategory: 'bull_pen',
+      description: `Created bull pen "${name}"`,
+      req,
+      newValues: { bullPenId, name, durationSec, maxPlayers, startingCash, allowFractional, approvalRequired }
+    });
 
     return res.status(201).json({ bullPen: mapBullPenRow(rows[0]) });
   } catch (err) {
