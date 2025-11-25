@@ -105,7 +105,7 @@ async function listBullPens(req, res) {
 
   try {
     const params = [];
-    let where = '1=1';
+    let where = 'deleted_at IS NULL';
 
     if (state) {
       where += ' AND state = ?';
@@ -139,7 +139,7 @@ async function getBullPen(req, res) {
   const bullPenId = req.params.id;
 
   try {
-    const [rows] = await db.execute('SELECT * FROM bull_pens WHERE id = ?', [bullPenId]);
+    const [rows] = await db.execute('SELECT * FROM bull_pens WHERE id = ? AND deleted_at IS NULL', [bullPenId]);
     if (!rows.length) {
       return notFound(res, 'Bull pen not found');
     }
@@ -236,10 +236,51 @@ async function updateBullPen(req, res) {
   }
 }
 
+async function deleteBullPen(req, res) {
+  const userId = req.user && req.user.id;
+  const bullPenId = req.params.id;
+
+  if (!bullPenId) {
+    return badRequest(res, 'Missing bull pen id');
+  }
+
+  try {
+    const [existingRows] = await db.execute(
+      'SELECT * FROM bull_pens WHERE id = ? AND deleted_at IS NULL',
+      [bullPenId]
+    );
+
+    const existing = existingRows[0];
+    if (!existing) {
+      return notFound(res, 'Bull pen not found');
+    }
+
+    if (existing.host_user_id !== userId) {
+      return forbidden(res, 'Only the host can delete this bull pen');
+    }
+
+    // Soft delete: set deleted_at timestamp
+    const [result] = await db.execute(
+      'UPDATE bull_pens SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL',
+      [bullPenId]
+    );
+
+    if (result.affectedRows === 0) {
+      return internalError(res, 'Failed to delete bull pen');
+    }
+
+    return res.status(204).send();
+  } catch (err) {
+    logger.error('Error deleting bull pen:', err);
+    return internalError(res, 'Failed to delete bull pen');
+  }
+}
+
 module.exports = {
   createBullPen,
   listBullPens,
   getBullPen,
   updateBullPen,
+  deleteBullPen,
 };
 

@@ -9,38 +9,59 @@ import { TREND_COLORS, CHART_CONFIG } from './constants.js';
 let detailChart = null;
 
 /**
+ * Find sparkline element from event target (handles nested SVG elements)
+ * @param {HTMLElement} target - Event target
+ * @returns {HTMLElement|null} Sparkline element or null
+ */
+function findSparklineElement(target) {
+    // Check if target itself is a sparkline
+    if (target.classList && target.classList.contains('sparkline')) {
+        return target;
+    }
+
+    // Check if parent is a sparkline (for nested SVG elements)
+    if (target.parentElement && target.parentElement.classList && target.parentElement.classList.contains('sparkline')) {
+        return target.parentElement;
+    }
+
+    return null;
+}
+
+/**
  * Setup sparkline hover and click interactions
  * @param {Object} state - Application state
  */
 export function setupSparklineInteractions(state) {
     const tooltip = document.getElementById('sparklineTooltip');
     if (!tooltip) return;
-    
+
     let currentHoverTicker = null;
-    
+
     document.addEventListener('mousemove', (e) => {
-        if (e.target.classList.contains('sparkline')) {
-            const ticker = e.target.getAttribute('data-ticker');
+        const sparklineEl = findSparklineElement(e.target);
+
+        if (sparklineEl) {
+            const ticker = sparklineEl.getAttribute('data-ticker');
             currentHoverTicker = ticker;
-            
+
             const data = state.trendData[ticker];
             if (!data) return;
-            
+
             const high = Math.max(...data);
             const low = Math.min(...data);
             const first = data[0];
             const last = data[data.length - 1];
             const change = ((last - first) / first) * 100;
-            
+
             const endDate = new Date();
             const startDate = new Date();
             startDate.setDate(startDate.getDate() - 29);
-            
+
             const tooltipHigh = document.getElementById('tooltipHigh');
             const tooltipLow = document.getElementById('tooltipLow');
             const tooltipChange = document.getElementById('tooltipChange');
             const tooltipRange = document.getElementById('tooltipRange');
-            
+
             if (tooltipHigh) tooltipHigh.textContent = formatCurrency(high);
             if (tooltipLow) tooltipLow.textContent = formatCurrency(low);
             if (tooltipChange) {
@@ -48,19 +69,19 @@ export function setupSparklineInteractions(state) {
                 tooltipChange.className = 'tooltip-value ' + (change >= 0 ? 'positive' : 'negative');
             }
             if (tooltipRange) {
-                tooltipRange.textContent = 
+                tooltipRange.textContent =
                     startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' - ' +
                     endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             }
-            
+
             tooltip.classList.add('active');
-            
+
             // Position tooltip
             const offsetX = 15;
             const offsetY = 15;
             let left = e.pageX + offsetX;
             let top = e.pageY + offsetY;
-            
+
             // Keep tooltip in viewport
             const tooltipRect = tooltip.getBoundingClientRect();
             if (left + tooltipRect.width > window.innerWidth) {
@@ -69,7 +90,7 @@ export function setupSparklineInteractions(state) {
             if (top + tooltipRect.height > window.innerHeight) {
                 top = e.pageY - tooltipRect.height - offsetY;
             }
-            
+
             tooltip.style.left = left + 'px';
             tooltip.style.top = top + 'px';
         } else {
@@ -79,19 +100,23 @@ export function setupSparklineInteractions(state) {
             }
         }
     });
-    
+
     // Click to show detail chart
     document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('sparkline')) {
-            const ticker = e.target.getAttribute('data-ticker');
+        const sparklineEl = findSparklineElement(e.target);
+
+        if (sparklineEl) {
+            const ticker = sparklineEl.getAttribute('data-ticker');
             showDetailChart(ticker, state);
         }
     });
-    
+
     // Keyboard support for sparklines
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && e.target.classList.contains('sparkline')) {
-            const ticker = e.target.getAttribute('data-ticker');
+        const sparklineEl = findSparklineElement(e.target);
+
+        if (e.key === 'Enter' && sparklineEl) {
+            const ticker = sparklineEl.getAttribute('data-ticker');
             showDetailChart(ticker, state);
         }
     });

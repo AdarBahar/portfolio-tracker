@@ -15,12 +15,21 @@ set -euo pipefail
 # - scripts
 #    - tradeRoom
 #       <trade room modules>
-#    <all frontend js scripts>
+#    <all frontend js scripts except config.local.*>
 # - styles
 #    <all frontend css files>
 # index.html
 # login.html
 # trade-room.html
+#
+# New files included (code review fixes):
+# - scripts/apiRetry.js (API retry with exponential backoff)
+# - scripts/notifications.js (toast notification system)
+# - styles/notifications.css (toast styles)
+#
+# Configuration:
+# - Frontend: Uses defaults from scripts/config.js (auto-detects production domain)
+# - Backend: Requires manual .env setup on server (see backend/.env.example)
 #
 # Usage (from repo root):
 #   ./deploy_zip.sh
@@ -80,6 +89,34 @@ chmod 644 "$TMP_DIR/index.html"
 chmod 644 "$TMP_DIR/login.html"
 chmod 644 "$TMP_DIR/trade-room.html"
 
+# Verify critical files are present
+echo "[deploy_zip] Verifying critical files..."
+MISSING_FILES=()
+
+# Check critical frontend files
+for file in "scripts/config.js" "scripts/apiRetry.js" "scripts/notifications.js" \
+            "scripts/app.js" "scripts/auth.js" "styles/notifications.css" \
+            "index.html" "login.html" "trade-room.html"; do
+    if [[ ! -f "$TMP_DIR/$file" ]]; then
+        MISSING_FILES+=("$file")
+    fi
+done
+
+# Check backend files
+for file in "backend/package.json" "backend/openapi.json" "backend/.env.example"; do
+    if [[ ! -f "$TMP_DIR/$file" ]]; then
+        MISSING_FILES+=("$file")
+    fi
+done
+
+if [[ ${#MISSING_FILES[@]} -gt 0 ]]; then
+    echo "[deploy_zip] ERROR: Missing critical files:"
+    printf '  - %s\n' "${MISSING_FILES[@]}"
+    exit 1
+fi
+
+echo "[deploy_zip] ✅ All critical files present"
+
 # Create zip archive
 (
   cd "$TMP_DIR" && \
@@ -87,4 +124,32 @@ chmod 644 "$TMP_DIR/trade-room.html"
 )
 
 echo "[deploy_zip] Created deployment archive at: $ZIP_PATH"
+
+# Show summary
+echo ""
+echo "=== Deployment Summary ==="
+echo "Archive: $ZIP_PATH"
+echo "Size: $(du -h "$ZIP_PATH" | cut -f1)"
+echo ""
+echo "Contents:"
+echo "  - Backend: $(find "$TMP_DIR/backend" -type f | wc -l | tr -d ' ') files"
+echo "  - Frontend scripts: $(find "$TMP_DIR/scripts" -type f -name "*.js" | wc -l | tr -d ' ') files"
+echo "  - Styles: $(find "$TMP_DIR/styles" -type f -name "*.css" | wc -l | tr -d ' ') files"
+echo "  - HTML: $(find "$TMP_DIR" -maxdepth 1 -type f -name "*.html" | wc -l | tr -d ' ') files"
+echo ""
+echo "New files (code review fixes):"
+echo "  ✅ scripts/apiRetry.js"
+echo "  ✅ scripts/notifications.js"
+echo "  ✅ styles/notifications.css"
+echo ""
+echo "Configuration:"
+echo "  - Frontend: Uses defaults from config.js (auto-detects production)"
+echo "  - Backend: Requires .env setup on server (see backend/.env.example)"
+echo ""
+echo "Next steps:"
+echo "  1. Extract the zip on the server"
+echo "  2. Configure backend/.env with production values"
+echo "  3. Run 'npm install --production' in backend/"
+echo "  4. Start the backend server"
+echo ""
 

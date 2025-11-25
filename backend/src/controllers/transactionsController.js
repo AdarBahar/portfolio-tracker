@@ -8,7 +8,7 @@ async function getTransactions(req, res) {
   try {
     const userId = req.user && req.user.id;
     const [rows] = await db.execute(
-      'SELECT id, type, ticker, shares, price, fees, date, created_at AS createdAt FROM transactions WHERE user_id = ? ORDER BY date DESC, id DESC',
+      'SELECT id, type, ticker, shares, price, fees, date, created_at AS createdAt FROM transactions WHERE user_id = ? AND deleted_at IS NULL ORDER BY date DESC, id DESC',
       [userId]
     );
 
@@ -53,7 +53,7 @@ async function createTransaction(req, res) {
     );
 
     const [rows] = await db.execute(
-      'SELECT id, type, ticker, shares, price, fees, date, created_at AS createdAt FROM transactions WHERE id = ?',
+      'SELECT id, type, ticker, shares, price, fees, date, created_at AS createdAt FROM transactions WHERE id = ? AND deleted_at IS NULL',
       [result.insertId]
     );
 
@@ -90,7 +90,7 @@ async function updateTransaction(req, res) {
 
   try {
     const [result] = await db.execute(
-      'UPDATE transactions SET type = ?, ticker = ?, shares = ?, price = ?, fees = ?, date = ? WHERE id = ? AND user_id = ?',
+      'UPDATE transactions SET type = ?, ticker = ?, shares = ?, price = ?, fees = ?, date = ? WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
       [
         type,
         ticker,
@@ -108,7 +108,7 @@ async function updateTransaction(req, res) {
     }
 
     const [rows] = await db.execute(
-      'SELECT id, type, ticker, shares, price, fees, date, created_at AS createdAt FROM transactions WHERE id = ? AND user_id = ?',
+      'SELECT id, type, ticker, shares, price, fees, date, created_at AS createdAt FROM transactions WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
       [transactionId, userId]
     );
 
@@ -128,8 +128,9 @@ async function deleteTransaction(req, res) {
   }
 
   try {
+    // Soft delete: set deleted_at timestamp
     const [result] = await db.execute(
-      'DELETE FROM transactions WHERE id = ? AND user_id = ?',
+      'UPDATE transactions SET deleted_at = NOW() WHERE id = ? AND user_id = ? AND deleted_at IS NULL',
       [transactionId, userId]
     );
 

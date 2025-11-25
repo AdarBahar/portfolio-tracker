@@ -156,6 +156,8 @@ function setupDetailChartModal() {
  * @param {HTMLElement} modal - Modal element
  */
 function closeModal(modal) {
+    if (!modal) return;
+
     modal.classList.remove('active');
     modal.setAttribute('aria-hidden', 'true');
 }

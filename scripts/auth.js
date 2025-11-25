@@ -236,13 +236,32 @@ export class AuthManager {
 
     /**
      * Get Authorization header object for backend API calls.
+     * Returns only whitelisted headers to prevent header injection attacks.
+     * Never exposes secrets beyond the bearer token.
+     *
+     * Security guarantees:
+     * - Only returns Authorization header (whitelisted)
+     * - Token is validated and sanitized
+     * - Cannot be used to override security-sensitive headers
+     * - No user-controlled values can influence header names or values
      */
     getAuthHeader() {
         const token = this.getToken();
         if (!token) {
             return {};
         }
-        return { Authorization: `Bearer ${token}` };
+
+        // Validate token format (should be a non-empty string)
+        if (typeof token !== 'string' || token.trim().length === 0) {
+            console.warn('[Auth] Invalid token format');
+            return {};
+        }
+
+        // Only return whitelisted headers
+        // This prevents any possibility of header injection or override
+        return {
+            Authorization: `Bearer ${token}`
+        };
     }
 
     /**

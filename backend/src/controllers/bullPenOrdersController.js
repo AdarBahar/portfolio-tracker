@@ -11,7 +11,7 @@ class OrderError extends Error {
 }
 
 async function getBullPenForOrder(bullPenId, userId, connection) {
-  const [rows] = await (connection || db).execute('SELECT * FROM bull_pens WHERE id = ?', [bullPenId]);
+  const [rows] = await (connection || db).execute('SELECT * FROM bull_pens WHERE id = ? AND deleted_at IS NULL', [bullPenId]);
   const bullPen = rows[0];
   if (!bullPen) {
     throw new OrderError(404, 'Bull pen not found');
@@ -25,7 +25,7 @@ async function getBullPenForOrder(bullPenId, userId, connection) {
 
 async function getActiveMembership(bullPenId, userId, connection) {
   const [rows] = await (connection || db).execute(
-    'SELECT * FROM bull_pen_memberships WHERE bull_pen_id = ? AND user_id = ? AND status = "active"',
+    'SELECT * FROM bull_pen_memberships WHERE bull_pen_id = ? AND user_id = ? AND status = "active" AND deleted_at IS NULL',
     [bullPenId, userId]
   );
   const membership = rows[0];
@@ -111,7 +111,7 @@ async function placeOrder(req, res) {
       }
     } else if (side === 'sell') {
       const [positionRows] = await connection.execute(
-        'SELECT * FROM bull_pen_positions WHERE bull_pen_id = ? AND user_id = ? AND symbol = ? FOR UPDATE',
+        'SELECT * FROM bull_pen_positions WHERE bull_pen_id = ? AND user_id = ? AND symbol = ? AND deleted_at IS NULL FOR UPDATE',
         [bullPenId, userId, symbol]
       );
       const position = positionRows[0];
@@ -272,8 +272,8 @@ async function listOrders(req, res) {
   try {
     const [rows] = await db.execute(
       mine === 'true'
-        ? 'SELECT * FROM bull_pen_orders WHERE bull_pen_id = ? AND user_id = ? ORDER BY placed_at DESC, id DESC'
-        : 'SELECT * FROM bull_pen_orders WHERE bull_pen_id = ? ORDER BY placed_at DESC, id DESC',
+        ? 'SELECT * FROM bull_pen_orders WHERE bull_pen_id = ? AND user_id = ? AND deleted_at IS NULL ORDER BY placed_at DESC, id DESC'
+        : 'SELECT * FROM bull_pen_orders WHERE bull_pen_id = ? AND deleted_at IS NULL ORDER BY placed_at DESC, id DESC',
       mine === 'true' ? [bullPenId, userId] : [bullPenId]
     );
 
@@ -296,8 +296,8 @@ async function listPositions(req, res) {
   try {
     const [rows] = await db.execute(
       mine === 'true'
-        ? 'SELECT * FROM bull_pen_positions WHERE bull_pen_id = ? AND user_id = ? ORDER BY symbol ASC'
-        : 'SELECT * FROM bull_pen_positions WHERE bull_pen_id = ? ORDER BY user_id ASC, symbol ASC',
+        ? 'SELECT * FROM bull_pen_positions WHERE bull_pen_id = ? AND user_id = ? AND deleted_at IS NULL ORDER BY symbol ASC'
+        : 'SELECT * FROM bull_pen_positions WHERE bull_pen_id = ? AND deleted_at IS NULL ORDER BY user_id ASC, symbol ASC',
       mine === 'true' ? [bullPenId, userId] : [bullPenId]
     );
 
