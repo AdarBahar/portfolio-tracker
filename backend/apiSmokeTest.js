@@ -11,6 +11,9 @@
  * Tests are documented in backend/API_TESTS.md.
  */
 
+// Load environment variables from .env file
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+
 const http = require('http');
 const https = require('https');
 const { URL } = require('url');
