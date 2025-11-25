@@ -178,7 +178,9 @@ export class BullPenAPI {
      * Get market data for multiple symbols
      */
     async getMultipleMarketData(symbols) {
-        const params = new URLSearchParams({ symbols: symbols.join(',') });
+        // Deduplicate symbols to avoid wasting backend work
+        const uniqueSymbols = [...new Set(symbols)];
+        const params = new URLSearchParams({ symbols: uniqueSymbols.join(',') });
         const response = await fetch(`${this.apiUrl}/market-data?${params}`, {
             headers: this._getHeaders(),
         });

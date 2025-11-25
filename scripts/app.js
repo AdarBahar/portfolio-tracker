@@ -24,6 +24,8 @@ let priceUpdateInterval;
  * Update entire dashboard
  */
 function updateDashboard() {
+    if (!appState) return;
+
     updateMetrics(appState);
     updateHoldingsTable(appState);
     updatePerformanceMetrics(appState);
@@ -36,6 +38,8 @@ function updateDashboard() {
  * Update prices - uses real API data if available, otherwise simulates
  */
 async function updatePrices() {
+    if (!appState) return;
+
     try {
         const newPrices = {};
         const newTrendData = {};
@@ -62,8 +66,15 @@ async function updatePrices() {
                 }
 
                 // Update trend data - shift left and add new price
-                const trendArray = [...appState.trendData[holding.ticker]];
-                trendArray.shift();
+                // Guard against missing or empty trend arrays
+                const existingTrend = appState.trendData[holding.ticker];
+                const trendArray = existingTrend && existingTrend.length > 0
+                    ? [...existingTrend]
+                    : [newPrices[holding.ticker]];
+
+                if (trendArray.length > 0) {
+                    trendArray.shift();
+                }
                 trendArray.push(newPrices[holding.ticker]);
                 newTrendData[holding.ticker] = trendArray;
             });
@@ -74,8 +85,15 @@ async function updatePrices() {
                 newPrices[holding.ticker] = simulatePriceChange(appState.currentPrices[holding.ticker]);
 
                 // Update trend data - shift left and add new price
-                const trendArray = [...appState.trendData[holding.ticker]];
-                trendArray.shift();
+                // Guard against missing or empty trend arrays
+                const existingTrend = appState.trendData[holding.ticker];
+                const trendArray = existingTrend && existingTrend.length > 0
+                    ? [...existingTrend]
+                    : [newPrices[holding.ticker]];
+
+                if (trendArray.length > 0) {
+                    trendArray.shift();
+                }
                 trendArray.push(newPrices[holding.ticker]);
                 newTrendData[holding.ticker] = trendArray;
             });
@@ -95,8 +113,10 @@ async function updatePrices() {
 function setupTableSorting() {
     document.querySelectorAll('th[data-sort]').forEach(th => {
         th.addEventListener('click', function() {
+            if (!appState) return;
+
             const column = this.getAttribute('data-sort');
-            
+
             if (appState.sortColumn === column) {
                 appState.setSort(column, appState.sortDirection === 'asc' ? 'desc' : 'asc');
             } else {
@@ -112,11 +132,12 @@ function setupTableSorting() {
 function setupSearch() {
     const searchInput = document.getElementById('searchInput');
     if (!searchInput) return;
-    
+
     const debouncedSearch = debounce((term) => {
+        if (!appState) return;
         appState.setSearchTerm(term);
     }, 300);
-    
+
     searchInput.addEventListener('input', (e) => {
         debouncedSearch(e.target.value);
     });
@@ -128,6 +149,8 @@ function setupSearch() {
 function setupFilters() {
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
+            if (!appState) return;
+
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             appState.setFilter(this.getAttribute('data-filter'));
