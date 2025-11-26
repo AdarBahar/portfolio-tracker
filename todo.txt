@@ -1,16 +1,15 @@
-save cache for tikers data, to reduce API calls
+save cache for tickers data, to reduce API calls
 run code review on frontend and backend
 Login - add last used label
 Login - google opens devtools
 
-user_audit_log - still nothing is written 
 
 Admin page
-show users
-show logs per user
 show other data from tables
+show logs - full page (not modal). search by word or time limit
 
 UI automation testing to cover all flows
+Send emails/notifications on major events
 
 update @/Users/adar.bahar/Code/portfolio-tracker/PROJECT_HISTORY.md based on the instructions on @/Users/adar.bahar/Code/portfolio-tracker/project_history_prompt.md 
 
