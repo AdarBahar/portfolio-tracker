@@ -4,6 +4,7 @@ const {
   getUserLogs,
   updateUserAdminStatus,
   getUserDetail,
+  grantStars,
 } = require('../controllers/adminController');
 
 const router = express.Router();
@@ -19,6 +20,9 @@ router.get('/users/:id/logs', getUserLogs);
 
 // PATCH /api/admin/users/:id/admin - Update user admin status
 router.patch('/users/:id/admin', updateUserAdminStatus);
+
+// POST /api/admin/users/:id/grant-stars - Grant stars to user
+router.post('/users/:id/grant-stars', grantStars);
 
 module.exports = router;
 

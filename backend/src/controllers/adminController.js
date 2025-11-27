@@ -316,10 +316,75 @@ async function getUserDetail(req, res) {
   }
 }
 
+/**
+ * Grant stars to a user (admin only)
+ * POST /api/admin/users/:id/grant-stars
+ */
+async function grantStars(req, res) {
+  const userId = parseInt(req.params.id, 10);
+  const { stars, reason } = req.body;
+  const adminId = req.user && req.user.id;
+
+  if (!userId || !stars || stars <= 0) {
+    return res.status(400).json({ error: 'Missing or invalid userId or stars' });
+  }
+
+  if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+    return res.status(400).json({ error: 'Missing or invalid reason' });
+  }
+
+  try {
+    // Verify user exists
+    const [userRows] = await db.execute(
+      'SELECT id, email, name FROM users WHERE id = ? AND deleted_at IS NULL',
+      [userId]
+    );
+
+    if (userRows.length === 0) {
+      return notFound(res, 'User not found');
+    }
+
+    const user = userRows[0];
+
+    // Award stars using achievementsService
+    const achievementsService = require('../services/achievementsService');
+    const result = await achievementsService.awardStars(
+      userId,
+      'admin_grant',
+      stars,
+      { bullPenId: null, seasonId: null, source: 'admin_grant', meta: { reason, grantedBy: adminId } }
+    );
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.message });
+    }
+
+    // Log admin action
+    await auditLog.log({
+      userId: adminId,
+      eventType: 'admin_grant_stars',
+      eventCategory: 'admin',
+      description: `Granted ${stars} stars to user ${user.email} (${user.name}). Reason: ${reason}`,
+      newValues: { targetUserId: userId, starsGranted: stars, reason }
+    });
+
+    return res.json({
+      success: true,
+      message: `Granted ${stars} stars to user ${user.email}`,
+      starId: result.starId,
+      totalStars: result.totalStars,
+    });
+  } catch (err) {
+    logger.error('[Admin] Error granting stars:', err);
+    return internalError(res, 'Failed to grant stars');
+  }
+}
+
 module.exports = {
   listUsers,
   getUserLogs,
   updateUserAdminStatus,
   getUserDetail,
+  grantStars,
 };
 

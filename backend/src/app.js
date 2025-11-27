@@ -21,6 +21,7 @@ const cancellationRoutes = require('./routes/cancellationRoutes');
 const rakeRoutes = require('./routes/rakeRoutes');
 const bonusRoutes = require('./routes/bonusRoutes');
 const adminPromotionRoutes = require('./routes/adminPromotionRoutes');
+const achievementRulesRoutes = require('./routes/achievementRulesRoutes');
 const openapi = require('../openapi.json');
 const db = require('./db');
 const { internalError } = require('./utils/apiError');
@@ -70,6 +71,7 @@ app.use(`${BASE_PATH}/api/auth`, authRoutes);
 app.use(`${BASE_PATH}/api/admin`, authenticateToken, requireAdmin, adminRoutes);
 app.use(`${BASE_PATH}/api/admin/rake`, authenticateToken, requireAdmin, rakeRoutes);
 app.use(`${BASE_PATH}/api/admin/promotions`, authenticateToken, requireAdmin, adminPromotionRoutes);
+app.use(`${BASE_PATH}/api/admin/achievement-rules`, authenticateToken, requireAdmin, achievementRulesRoutes);
 
 // Authenticated portfolio routes
 app.use(`${BASE_PATH}/api/holdings`, authenticateToken, holdingsRoutes);
