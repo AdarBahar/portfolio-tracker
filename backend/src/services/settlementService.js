@@ -6,6 +6,8 @@
 const db = require('../db');
 const budgetService = require('./budgetService');
 const rakeService = require('./rakeService');
+const achievementsService = require('./achievementsService');
+const ruleEvaluator = require('./ruleEvaluator');
 const { v4: uuid } = require('uuid');
 const logger = require('../utils/logger');
 
@@ -110,6 +112,54 @@ async function settleRoom(bullPenId) {
         } else {
           settledCount++;
         }
+      }
+
+      // Award room achievements
+      try {
+        // Award room_first_place if rank = 1
+        if (rank === 1) {
+          const qualifies = await ruleEvaluator.evaluateRoomFirstPlace(userId, bullPenId, rank);
+          if (qualifies) {
+            await achievementsService.awardStars(
+              userId,
+              'room_first_place',
+              100,
+              { bullPenId, seasonId: null, source: 'achievement' }
+            );
+            logger.log(`[Achievement] User ${userId} awarded 100 stars for room_first_place in room ${bullPenId}`);
+          }
+        }
+
+        // Award three_straight_wins if applicable
+        const qualifiesThreeWins = await ruleEvaluator.evaluateThreeStraightWins(userId);
+        if (qualifiesThreeWins) {
+          await achievementsService.awardStars(
+            userId,
+            'three_straight_wins',
+            40,
+            { bullPenId, seasonId: null, source: 'achievement' }
+          );
+          logger.log(`[Achievement] User ${userId} awarded 40 stars for three_straight_wins`);
+        }
+
+        // Check rooms_played milestones
+        const milestoneCounts = [10, 50, 100];
+        for (const count of milestoneCounts) {
+          const qualifiesMilestone = await ruleEvaluator.evaluateRoomsPlayedMilestone(userId, count);
+          if (qualifiesMilestone) {
+            const starReward = count === 10 ? 20 : count === 50 ? 60 : 150;
+            await achievementsService.awardStars(
+              userId,
+              `rooms_played_${count}`,
+              starReward,
+              { bullPenId: null, seasonId: null, source: 'achievement' }
+            );
+            logger.log(`[Achievement] User ${userId} awarded ${starReward} stars for rooms_played_${count}`);
+          }
+        }
+      } catch (err) {
+        logger.warn(`[Achievement] Error awarding room achievements for user ${userId}:`, err);
+        // Don't fail settlement if achievement award fails
       }
     }
 

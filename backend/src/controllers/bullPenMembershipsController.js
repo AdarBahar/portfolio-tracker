@@ -3,6 +3,8 @@ const { badRequest, forbidden, internalError, notFound } = require('../utils/api
 const logger = require('../utils/logger');
 const auditLog = require('../utils/auditLog');
 const budgetService = require('../services/budgetService');
+const achievementsService = require('../services/achievementsService');
+const ruleEvaluator = require('../services/ruleEvaluator');
 const { v4: uuid } = require('uuid');
 
 function mapMembershipRow(row) {
@@ -111,6 +113,25 @@ async function joinBullPen(req, res) {
         correlationId
       }
     });
+
+    // Award first_room_join achievement if this is user's first room
+    try {
+      const isFirstRoom = await ruleEvaluator.evaluateFirstRoomJoin(userId);
+      if (isFirstRoom) {
+        const starResult = await achievementsService.awardStars(
+          userId,
+          'first_room_join',
+          10,
+          { bullPenId: null, seasonId: null, source: 'achievement' }
+        );
+        if (starResult.success) {
+          logger.log(`[Achievement] User ${userId} awarded 10 stars for first_room_join`);
+        }
+      }
+    } catch (err) {
+      // Log error but don't fail the join operation
+      logger.warn(`[Achievement] Error awarding first_room_join stars for user ${userId}:`, err);
+    }
 
     return res.status(201).json({
       membership: mapMembershipRow(membership),
