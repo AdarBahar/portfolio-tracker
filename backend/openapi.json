@@ -1242,6 +1242,395 @@
           }
         }
       }
+    },
+    "/api/v1/budget": {
+      "get": {
+        "summary": "Get current user budget",
+        "description": "Returns the current budget state for the authenticated user, including available and locked balances.",
+        "tags": ["Budget"],
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Current budget retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserBudget" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid JWT token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Budget not found for user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/budget/logs": {
+      "get": {
+        "summary": "Get user budget logs",
+        "description": "Returns paginated budget transaction history for the authenticated user with optional filtering.",
+        "tags": ["Budget"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of records to return (default: 50)",
+            "schema": { "type": "integer", "default": 50 }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Number of records to skip (default: 0)",
+            "schema": { "type": "integer", "default": 0 }
+          },
+          {
+            "name": "operation_type",
+            "in": "query",
+            "description": "Filter by operation type (e.g., ROOM_BUY_IN, TRANSFER_OUT)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "bull_pen_id",
+            "in": "query",
+            "description": "Filter by bull pen (trading room) ID",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Budget logs retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BudgetLog" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid JWT token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/budget/credit": {
+      "post": {
+        "summary": "Credit user budget (Internal)",
+        "description": "Internal service endpoint to credit a user's budget. Requires service token authentication and idempotency key.",
+        "tags": ["Budget - Internal"],
+        "security": [{ "ServiceTokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BudgetCreditRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Budget credited successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BudgetOperationResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or insufficient funds",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Invalid service token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Budget not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/budget/debit": {
+      "post": {
+        "summary": "Debit user budget (Internal)",
+        "description": "Internal service endpoint to debit a user's budget. Requires service token authentication and idempotency key.",
+        "tags": ["Budget - Internal"],
+        "security": [{ "ServiceTokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BudgetDebitRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Budget debited successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BudgetOperationResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or insufficient funds",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Invalid service token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Budget not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/budget/lock": {
+      "post": {
+        "summary": "Lock user budget funds (Internal)",
+        "description": "Internal service endpoint to lock funds (move from available to locked balance). Used for pending room entries.",
+        "tags": ["Budget - Internal"],
+        "security": [{ "ServiceTokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BudgetLockRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Funds locked successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BudgetLockResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or insufficient funds",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Invalid service token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Budget not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/budget/unlock": {
+      "post": {
+        "summary": "Unlock user budget funds (Internal)",
+        "description": "Internal service endpoint to unlock funds (move from locked back to available balance). Used on room cancel or join failure.",
+        "tags": ["Budget - Internal"],
+        "security": [{ "ServiceTokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BudgetUnlockRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Funds unlocked successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BudgetUnlockResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or insufficient locked funds",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Invalid service token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Budget not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/budget/transfer": {
+      "post": {
+        "summary": "Transfer budget between users (Internal)",
+        "description": "Internal service endpoint for atomic user-to-user budget transfers. Locks both budgets in deterministic order and creates two log entries.",
+        "tags": ["Budget - Internal"],
+        "security": [{ "ServiceTokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BudgetTransferRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transfer completed successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BudgetTransferResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or insufficient funds",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Invalid service token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Budget not found for one or both users",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/v1/budget/adjust": {
+      "post": {
+        "summary": "Adjust user budget (Internal - Admin)",
+        "description": "Internal service endpoint for admin budget adjustments (credits or debits). Used for manual corrections and support tickets.",
+        "tags": ["Budget - Internal"],
+        "security": [{ "ServiceTokenAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BudgetAdjustRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Budget adjusted successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BudgetOperationResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - Invalid input or insufficient funds",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Invalid service token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Budget not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1250,6 +1639,11 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      },
+      "ServiceTokenAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Service-to-service authentication using INTERNAL_SERVICE_TOKEN"
       }
     },
     "schemas": {
@@ -1485,6 +1879,622 @@
           }
         },
         "required": ["id", "userId", "eventType", "eventCategory", "createdAt"]
+      },
+      "UserBudget": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Budget record ID",
+            "example": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User ID",
+            "example": 123
+          },
+          "available_balance": {
+            "type": "number",
+            "format": "double",
+            "description": "Available balance (can be spent)",
+            "example": 1200.50
+          },
+          "locked_balance": {
+            "type": "number",
+            "format": "double",
+            "description": "Locked balance (pending operations)",
+            "example": 100.00
+          },
+          "total_balance": {
+            "type": "number",
+            "format": "double",
+            "description": "Total balance (available + locked)",
+            "example": 1300.50
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code",
+            "example": "VUSD"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "frozen"],
+            "description": "Budget status",
+            "example": "active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": ["id", "user_id", "available_balance", "locked_balance", "currency", "status"]
+      },
+      "BudgetLog": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Log entry ID",
+            "example": 1001
+          },
+          "user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User ID",
+            "example": 123
+          },
+          "direction": {
+            "type": "string",
+            "enum": ["IN", "OUT", "LOCK", "UNLOCK"],
+            "description": "Transaction direction",
+            "example": "OUT"
+          },
+          "operation_type": {
+            "type": "string",
+            "description": "Operation type identifier",
+            "example": "ROOM_BUY_IN"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Transaction amount",
+            "example": 100.00
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code",
+            "example": "VUSD"
+          },
+          "balance_before": {
+            "type": "number",
+            "format": "double",
+            "description": "Balance before transaction",
+            "example": 1300.50
+          },
+          "balance_after": {
+            "type": "number",
+            "format": "double",
+            "description": "Balance after transaction",
+            "example": 1200.50
+          },
+          "correlation_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Correlation ID for tracing related operations",
+            "example": "room-45-join-uuid"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Transaction timestamp"
+          }
+        },
+        "required": ["id", "user_id", "direction", "operation_type", "amount", "currency", "balance_before", "balance_after"]
+      },
+      "BudgetCreditRequest": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User ID to credit",
+            "example": 123
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount to credit (positive)",
+            "example": 100.00
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code (optional, default VUSD)",
+            "example": "VUSD"
+          },
+          "operation_type": {
+            "type": "string",
+            "description": "Operation type identifier",
+            "example": "ROOM_PAYOUT"
+          },
+          "bull_pen_id": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Associated trading room ID",
+            "example": 45
+          },
+          "season_id": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Associated season ID",
+            "example": 3
+          },
+          "correlation_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Correlation ID for tracing",
+            "example": "room-45-settlement-uuid"
+          },
+          "meta": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional metadata",
+            "example": { "reason": "Room settlement payout" }
+          }
+        },
+        "required": ["user_id", "amount", "operation_type"]
+      },
+      "BudgetDebitRequest": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User ID to debit",
+            "example": 123
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount to debit (positive)",
+            "example": 100.00
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code (optional, default VUSD)",
+            "example": "VUSD"
+          },
+          "operation_type": {
+            "type": "string",
+            "description": "Operation type identifier",
+            "example": "ROOM_BUY_IN"
+          },
+          "bull_pen_id": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Associated trading room ID",
+            "example": 45
+          },
+          "season_id": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Associated season ID",
+            "example": 3
+          },
+          "correlation_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Correlation ID for tracing",
+            "example": "room-45-join-uuid"
+          },
+          "meta": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional metadata",
+            "example": { "reason": "Room buy-in" }
+          }
+        },
+        "required": ["user_id", "amount", "operation_type"]
+      },
+      "BudgetLockRequest": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User ID",
+            "example": 123
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount to lock (positive)",
+            "example": 100.00
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code (optional, default VUSD)",
+            "example": "VUSD"
+          },
+          "operation_type": {
+            "type": "string",
+            "description": "Operation type identifier",
+            "example": "ROOM_BUY_IN_LOCK"
+          },
+          "bull_pen_id": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Associated trading room ID",
+            "example": 45
+          },
+          "season_id": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Associated season ID",
+            "example": 3
+          },
+          "correlation_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Correlation ID for tracing",
+            "example": "room-45-join-uuid"
+          },
+          "meta": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional metadata"
+          }
+        },
+        "required": ["user_id", "amount", "operation_type"]
+      },
+      "BudgetUnlockRequest": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User ID",
+            "example": 123
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount to unlock (positive)",
+            "example": 100.00
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code (optional, default VUSD)",
+            "example": "VUSD"
+          },
+          "operation_type": {
+            "type": "string",
+            "description": "Operation type identifier",
+            "example": "ROOM_BUY_IN_UNLOCK"
+          },
+          "bull_pen_id": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Associated trading room ID",
+            "example": 45
+          },
+          "season_id": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Associated season ID",
+            "example": 3
+          },
+          "correlation_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Correlation ID for tracing",
+            "example": "room-45-join-uuid"
+          },
+          "meta": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional metadata"
+          }
+        },
+        "required": ["user_id", "amount", "operation_type"]
+      },
+      "BudgetTransferRequest": {
+        "type": "object",
+        "properties": {
+          "from_user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Source user ID",
+            "example": 123
+          },
+          "to_user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Destination user ID",
+            "example": 456
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount to transfer (positive)",
+            "example": 50.00
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code (optional, default VUSD)",
+            "example": "VUSD"
+          },
+          "operation_type_out": {
+            "type": "string",
+            "description": "Operation type for outgoing transaction (optional, default TRANSFER_OUT)",
+            "example": "TRANSFER_OUT"
+          },
+          "operation_type_in": {
+            "type": "string",
+            "description": "Operation type for incoming transaction (optional, default TRANSFER_IN)",
+            "example": "TRANSFER_IN"
+          },
+          "correlation_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Correlation ID for tracing",
+            "example": "transfer-uuid"
+          },
+          "meta": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional metadata",
+            "example": { "reason": "Friendly stake" }
+          }
+        },
+        "required": ["from_user_id", "to_user_id", "amount"]
+      },
+      "BudgetAdjustRequest": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User ID to adjust",
+            "example": 123
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount to adjust (positive)",
+            "example": 20.00
+          },
+          "direction": {
+            "type": "string",
+            "enum": ["IN", "OUT"],
+            "description": "Direction of adjustment",
+            "example": "IN"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Currency code (optional, default VUSD)",
+            "example": "VUSD"
+          },
+          "operation_type": {
+            "type": "string",
+            "description": "Operation type (optional, default ADJUSTMENT)",
+            "example": "ADJUSTMENT_CREDIT"
+          },
+          "created_by": {
+            "type": "string",
+            "nullable": true,
+            "description": "Admin identifier",
+            "example": "admin:42"
+          },
+          "correlation_id": {
+            "type": "string",
+            "nullable": true,
+            "description": "Correlation ID for tracing",
+            "example": "support-ticket-uuid"
+          },
+          "meta": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional metadata",
+            "example": { "ticket_id": "SUP-12345", "reason": "Manual correction" }
+          }
+        },
+        "required": ["user_id", "amount", "direction"]
+      },
+      "BudgetOperationResponse": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User ID",
+            "example": 123
+          },
+          "balance_before": {
+            "type": "number",
+            "format": "double",
+            "description": "Balance before operation",
+            "example": 1300.50
+          },
+          "balance_after": {
+            "type": "number",
+            "format": "double",
+            "description": "Balance after operation",
+            "example": 1200.50
+          },
+          "log_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Budget log entry ID",
+            "example": 1001
+          },
+          "idempotent": {
+            "type": "boolean",
+            "description": "Whether this was an idempotent retry",
+            "example": false
+          }
+        },
+        "required": ["user_id", "balance_before", "balance_after", "log_id", "idempotent"]
+      },
+      "BudgetLockResponse": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User ID",
+            "example": 123
+          },
+          "balance_before": {
+            "type": "number",
+            "format": "double",
+            "description": "Available balance before lock",
+            "example": 1300.50
+          },
+          "balance_after": {
+            "type": "number",
+            "format": "double",
+            "description": "Available balance after lock",
+            "example": 1200.50
+          },
+          "locked_balance": {
+            "type": "number",
+            "format": "double",
+            "description": "New locked balance",
+            "example": 100.00
+          },
+          "log_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Budget log entry ID",
+            "example": 1001
+          },
+          "idempotent": {
+            "type": "boolean",
+            "description": "Whether this was an idempotent retry",
+            "example": false
+          }
+        },
+        "required": ["user_id", "balance_before", "balance_after", "locked_balance", "log_id", "idempotent"]
+      },
+      "BudgetUnlockResponse": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "User ID",
+            "example": 123
+          },
+          "balance_before": {
+            "type": "number",
+            "format": "double",
+            "description": "Locked balance before unlock",
+            "example": 100.00
+          },
+          "balance_after": {
+            "type": "number",
+            "format": "double",
+            "description": "Locked balance after unlock",
+            "example": 0.00
+          },
+          "available_balance": {
+            "type": "number",
+            "format": "double",
+            "description": "New available balance",
+            "example": 1300.50
+          },
+          "log_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Budget log entry ID",
+            "example": 1001
+          },
+          "idempotent": {
+            "type": "boolean",
+            "description": "Whether this was an idempotent retry",
+            "example": false
+          }
+        },
+        "required": ["user_id", "balance_before", "balance_after", "available_balance", "log_id", "idempotent"]
+      },
+      "BudgetTransferResponse": {
+        "type": "object",
+        "properties": {
+          "from_user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Source user ID",
+            "example": 123
+          },
+          "to_user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Destination user ID",
+            "example": 456
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount transferred",
+            "example": 50.00
+          },
+          "from_balance_before": {
+            "type": "number",
+            "format": "double",
+            "description": "Source balance before transfer",
+            "example": 100.00
+          },
+          "from_balance_after": {
+            "type": "number",
+            "format": "double",
+            "description": "Source balance after transfer",
+            "example": 50.00
+          },
+          "to_balance_before": {
+            "type": "number",
+            "format": "double",
+            "description": "Destination balance before transfer",
+            "example": 200.00
+          },
+          "to_balance_after": {
+            "type": "number",
+            "format": "double",
+            "description": "Destination balance after transfer",
+            "example": 250.00
+          },
+          "from_log_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Source user's log entry ID",
+            "example": 1001
+          },
+          "to_log_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Destination user's log entry ID",
+            "example": 1002
+          },
+          "correlation_id": {
+            "type": "string",
+            "description": "Correlation ID linking both log entries",
+            "example": "transfer-uuid"
+          },
+          "idempotent": {
+            "type": "boolean",
+            "description": "Whether this was an idempotent retry",
+            "example": false
+          }
+        },
+        "required": ["from_user_id", "to_user_id", "amount", "from_balance_before", "from_balance_after", "to_balance_before", "to_balance_after", "from_log_id", "to_log_id", "correlation_id", "idempotent"]
       }
     }
   }

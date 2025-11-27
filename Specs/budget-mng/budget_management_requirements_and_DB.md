@@ -1,5 +1,9 @@
 # Budget Management Specification
 
+**Document Status:** LOCKED v1.0 — This spec is the implementation baseline for the Budget Management feature. Any changes must be versioned and reviewed before code is updated.
+
+
+
 This document defines the requirements and database schema for the Budget Management feature. The system treats each user's virtual money like a bank account, tracking balances and maintaining a complete, immutable ledger of all changes.
 
 ---
@@ -186,6 +190,50 @@ This specification establishes the full data and logic model for managing user b
 * Strong consistency
 * Full auditability
 * Clear separation between current state and historical ledger
-* Support for high-frequency virtual transactions
+
+## 7. Implementation Notes and Constraints
+
+### 7.1 Relationship to Trading Rooms
+
+* The `user_budgets` and `budget_logs` tables track **global virtual money**.
+* Bull Pen cash (e.g. `bull_pen_memberships.cash` and `bull_pen_positions`) represents **room-internal chips** for gameplay and rankings.
+* For the MVP, **only room entry (buy-ins) and room settlements (payouts and optional loss settlements)** affect `user_budgets`. Intra-room trades and P&L stay inside Bull Pen tables.
+* Future changes that make per-trade effects hit `user_budgets` must be treated as a major design change.
+
+### 7.2 Idempotency Semantics
+
+* Each mutating operation that accepts an `idempotency_key` must:
+  * Treat the key as unique for that logical operation (typically per user + endpoint + business action).
+  * On first execution: perform the mutation and store the `idempotency_key` in `budget_logs`.
+  * On retry with the same key: **do not** perform the mutation again, but return a response derived from the existing log row.
+* The system must define an operational policy for how long idempotency keys remain valid (for example, at least 24–72 hours for room-related operations).
+
+### 7.3 Deletion and Immutability of Logs
+
+* `budget_logs` is logically **append-only**. Normal operations must never update existing rows.
+* `deleted_at` is provided only for exceptional, legal, or operational reasons (for example, GDPR-like requests or catastrophic corrections).
+* Any process that sets `deleted_at` must itself be auditable and restricted to admin tooling.
+
+### 7.4 Rounding and Precision
+
+* All monetary values use `DECIMAL(18,2)` to avoid floating point issues.
+* A single, consistent rounding strategy (for example, round half up to 2 decimal places) must be used across **all** budget operations (debits, credits, transfers, rake calculations).
+* Rounding should occur at the application layer before values are persisted, and should be tested explicitly.
+
+### 7.5 Performance and Archiving
+
+* `budget_logs` is expected to grow quickly. Proper indexing is required for common access patterns:
+  * History per user ordered by time (`user_id`, `created_at`).
+  * Queries by `operation_type`, `bull_pen_id`, `season_id`, and `idempotency_key`.
+* For long-term operations, consider:
+  * Archiving old logs to separate storage (for example, by date range) while keeping recent history hot.
+  * Using `created_at`-based pagination instead of large `OFFSET` values for public history endpoints.
+
+### 7.6 Document Lock
+
+* This document is considered **LOCKED** for the current implementation phase.
+* Any change that affects table shapes, invariants, or semantics (especially relationship to Trading Rooms) must:
+  * Be recorded in a new version section of this spec.
+  * Be reviewed before schema or code changes are made.
 
 This document can now serve as the basis for API design and backend implementation.

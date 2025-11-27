@@ -180,9 +180,211 @@ async function updateUserAdminStatus(req, res) {
   }
 }
 
+/**
+ * Get detailed user info including budget and trading rooms (admin only)
+ * GET /api/admin/users/:id/detail
+ */
+async function getUserDetail(req, res) {
+  const userId = req.params.id;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'Missing user ID' });
+  }
+
+  try {
+    // Get user info
+    const [userRows] = await db.execute(
+      `SELECT
+        id,
+        email,
+        name,
+        auth_provider AS authProvider,
+        is_demo AS isDemo,
+        is_admin AS isAdmin,
+        status,
+        created_at AS createdAt,
+        last_login AS lastLogin
+      FROM users
+      WHERE id = ? AND deleted_at IS NULL`,
+      [userId]
+    );
+
+    if (userRows.length === 0) {
+      return notFound(res, 'User not found');
+    }
+
+    const user = userRows[0];
+
+    // Get user's budget
+    const [budgetRows] = await db.execute(
+      `SELECT
+        id,
+        user_id AS userId,
+        available_balance AS availableBalance,
+        locked_balance AS lockedBalance,
+        currency,
+        status,
+        created_at AS createdAt,
+        updated_at AS updatedAt
+      FROM user_budgets
+      WHERE user_id = ? AND deleted_at IS NULL`,
+      [userId]
+    );
+
+    const budget = budgetRows.length > 0 ? budgetRows[0] : null;
+
+    // Get last 10 budget transactions
+    const [budgetLogs] = await db.execute(
+      `SELECT
+        id,
+        user_id AS userId,
+        direction,
+        operation_type AS operationType,
+        amount,
+        currency,
+        balance_before AS balanceBefore,
+        balance_after AS balanceAfter,
+        bull_pen_id AS bullPenId,
+        season_id AS seasonId,
+        correlation_id AS correlationId,
+        created_at AS createdAt
+      FROM budget_logs
+      WHERE user_id = ? AND deleted_at IS NULL
+      ORDER BY created_at DESC
+      LIMIT 10`,
+      [userId]
+    );
+
+    // Get trading rooms user is part of
+    const [tradingRooms] = await db.execute(
+      `SELECT
+        bp.id,
+        bp.name,
+        bp.state,
+        bp.starting_cash AS startingCash,
+        bp.host_user_id AS hostUserId,
+        bp.start_time AS startTime,
+        bp.duration_sec AS durationSec,
+        bpm.role,
+        bpm.status,
+        bpm.cash,
+        bpm.joined_at AS joinedAt
+      FROM bull_pens bp
+      JOIN bull_pen_memberships bpm ON bp.id = bpm.bull_pen_id
+      WHERE bpm.user_id = ? AND bp.deleted_at IS NULL AND bpm.deleted_at IS NULL
+      ORDER BY bp.start_time DESC, bp.id DESC`,
+      [userId]
+    );
+
+    // Get user's standing in each trading room (if room is active or completed)
+    const standings = [];
+    for (const room of tradingRooms) {
+      if (['active', 'completed'].includes(room.state)) {
+        const [leaderboard] = await db.execute(
+          `SELECT
+            rank,
+            portfolio_value AS portfolioValue,
+            pnl_abs AS pnlAbs,
+            pnl_pct AS pnlPct
+          FROM leaderboard_snapshots
+          WHERE bull_pen_id = ? AND user_id = ?
+          ORDER BY snapshot_at DESC
+          LIMIT 1`,
+          [room.id, userId]
+        );
+
+        if (leaderboard.length > 0) {
+          standings.push({
+            bullPenId: room.id,
+            bullPenName: room.name,
+            ...leaderboard[0]
+          });
+        }
+      }
+    }
+
+    return res.json({
+      user,
+      budget,
+      budgetLogs,
+      tradingRooms,
+      standings
+    });
+  } catch (err) {
+    logger.error('[Admin] Error fetching user detail:', err);
+    return internalError(res, 'Failed to fetch user detail');
+  }
+}
+
+/**
+ * Grant stars to a user (admin only)
+ * POST /api/admin/users/:id/grant-stars
+ */
+async function grantStars(req, res) {
+  const userId = parseInt(req.params.id, 10);
+  const { stars, reason } = req.body;
+  const adminId = req.user && req.user.id;
+
+  if (!userId || !stars || stars <= 0) {
+    return res.status(400).json({ error: 'Missing or invalid userId or stars' });
+  }
+
+  if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+    return res.status(400).json({ error: 'Missing or invalid reason' });
+  }
+
+  try {
+    // Verify user exists
+    const [userRows] = await db.execute(
+      'SELECT id, email, name FROM users WHERE id = ? AND deleted_at IS NULL',
+      [userId]
+    );
+
+    if (userRows.length === 0) {
+      return notFound(res, 'User not found');
+    }
+
+    const user = userRows[0];
+
+    // Award stars using achievementsService
+    const achievementsService = require('../services/achievementsService');
+    const result = await achievementsService.awardStars(
+      userId,
+      'admin_grant',
+      stars,
+      { bullPenId: null, seasonId: null, source: 'admin_grant', meta: { reason, grantedBy: adminId } }
+    );
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.message });
+    }
+
+    // Log admin action
+    await auditLog.log({
+      userId: adminId,
+      eventType: 'admin_grant_stars',
+      eventCategory: 'admin',
+      description: `Granted ${stars} stars to user ${user.email} (${user.name}). Reason: ${reason}`,
+      newValues: { targetUserId: userId, starsGranted: stars, reason }
+    });
+
+    return res.json({
+      success: true,
+      message: `Granted ${stars} stars to user ${user.email}`,
+      starId: result.starId,
+      totalStars: result.totalStars,
+    });
+  } catch (err) {
+    logger.error('[Admin] Error granting stars:', err);
+    return internalError(res, 'Failed to grant stars');
+  }
+}
+
 module.exports = {
   listUsers,
   getUserLogs,
   updateUserAdminStatus,
+  getUserDetail,
+  grantStars,
 };
 

@@ -68,6 +68,8 @@ function setupEventListeners() {
         });
     }
 
+
+
     // Close logs modal
     const closeLogsBtn = document.getElementById('closeLogsModal');
     const logsModal = document.getElementById('logsModal');
@@ -146,7 +148,7 @@ function renderUsers(users) {
 
     tbody.innerHTML = users.map(user => `
         <tr>
-            <td><strong>${escapeHtml(user.name || 'N/A')}</strong></td>
+            <td><button class="user-name-link" onclick="window.adminPanel.viewUserDetail(${user.id})">${escapeHtml(user.name || 'N/A')}</button></td>
             <td>${escapeHtml(user.email)}</td>
             <td>${escapeHtml(user.authProvider)}</td>
             <td><span class="status-badge ${user.status}">${user.status}</span></td>
@@ -369,8 +371,18 @@ function showError(message) {
     }
 }
 
+/**
+ * View user detail overview - navigate to full page
+ */
+function viewUserDetail(userId) {
+    window.location.href = `/fantasybroker/user-detail.html?userId=${userId}`;
+}
+
+
+
 // Export functions for global access (for onclick handlers)
 window.adminPanel = {
+    viewUserDetail,
     viewLogs,
     toggleAdmin,
 };

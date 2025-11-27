@@ -18,20 +18,13 @@ set -euo pipefail
 #    <all frontend js scripts except config.local.*>
 # - styles
 #    <all frontend css files>
-# index.html
-# login.html
-# trade-room.html
-# admin.html
+# <all HTML files>
 #
-# New files included (code review fixes):
-# - scripts/apiRetry.js (API retry with exponential backoff)
-# - scripts/notifications.js (toast notification system)
-# - styles/notifications.css (toast styles)
-#
-# New files included (admin feature):
-# - admin.html (admin panel page)
-# - scripts/admin.js (admin panel functionality)
-# - styles/admin.css (admin panel styles)
+# Frontend files included:
+# - All .html files (index.html, login.html, trade-room.html, admin.html, user-detail.html, etc.)
+# - All .js files in scripts/ (except config.local.* development files)
+# - All .js files in scripts/tradeRoom/
+# - All .css files in styles/
 #
 # Configuration:
 # - Frontend: Uses defaults from scripts/config.js (auto-detects production domain)
@@ -85,31 +78,34 @@ cp "$ROOT_DIR"/styles/*.css "$TMP_DIR/styles/"
 mkdir -p "$TMP_DIR/scripts/tradeRoom"
 cp "$ROOT_DIR"/scripts/tradeRoom/*.js "$TMP_DIR/scripts/tradeRoom/"
 
-# HTML entry points
-cp "$ROOT_DIR/index.html" "$TMP_DIR/index.html"
-cp "$ROOT_DIR/login.html" "$TMP_DIR/login.html"
-cp "$ROOT_DIR/trade-room.html" "$TMP_DIR/trade-room.html"
-cp "$ROOT_DIR/admin.html" "$TMP_DIR/admin.html"
-
-# Ensure HTML files have 644 permissions inside the archive
-chmod 644 "$TMP_DIR/index.html"
-chmod 644 "$TMP_DIR/login.html"
-chmod 644 "$TMP_DIR/trade-room.html"
-chmod 644 "$TMP_DIR/admin.html"
+# HTML entry points - copy all HTML files from root
+for file in "$ROOT_DIR"/*.html; do
+    if [[ -f "$file" ]]; then
+        cp "$file" "$TMP_DIR/"
+        chmod 644 "$TMP_DIR/$(basename "$file")"
+    fi
+done
 
 # Verify critical files are present
 echo "[deploy_zip] Verifying critical files..."
 MISSING_FILES=()
 
 # Check critical frontend files
-for file in "scripts/config.js" "scripts/apiRetry.js" "scripts/notifications.js" \
-            "scripts/app.js" "scripts/auth.js" "scripts/admin.js" \
-            "styles/notifications.css" "styles/admin.css" \
-            "index.html" "login.html" "trade-room.html" "admin.html"; do
+for file in "scripts/config.js" "scripts/app.js" "scripts/auth.js"; do
     if [[ ! -f "$TMP_DIR/$file" ]]; then
         MISSING_FILES+=("$file")
     fi
 done
+
+# Check that at least one HTML file exists
+if [[ ! $(find "$TMP_DIR" -maxdepth 1 -type f -name "*.html" | head -1) ]]; then
+    MISSING_FILES+=("HTML files")
+fi
+
+# Check that at least one CSS file exists
+if [[ ! $(find "$TMP_DIR/styles" -type f -name "*.css" | head -1) ]]; then
+    MISSING_FILES+=("CSS files")
+fi
 
 # Check backend files
 for file in "backend/package.json" "backend/openapi.json" "backend/.env.example"; do
@@ -146,15 +142,8 @@ echo "  - Frontend scripts: $(find "$TMP_DIR/scripts" -type f -name "*.js" | wc 
 echo "  - Styles: $(find "$TMP_DIR/styles" -type f -name "*.css" | wc -l | tr -d ' ') files"
 echo "  - HTML: $(find "$TMP_DIR" -maxdepth 1 -type f -name "*.html" | wc -l | tr -d ' ') files"
 echo ""
-echo "New files (code review fixes):"
-echo "  ✅ scripts/apiRetry.js"
-echo "  ✅ scripts/notifications.js"
-echo "  ✅ styles/notifications.css"
-echo ""
-echo "New files (admin feature):"
-echo "  ✅ admin.html"
-echo "  ✅ scripts/admin.js"
-echo "  ✅ styles/admin.css"
+echo "Frontend HTML files included:"
+find "$TMP_DIR" -maxdepth 1 -type f -name "*.html" -exec basename {} \; | sed 's/^/  ✅ /'
 echo ""
 echo "Configuration:"
 echo "  - Frontend: Uses defaults from config.js (auto-detects production)"

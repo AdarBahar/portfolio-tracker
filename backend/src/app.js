@@ -14,11 +14,20 @@ const myBullPensRoutes = require('./routes/myBullPensRoutes');
 const marketDataRoutes = require('./routes/marketDataRoutes');
 const leaderboardRoutes = require('./routes/leaderboardRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const budgetRoutes = require('./routes/budgetRoutes');
+const internalBudgetRoutes = require('./routes/internalBudgetRoutes');
+const settlementRoutes = require('./routes/settlementRoutes');
+const cancellationRoutes = require('./routes/cancellationRoutes');
+const rakeRoutes = require('./routes/rakeRoutes');
+const bonusRoutes = require('./routes/bonusRoutes');
+const adminPromotionRoutes = require('./routes/adminPromotionRoutes');
+const achievementRulesRoutes = require('./routes/achievementRulesRoutes');
 const openapi = require('../openapi.json');
 const db = require('./db');
 const { internalError } = require('./utils/apiError');
 const { authenticateToken } = require('./utils/authMiddleware');
 const { requireAdmin } = require('./utils/adminMiddleware');
+const { requireInternalService } = require('./utils/internalServiceMiddleware');
 const logger = require('./utils/logger');
 
 // Optional base path for when the app is mounted under a sub-path
@@ -60,6 +69,9 @@ app.use(`${BASE_PATH}/api/auth`, authRoutes);
 
 // Admin routes (require authentication + admin privileges)
 app.use(`${BASE_PATH}/api/admin`, authenticateToken, requireAdmin, adminRoutes);
+app.use(`${BASE_PATH}/api/admin/rake`, authenticateToken, requireAdmin, rakeRoutes);
+app.use(`${BASE_PATH}/api/admin/promotions`, authenticateToken, requireAdmin, adminPromotionRoutes);
+app.use(`${BASE_PATH}/api/admin/achievement-rules`, authenticateToken, requireAdmin, achievementRulesRoutes);
 
 // Authenticated portfolio routes
 app.use(`${BASE_PATH}/api/holdings`, authenticateToken, holdingsRoutes);
@@ -72,6 +84,21 @@ app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, bullPenOrdersRoutes);
 app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, leaderboardRoutes);
 app.use(`${BASE_PATH}/api/my`, authenticateToken, myBullPensRoutes);
 app.use(`${BASE_PATH}/api/market-data`, marketDataRoutes);
+
+// Budget routes (public, authenticated)
+app.use(`${BASE_PATH}/api/v1/budget`, authenticateToken, budgetRoutes);
+
+// Bonus routes (public, authenticated)
+app.use(`${BASE_PATH}/api/v1/bonus`, authenticateToken, bonusRoutes);
+
+// Internal budget routes (service-to-service)
+app.use(`${BASE_PATH}/internal/v1/budget`, requireInternalService, internalBudgetRoutes);
+
+// Internal settlement routes (service-to-service)
+app.use(`${BASE_PATH}/internal/v1/settlement`, requireInternalService, settlementRoutes);
+
+// Internal cancellation routes (service-to-service)
+app.use(`${BASE_PATH}/internal/v1/cancellation`, requireInternalService, cancellationRoutes);
 
 // Global error handler (basic)
 // eslint-disable-next-line no-unused-vars

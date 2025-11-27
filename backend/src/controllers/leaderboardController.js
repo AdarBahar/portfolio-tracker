@@ -93,22 +93,44 @@ async function getLeaderboard(req, res) {
       [bullPenId]
     );
     
+    // Get latest leaderboard snapshot for stars and scores
+    const [snapshotRows] = await db.execute(
+      `SELECT user_id, rank, stars, score FROM leaderboard_snapshots
+       WHERE bull_pen_id = ? AND snapshot_at = (
+         SELECT MAX(snapshot_at) FROM leaderboard_snapshots WHERE bull_pen_id = ?
+       )`,
+      [bullPenId, bullPenId]
+    );
+
+    // Create map of snapshot data for quick lookup
+    const snapshotMap = {};
+    snapshotRows.forEach(row => {
+      snapshotMap[row.user_id] = {
+        rank: row.rank,
+        stars: row.stars || 0,
+        score: row.score || 0,
+      };
+    });
+
     // Calculate portfolio value for each member
     const leaderboard = [];
-    
+
     for (const member of members) {
       const portfolio = await calculatePortfolioValue(bullPenId, member.user_id);
-      
+
       // Get last trade timestamp
       const [lastTradeRows] = await db.execute(
         'SELECT MAX(placed_at) as last_trade_at FROM bull_pen_orders WHERE bull_pen_id = ? AND user_id = ? AND status = "filled" AND deleted_at IS NULL',
         [bullPenId, member.user_id]
       );
-      
+
       const startingCash = Number(bullPen.starting_cash);
       const pnlAbs = portfolio.totalValue - startingCash;
       const pnlPct = (pnlAbs / startingCash) * 100;
-      
+
+      // Get snapshot data if available
+      const snapshotData = snapshotMap[member.user_id] || { rank: null, stars: 0, score: 0 };
+
       leaderboard.push({
         userId: member.user_id,
         userName: member.name,
@@ -118,13 +140,18 @@ async function getLeaderboard(req, res) {
         positionsValue: portfolio.positionsValue,
         pnlAbs,
         pnlPct,
-        lastTradeAt: lastTradeRows[0].last_trade_at,
+        stars: snapshotData.stars,
+        score: snapshotData.score,
+        lastTradeAt: lastTradeRows[0]?.last_trade_at,
       });
     }
-    
-    // Sort by portfolio value descending
-    leaderboard.sort((a, b) => b.portfolioValue - a.portfolioValue);
-    
+
+    // Sort by score (composite ranking) if available, otherwise by portfolio value
+    leaderboard.sort((a, b) => {
+      if (a.score !== b.score) return b.score - a.score;
+      return b.portfolioValue - a.portfolioValue;
+    });
+
     // Assign ranks
     leaderboard.forEach((entry, index) => {
       entry.rank = index + 1;
