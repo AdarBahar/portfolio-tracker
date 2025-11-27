@@ -2,6 +2,8 @@ const cron = require('node-cron');
 const db = require('../db');
 const { calculatePortfolioValue } = require('../controllers/leaderboardController');
 const logger = require('../utils/logger');
+const settlementService = require('../services/settlementService');
+const { reconciliationJob } = require('./reconciliationJob');
 
 /**
  * Room State Manager
@@ -34,6 +36,14 @@ async function roomStateManager() {
 
       // Create final leaderboard snapshot
       await createLeaderboardSnapshot(room.id);
+
+      // Settle the room (credit winners, debit losers)
+      const settlementResult = await settlementService.settleRoom(room.id);
+      if (settlementResult.success) {
+        logger.log(`[Job] Room ${room.id} settled successfully. ${settlementResult.settled_count} users processed.`);
+      } else {
+        logger.error(`[Job] Room ${room.id} settlement failed:`, settlementResult.error);
+      }
     }
 
     logger.log(`[Job] Room state manager complete. Transitioned ${scheduledRooms.length} to active, ${activeRooms.length} to completed.`);
@@ -142,6 +152,10 @@ function startJobs() {
   cron.schedule('*/5 * * * *', leaderboardUpdater);
   logger.log('[Jobs] Scheduled leaderboard updater (every 5 minutes)');
 
+  // Reconciliation job - every hour
+  cron.schedule('0 * * * *', reconciliationJob);
+  logger.log('[Jobs] Scheduled reconciliation job (every hour)');
+
   logger.log('[Jobs] All background jobs started');
 }
 
@@ -150,5 +164,6 @@ module.exports = {
   roomStateManager,
   leaderboardUpdater,
   createLeaderboardSnapshot,
+  reconciliationJob,
 };
 

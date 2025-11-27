@@ -2,6 +2,8 @@ const db = require('../db');
 const { badRequest, forbidden, internalError, notFound } = require('../utils/apiError');
 const logger = require('../utils/logger');
 const auditLog = require('../utils/auditLog');
+const budgetService = require('../services/budgetService');
+const { v4: uuid } = require('uuid');
 
 function mapMembershipRow(row) {
   if (!row) return null;
@@ -64,6 +66,22 @@ async function joinBullPen(req, res) {
       return badRequest(res, 'User is already a member of this bull pen');
     }
 
+    // Debit user's budget for room buy-in
+    const correlationId = `room-${bullPenId}-join-${uuid()}`;
+    const idempotencyKey = `join-${userId}-${bullPenId}-${Date.now()}`;
+
+    const debitResult = await budgetService.debitBudget(userId, bullPen.starting_cash, {
+      operation_type: 'ROOM_BUY_IN',
+      bull_pen_id: bullPenId,
+      correlation_id: correlationId,
+      idempotency_key: idempotencyKey
+    });
+
+    if (debitResult.error) {
+      logger.warn(`Budget debit failed for user ${userId} joining room ${bullPenId}:`, debitResult.error);
+      return res.status(debitResult.status || 400).json({ error: debitResult.error });
+    }
+
     const status = bullPen.approval_required ? 'pending' : 'active';
 
     const [result] = await db.execute(
@@ -82,12 +100,23 @@ async function joinBullPen(req, res) {
       userId,
       eventType: 'bull_pen_joined',
       eventCategory: 'bull_pen',
-      description: `Joined bull pen "${bullPen.name}" (status: ${status})`,
+      description: `Joined bull pen "${bullPen.name}" (status: ${status}, buy-in: ${bullPen.starting_cash})`,
       req,
-      newValues: { bullPenId, bullPenName: bullPen.name, status, role: 'player' }
+      newValues: {
+        bullPenId,
+        bullPenName: bullPen.name,
+        status,
+        role: 'player',
+        budgetLogId: debitResult.log_id,
+        correlationId
+      }
     });
 
-    return res.status(201).json({ membership: mapMembershipRow(membership) });
+    return res.status(201).json({
+      membership: mapMembershipRow(membership),
+      budgetLogId: debitResult.log_id,
+      correlationId
+    });
   } catch (err) {
     logger.error('Error joining bull pen:', err);
     return internalError(res, 'Failed to join bull pen');
@@ -274,9 +303,25 @@ async function leaveBullPen(req, res) {
 
     // Get bull pen info for logging
     const [[bullPen]] = await db.execute(
-      'SELECT name FROM bull_pens WHERE id = ?',
+      'SELECT name, starting_cash FROM bull_pens WHERE id = ?',
       [bullPenId]
     );
+
+    // Refund user's budget for room buy-in (only if room hasn't started settlement)
+    const correlationId = `room-${bullPenId}-leave-${uuid()}`;
+    const idempotencyKey = `leave-${userId}-${bullPenId}-${Date.now()}`;
+
+    const creditResult = await budgetService.creditBudget(userId, bullPen.starting_cash, {
+      operation_type: 'ROOM_LEAVE_REFUND',
+      bull_pen_id: bullPenId,
+      correlation_id: correlationId,
+      idempotency_key: idempotencyKey
+    });
+
+    if (creditResult.error) {
+      logger.warn(`Budget credit failed for user ${userId} leaving room ${bullPenId}:`, creditResult.error);
+      // Don't fail the leave operation if budget credit fails - log it but continue
+    }
 
     await db.execute(
       'UPDATE bull_pen_memberships SET status = "left" WHERE id = ? AND deleted_at IS NULL',
@@ -293,13 +338,23 @@ async function leaveBullPen(req, res) {
       userId,
       eventType: 'bull_pen_left',
       eventCategory: 'bull_pen',
-      description: `Left bull pen "${bullPen?.name || 'Unknown'}"`,
+      description: `Left bull pen "${bullPen?.name || 'Unknown'}" (refund: ${bullPen.starting_cash})`,
       req,
       previousValues: { status: membership.status },
-      newValues: { status: 'left', bullPenId, bullPenName: bullPen?.name }
+      newValues: {
+        status: 'left',
+        bullPenId,
+        bullPenName: bullPen?.name,
+        budgetLogId: creditResult.log_id,
+        correlationId
+      }
     });
 
-    return res.json({ membership: mapMembershipRow(updated) });
+    return res.json({
+      membership: mapMembershipRow(updated),
+      budgetLogId: creditResult.log_id,
+      correlationId
+    });
   } catch (err) {
     logger.error('Error leaving bull pen:', err);
     return internalError(res, 'Failed to leave bull pen');

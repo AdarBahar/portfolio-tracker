@@ -13,3 +13,10 @@ Send emails/notifications on major events
 
 update @/Users/adar.bahar/Code/portfolio-tracker/PROJECT_HISTORY.md based on the instructions on @/Users/adar.bahar/Code/portfolio-tracker/project_history_prompt.md 
 
+Ranking prompt:
+Decision: Ranking calculation should include the stars, total budget, number of transactions, wins, and losses. Help me consider what additional data should be applied in the calculation, and suggest a formula that can provide a ranking algorithm across multiple users. Suggest the weights and balances to include for each parameter, identify any missing parameters, and so on.
+
+
+Make sure to update the @/Users/adar.bahar/Code/portfolio-tracker/schema.mysql.sql with the recent updates and for it to hold to current, working database and tables configuration.
+update @/Users/adar.bahar/Code/portfolio-tracker/PROJECT_HISTORY.md based on the instructions on @/Users/adar.bahar/Code/portfolio-tracker/project_history_prompt.md 
+Update the repo with all changes
