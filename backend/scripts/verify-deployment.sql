@@ -1,13 +1,16 @@
 -- Stars System Deployment Verification Script
 -- Run this after deployment to verify all components are working
+-- Make sure to run this in the portfolio_tracker database
+
+USE portfolio_tracker;
 
 -- ============================================
 -- 1. VERIFY TABLES EXIST
 -- ============================================
 SELECT 'TABLE VERIFICATION' as check_type;
-SELECT TABLE_NAME, TABLE_ROWS 
-FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_SCHEMA = 'portfolio_tracker' 
+SELECT TABLE_NAME, TABLE_ROWS
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = 'portfolio_tracker'
 AND TABLE_NAME IN ('user_star_events', 'achievement_rules', 'season_user_stats', 'leaderboard_snapshots', 'bull_pens')
 ORDER BY TABLE_NAME;
 
