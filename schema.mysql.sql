@@ -11,6 +11,9 @@ DROP TABLE IF EXISTS promotions;
 DROP TABLE IF EXISTS rake_collection;
 DROP TABLE IF EXISTS rake_config;
 DROP TABLE IF EXISTS budget_logs;
+DROP TABLE IF EXISTS season_user_stats;
+DROP TABLE IF EXISTS user_star_events;
+DROP TABLE IF EXISTS achievement_rules;
 DROP TABLE IF EXISTS leaderboard_snapshots;
 DROP TABLE IF EXISTS bull_pen_orders;
 DROP TABLE IF EXISTS bull_pen_positions;
@@ -137,6 +140,7 @@ CREATE TABLE bull_pens (
     allow_fractional BOOLEAN NOT NULL DEFAULT FALSE,
     approval_required BOOLEAN NOT NULL DEFAULT FALSE,
     invite_code VARCHAR(16) UNIQUE,
+    season_id INT NULL COMMENT 'Season this room belongs to (for future use)',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -416,6 +420,8 @@ CREATE TABLE leaderboard_snapshots (
     pnl_abs DECIMAL(18, 2) NOT NULL,
     pnl_pct DECIMAL(10, 4) NOT NULL,
     last_trade_at TIMESTAMP NULL,
+    stars INT DEFAULT 0 COMMENT 'Stars earned in this room',
+    score DECIMAL(10, 4) DEFAULT 0 COMMENT 'Composite ranking score',
 
     -- Constraints
     CONSTRAINT fk_leaderboard_bull_pen FOREIGN KEY (bull_pen_id) REFERENCES bull_pens(id) ON DELETE CASCADE,
@@ -531,6 +537,100 @@ COMMENT='Tracks bonus redemptions by users';
 CREATE INDEX idx_bonus_redemptions_user ON bonus_redemptions(user_id);
 CREATE INDEX idx_bonus_redemptions_promotion ON bonus_redemptions(promotion_id);
 CREATE INDEX idx_bonus_redemptions_idempotency ON bonus_redemptions(idempotency_key);
+
+-- ============================================================================
+-- STARS SYSTEM TABLES
+-- Gamification system for tracking user achievements and rankings
+-- ============================================================================
+
+-- ============================================================================
+-- ACHIEVEMENT RULES TABLE
+-- Defines configurable achievement rules for star awards
+-- ============================================================================
+
+CREATE TABLE achievement_rules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(100) NOT NULL UNIQUE COMMENT 'Unique identifier for the rule',
+    name VARCHAR(150) NOT NULL COMMENT 'Display name of the achievement',
+    description TEXT COMMENT 'Detailed description of the achievement',
+    category VARCHAR(50) NOT NULL COMMENT 'Category: performance, engagement, seasonal, admin',
+    source VARCHAR(50) NOT NULL DEFAULT 'achievement' COMMENT 'Source: achievement, admin, system',
+    stars_reward INT NOT NULL COMMENT 'Number of stars awarded',
+    is_repeatable TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Can be awarded multiple times',
+    max_times INT COMMENT 'Maximum times if repeatable (NULL = unlimited)',
+    scope_type VARCHAR(30) NOT NULL COMMENT 'Scope: room, lifetime, season',
+    is_active TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Whether the rule is active',
+    conditions_json JSON COMMENT 'JSON object with rule conditions',
+    ui_badge_code VARCHAR(100) COMMENT 'Badge code for UI display',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME COMMENT 'Soft delete timestamp',
+
+    -- Indexes
+    INDEX idx_active_rules (is_active, deleted_at),
+    INDEX idx_category (category),
+    INDEX idx_scope_type (scope_type),
+    UNIQUE KEY code (code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+COMMENT='Configurable achievement rules for star awards';
+
+-- ============================================================================
+-- USER STAR EVENTS TABLE
+-- Append-only log of star awards (stars never decrease)
+-- ============================================================================
+
+CREATE TABLE user_star_events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL COMMENT 'User who earned the stars',
+    bull_pen_id INT COMMENT 'Trading room where stars were earned (nullable)',
+    season_id INT COMMENT 'Season ID for seasonal achievements (nullable)',
+    source VARCHAR(50) NOT NULL COMMENT 'Source: achievement, admin, system',
+    reason_code VARCHAR(100) NOT NULL COMMENT 'Achievement code or reason',
+    stars_delta INT NOT NULL COMMENT 'Number of stars awarded (always positive)',
+    meta JSON COMMENT 'Additional metadata (e.g., rank, P&L)',
+    deleted_at DATETIME COMMENT 'Soft delete timestamp',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    -- Indexes for performance
+    INDEX idx_user_stars (user_id),
+    INDEX idx_room_stars (bull_pen_id),
+    INDEX idx_season_stars (season_id),
+    INDEX idx_reason_code (reason_code),
+    INDEX idx_created_at (created_at),
+    INDEX idx_user_reason (user_id, reason_code),
+
+    -- Foreign key constraints
+    CONSTRAINT fk_user_star_events_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_star_events_room FOREIGN KEY (bull_pen_id) REFERENCES bull_pens(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+COMMENT='Append-only log of star awards (stars never decrease)';
+
+-- ============================================================================
+-- SEASON USER STATS TABLE
+-- Aggregated stats per user per season for leaderboard ranking
+-- ============================================================================
+
+CREATE TABLE season_user_stats (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL COMMENT 'User ID',
+    season_id INT NOT NULL COMMENT 'Season ID',
+    total_initial_equity DECIMAL(15, 2) NOT NULL COMMENT 'Total starting capital',
+    total_portfolio_value DECIMAL(15, 2) NOT NULL COMMENT 'Current portfolio value',
+    pnl_abs DECIMAL(15, 2) NOT NULL COMMENT 'Absolute P&L',
+    pnl_pct DECIMAL(10, 4) NOT NULL COMMENT 'Percentage P&L',
+    stars INT DEFAULT 0 COMMENT 'Total stars earned in season',
+    score DECIMAL(10, 4) DEFAULT 0 COMMENT 'Composite ranking score',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    -- Constraints
+    UNIQUE KEY uniq_user_season (user_id, season_id),
+    CONSTRAINT fk_season_user_stats_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+
+    -- Indexes
+    INDEX idx_season_score (season_id, score),
+    INDEX idx_user_season (user_id, season_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+COMMENT='Aggregated stats per user per season for leaderboard ranking';
 
 -- ============================================================================
 -- SAMPLE DATA (Optional - for testing)
