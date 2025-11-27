@@ -1664,3 +1664,81 @@ Successfully applied Phase 3 schema migration to local database:
   - Consider adding indexes on `deleted_at` columns for soft delete queries
   - Plan for data migration if any existing production data needs status values
   - Document production database schema differences from local development
+
+## 2025-11-27 – Repository Cleanup & Organization
+
+- **Git reference**: `feature/budget-mng` branch
+- **Summary**: Cleaned up and organized repository structure by moving documentation to centralized location and archiving temporary/debug files. Improved project maintainability and reduced root directory clutter.
+
+- **Details**:
+  - **Documentation Organization**:
+    - Moved 60+ markdown files from root directory to `docs/` folder
+    - Kept only essential files in root: README.md, project_history_prompt.md, schema.mysql.sql, todo.txt
+    - Centralized all documentation in single location for easier navigation
+    - Total documentation files in docs/: 108 files
+
+  - **Archive Folder Creation**:
+    - Created `Archive/` folder for temporary and debug files
+    - Moved 16 files to Archive/:
+      - SQL migration scripts (temporary)
+      - Shell scripts and deployment helpers
+      - Backend test files (8 files):
+        - apiSmokeTest.js
+        - debug-order-test.js
+        - getTokenFromBrowser.js
+        - tokenRefresher.js
+        - test-finnhub.js
+        - test-market-data-modes.js
+        - test-budget-api.js
+        - test-budget-integration.js
+      - deploy-ftp-test.sh
+      - Google OAuth credentials (client_secret_*.json)
+      - CSP override file (csp-override.php)
+      - "new UI" folder
+
+  - **Root Directory Cleanup**:
+    - Removed 60+ markdown files from root
+    - Removed SQL migration scripts
+    - Removed shell scripts
+    - Removed test files
+    - Removed sensitive files (OAuth credentials)
+    - Final root directory contains only 15 items (down from 100+)
+
+- **Reasoning / Motivation**:
+  - Root directory was cluttered with 100+ files making navigation difficult
+  - Documentation scattered across multiple locations
+  - Sensitive files (OAuth credentials) exposed in root
+  - Temporary test files mixed with production code
+  - Improved organization benefits:
+    - Easier for new developers to understand project structure
+    - Better separation of concerns
+    - Reduced risk of accidental file modifications
+    - Cleaner git repository appearance
+
+- **Impact**:
+  - ✅ Root directory now clean and organized
+  - ✅ Documentation centralized in `docs/` folder
+  - ✅ Temporary files isolated in `Archive/` folder
+  - ✅ Sensitive files archived and protected
+  - ✅ Easier project navigation
+  - ✅ Better maintainability
+
+- **Deployment / Ops notes**:
+  - No impact on production deployment
+  - All essential files remain in place
+  - Archive folder can be safely ignored in deployments
+  - Documentation remains accessible in docs/ folder
+  - No changes to backend, frontend, or database code
+
+- **Testing**:
+  - ✅ Verified all files moved correctly
+  - ✅ Verified docs/ folder contains 108 files
+  - ✅ Verified Archive/ folder contains 16 files
+  - ✅ Verified root directory contains only essential files
+  - ✅ Verified git status clean after cleanup
+
+- **Open questions / next steps**:
+  - Consider creating docs/ARCHIVE_README.md to document what's in Archive/
+  - Consider adding .gitignore rules for temporary files
+  - Monitor that all necessary documentation is easily discoverable in docs/
+  - Consider creating docs/INDEX.md for documentation navigation
