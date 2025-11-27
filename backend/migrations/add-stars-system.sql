@@ -25,10 +25,8 @@ CREATE TABLE IF NOT EXISTS user_star_events (
     INDEX idx_season_stars (season_id),
     INDEX idx_reason_code (reason_code),
     INDEX idx_created_at (created_at),
-    
-    -- Unique constraint for idempotency (using COALESCE for NULL handling)
-    UNIQUE KEY uniq_star_event (user_id, reason_code, COALESCE(bull_pen_id, 0), COALESCE(season_id, 0)),
-    
+    INDEX idx_user_reason (user_id, reason_code),
+
     -- Foreign key constraints
     CONSTRAINT fk_star_events_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_star_events_room FOREIGN KEY (bull_pen_id) REFERENCES bull_pens(id) ON DELETE SET NULL
@@ -96,14 +94,14 @@ COMMENT='Per-user, per-season aggregates for global ranking';
 -- 4. ALTER LEADERBOARD_SNAPSHOTS TABLE (Add stars and score columns)
 -- ============================================================================
 
-ALTER TABLE leaderboard_snapshots ADD COLUMN IF NOT EXISTS stars INT DEFAULT 0 COMMENT 'Stars earned in this room';
-ALTER TABLE leaderboard_snapshots ADD COLUMN IF NOT EXISTS score DECIMAL(10, 4) DEFAULT 0 COMMENT 'Composite ranking score';
+ALTER TABLE leaderboard_snapshots ADD COLUMN stars INT DEFAULT 0 COMMENT 'Stars earned in this room';
+ALTER TABLE leaderboard_snapshots ADD COLUMN score DECIMAL(10, 4) DEFAULT 0 COMMENT 'Composite ranking score';
 
 -- ============================================================================
 -- 5. ALTER BULL_PENS TABLE (Add season_id for future use)
 -- ============================================================================
 
-ALTER TABLE bull_pens ADD COLUMN IF NOT EXISTS season_id INT NULL COMMENT 'Season this room belongs to (for future use)';
+ALTER TABLE bull_pens ADD COLUMN season_id INT NULL COMMENT 'Season this room belongs to (for future use)';
 
 -- ============================================================================
 -- Migration complete
