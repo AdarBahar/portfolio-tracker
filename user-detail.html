@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Detail - Admin Panel</title>
+    <meta name="description" content="User detail and audit logs view">
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/admin.css">
+    <script type="module" src="scripts/theme.js"></script>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div class="header">
+        <div>
+            <h1 id="pageTitle">User Detail</h1>
+            <p class="last-updated" id="lastUpdated">Loading...</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" id="backToAdminBtn">← Back to Admin Panel</button>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"></button>
+            <button class="btn btn-secondary logout-btn" id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <main id="main-content">
+        <!-- User Overview Section -->
+        <div class="section">
+            <div id="userDetailContainer">
+                <p class="loading-text">Loading user details...</p>
+            </div>
+        </div>
+
+        <!-- Audit Logs Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Audit Logs</h2>
+                <div class="section-actions">
+                    <input type="text" id="logsSearch" class="search-input" placeholder="Search logs...">
+                    <select id="logsTransactionFilter" class="filter-select">
+                        <option value="">All Events</option>
+                        <option value="transaction">Transactions</option>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                        <option value="auth">Authentication</option>
+                    </select>
+                    <select id="logsStarFilter" class="filter-select">
+                        <option value="">All Stars</option>
+                        <option value="0">0 Stars</option>
+                        <option value="1">1 Star</option>
+                        <option value="2">2 Stars</option>
+                        <option value="3">3 Stars</option>
+                        <option value="4">4 Stars</option>
+                        <option value="5">5 Stars</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="logsContainer">
+                <p class="loading-text">Loading logs...</p>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="logsPagination">
+                <button class="pagination-btn" id="prevPageBtn" disabled>← Previous</button>
+                <span class="pagination-info" id="paginationInfo">Page 1</span>
+                <button class="pagination-btn" id="nextPageBtn" disabled>Next →</button>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="scripts/user-detail.js"></script>
+</body>
+</html>
+

@@ -1,5 +1,126 @@
 # Project History
 
+## 2025-11-27 – User Detail Page & Comprehensive Audit Logs Implementation
+
+- **Git reference**: `feature/budget-mng` branch
+- **Summary**: Implemented full-page user detail view with comprehensive audit logs, pagination, and multi-filter search. Created realistic audit log data for user 4 spanning 2 weeks. Updated deployment script to dynamically include all frontend files.
+
+- **Details**:
+  - **User Detail Page** (`user-detail.html`):
+    - Full-page view replacing modal for better UX and log management
+    - Header with "Back to Admin Panel" navigation button
+    - User overview section showing:
+      - User profile (name, email, status, creation date, last login)
+      - Budget information (available + locked balance)
+      - Performance metrics (total P&L, average rank)
+      - Trading room memberships with join dates and rankings
+    - Audit logs section with:
+      - Free text search across event types and descriptions
+      - Transaction type filter dropdown
+      - Star rating filter dropdown
+      - Pagination controls (10 logs per page)
+      - Most recent logs displayed first
+      - Proper XSS prevention with HTML escaping
+
+  - **User Detail Module** (`scripts/user-detail.js`):
+    - Handles page initialization and authentication
+    - Loads user detail data from `/api/admin/users/:id/detail`
+    - Loads audit logs from `/api/admin/users/:id/logs`
+    - Implements real-time filtering with pagination reset
+    - Supports multiple filter combinations
+    - Utility functions for date formatting and HTML escaping
+    - Proper error handling and user feedback
+
+  - **Audit Logs Generation** (`backend/scripts/load-fake-audit-logs.sql`):
+    - Creates 39 realistic audit log entries for user 4
+    - Spans 14 days with coherent narrative:
+      - **Day 1**: Account registration, profile setup, budget assignment (5000 VUSD)
+      - **Days 2-5**: First trading room (Tech Stock Showdown), trading activity, rank progression, room won (+750 VUSD)
+      - **Days 6-10**: Second trading room (Market Movers Challenge), trading activity, rank progression, room lost (-250 VUSD)
+      - **Days 11-14**: Third trading room (Growth Stocks Battle - active), aggressive trading, rank changes
+    - Event distribution:
+      - 26 transaction events (room joins, orders, rank changes)
+      - 8 budget events (assignments, locks, settlements)
+      - 3 authentication events (account creation, logins)
+      - 2 profile events (profile creation, portfolio views)
+    - Simulated IP addresses (192.168.1.100-113) for realistic client tracking
+    - Coherent with existing user budget and trading room data
+
+  - **Audit Logs Documentation** (`backend/scripts/AUDIT_LOGS_README.md`):
+    - Comprehensive guide for audit log data
+    - Timeline breakdown with dates and events
+    - Event type reference
+    - Data consistency notes
+    - Usage instructions and verification commands
+
+  - **Admin Panel Updates** (`scripts/admin.js`):
+    - Updated `viewUserDetail()` to navigate to full page instead of modal
+    - Removed modal-related event listeners
+    - Removed `renderUserDetail()` function (moved to user-detail.js)
+    - Maintains backward compatibility with existing admin table
+
+  - **Deployment Script Updates** (`deploy_zip.sh`):
+    - Changed from hardcoded HTML file list to dynamic loop
+    - Now automatically includes all .html files from root directory
+    - Updated verification section to check for file existence dynamically
+    - Updated summary output to list all included HTML files
+    - Ensures new pages like user-detail.html are automatically included in future deployments
+    - Documentation updated to reflect dynamic file inclusion
+
+- **Files Created**:
+  - `user-detail.html` - Full-page user detail view
+  - `scripts/user-detail.js` - User detail page logic
+  - `backend/scripts/load-fake-audit-logs.sql` - Audit log data generation
+  - `backend/scripts/AUDIT_LOGS_README.md` - Audit logs documentation
+
+- **Files Modified**:
+  - `admin.html` - Removed user detail modal
+  - `scripts/admin.js` - Updated viewUserDetail() to navigate to page
+  - `styles/admin.css` - Added pagination and filter styling
+  - `deploy_zip.sh` - Updated to dynamically include all HTML files
+
+- **Reasoning / Motivation**:
+  1. Modal was limiting for displaying large amounts of audit log data
+  2. Full page provides better UX for pagination and filtering
+  3. Realistic audit logs enable testing of admin features with coherent data
+  4. Dynamic deployment script prevents missing new files in future deployments
+  5. Comprehensive audit trail supports compliance and debugging requirements
+
+- **Impact**:
+  - Users can now view detailed audit logs with search and filtering
+  - Admin panel provides complete user history and activity tracking
+  - Deployment process is more maintainable and future-proof
+  - Test data enables realistic admin panel testing
+  - Better separation of concerns (modal vs. full page)
+
+- **Deployment / Ops notes**:
+  - No new environment variables required
+  - No database migrations needed
+  - Audit logs are optional test data (can be loaded with `load-fake-audit-logs.sql`)
+  - User detail page requires admin authentication (existing middleware)
+  - Deploy script now automatically includes all HTML files
+
+- **Testing**:
+  - ✅ User detail page loads correctly with user data
+  - ✅ Audit logs display with proper pagination (10 per page)
+  - ✅ Search filters work across event types and descriptions
+  - ✅ Transaction and star filters work correctly
+  - ✅ "Back to Admin Panel" button navigates correctly
+  - ✅ All numeric values properly formatted with parseFloat()
+  - ✅ XSS prevention with HTML escaping
+  - ✅ Deploy script includes all HTML files dynamically
+  - ✅ 39 audit log entries loaded successfully for user 4
+
+- **Open questions / next steps**:
+  1. **Audit Log Retention**: Implement automatic cleanup of old audit logs (e.g., keep 90 days)
+  2. **Export Functionality**: Add ability to export audit logs to CSV/JSON
+  3. **Advanced Filtering**: Add date range filters and event type multi-select
+  4. **Real-time Updates**: Implement WebSocket updates for live audit log streaming
+  5. **Audit Log Analytics**: Create dashboard showing audit log trends and patterns
+  6. **Performance**: Monitor query performance with large audit log datasets
+  7. **Compliance Reports**: Generate compliance reports from audit logs
+  8. **Bulk Operations**: Add ability to bulk-export or bulk-delete audit logs
+
 ## 2025-11-26 – Phase 3: Admin Panel Enhancements & Fake Data Loading (with Schema Fixes)
 
 - **Git reference**: `feature/budget-mng` branch
