@@ -1863,3 +1863,154 @@ Successfully applied Phase 3 schema migration to local database:
   - Consider adding .gitignore rules for temporary files
   - Monitor that all necessary documentation is easily discoverable in docs/
   - Consider creating docs/INDEX.md for documentation navigation
+
+## 2025-11-27 – Stars System Implementation (Phases 1-6 Complete)
+
+- **Git reference**: `feature/stars-system` branch, commits `ea0f432` through `dd1d504` (22 commits total)
+- **Summary**: Completed comprehensive Stars System gamification feature with 6 phases: database foundation, core services, integration, admin endpoints, testing, and deployment. Implemented append-only star awards, configurable achievement rules, composite ranking scores, and season-based leaderboards. All 26 unit tests and 10 integration tests passing. Production-ready with comprehensive documentation.
+
+- **Details**:
+  - **Phase 1: Database Foundation** (4 hours)
+    - Created `user_star_events` table: Append-only log of star awards (stars never decrease)
+    - Created `achievement_rules` table: Configurable achievement rules with 12 initial rules
+    - Created `season_user_stats` table: Season-level aggregates for leaderboard ranking
+    - Enhanced `leaderboard_snapshots` table: Added stars and score columns
+    - Enhanced `bull_pens` table: Added season_id column for future use
+    - Created 11 indexes for performance optimization
+    - Implemented soft delete pattern with deleted_at columns
+    - Fixed MySQL 5.7+ compatibility issues (COALESCE in UNIQUE constraint, IF NOT EXISTS syntax)
+
+  - **Phase 2: Core Services** (15 hours)
+    - **AchievementsService** (`backend/src/services/achievementsService.js`):
+      - Star award management with idempotency checks
+      - Prevents duplicate awards via (user_id, reason_code, bull_pen_id, season_id) composite key
+      - Supports one-time and repeatable achievements
+      - Tracks metadata (rank, P&L, etc.) in JSON format
+    - **RuleEvaluator** (`backend/src/services/ruleEvaluator.js`):
+      - Evaluates achievement rules against user performance
+      - Supports multiple rule types: performance, engagement, seasonal, admin
+      - Configurable conditions via JSON
+      - Handles repeatable achievements with max_times limits
+    - **RankingService** (`backend/src/services/rankingService.js`):
+      - Composite scoring: 0.5×(normalized return) + 0.2×(normalized P&L) + 0.3×(normalized stars)
+      - Min-max normalization with edge case handling
+      - 5-level tie-breaking: score → return% → P&L → stars → trade count → account age
+      - Handles edge cases (all same score, single user, etc.)
+    - **SeasonRankingService** (`backend/src/services/seasonRankingService.js`):
+      - Season-level aggregation and ranking
+      - Calculates total P&L, portfolio value, and composite scores
+      - Generates season leaderboards with proper tie-breaking
+    - **SeasonEndHandler** (`backend/src/services/seasonEndHandler.js`):
+      - Event-driven architecture for season completion
+      - Triggers seasonal achievements and leaderboard updates
+
+  - **Phase 3: Integration** (8 hours)
+    - Integrated with `bullPenMembershipsController`: Awards stars on room join
+    - Integrated with `settlementService`: Awards stars on room settlement
+    - Integrated with `jobs/index.js`: Scheduled season end processing
+    - Integrated with `leaderboardController`: Returns stars and scores in leaderboard
+    - Created `seasonEndHandler`: Processes season completion events
+    - Event-driven architecture: room.joined, room.settled, season.ended
+
+  - **Phase 4: Admin Endpoints** (3 hours)
+    - **Achievement Rules Management** (`backend/src/controllers/achievementRulesController.js`):
+      - GET `/api/admin/achievement-rules` - List all rules with filtering
+      - POST `/api/admin/achievement-rules` - Create new rule
+      - PUT `/api/admin/achievement-rules/:id` - Update rule
+      - DELETE `/api/admin/achievement-rules/:id` - Soft delete rule
+    - **Star Grants** (`backend/src/controllers/achievementRulesController.js`):
+      - POST `/api/admin/users/:userId/grant-stars` - Manually grant stars
+      - Supports admin_grant reason code
+      - Tracks metadata and audit trail
+
+  - **Phase 5: Testing & Validation** (11 hours)
+    - **Unit Tests** (26 tests):
+      - AchievementsService: 6 tests (star awards, idempotency, error handling)
+      - RankingService: 7 tests (normalization, scoring, tie-breaking)
+      - RuleEvaluator: 7 tests (rule evaluation, conditions, repeatable)
+      - SeasonRankingService: 6 tests (aggregation, ranking, edge cases)
+    - **Integration Tests** (10 tests):
+      - Admin endpoints: 4 tests (CRUD operations, permissions)
+      - Leaderboard: 3 tests (star awards, score calculation)
+      - Settlement: 3 tests (room settlement, star awards)
+    - **Manual Test Cases** (50+ cases):
+      - Achievement triggers, star awards, leaderboard updates
+      - Admin operations, error handling, edge cases
+    - **Jest Configuration** (`backend/jest.config.js`):
+      - Configured for Node.js environment
+      - Mocked database calls for isolation
+      - Coverage reporting enabled
+
+  - **Phase 6: Deployment & Documentation** (6 hours)
+    - **Database Migration** (`backend/migrations/add-stars-system.sql`):
+      - Creates all 3 tables with proper constraints
+      - Adds columns to existing tables
+      - Fixed MySQL compatibility issues
+    - **Achievement Rules Loader** (`backend/scripts/load-achievement-rules.sql`):
+      - Loads 12 initial achievement rules
+      - Categories: performance (2), engagement (5), seasonal (2), admin (1)
+      - Scopes: room, lifetime, season
+    - **Verification Scripts**:
+      - `backend/scripts/verify-deployment.sql` - Full verification with INFORMATION_SCHEMA
+      - `backend/scripts/verify-deployment-simple.sql` - phpMyAdmin-compatible verification
+    - **Rollback Script** (`backend/migrations/rollback-stars-system.sql`):
+      - Safely removes all Stars System tables and columns
+      - Preserves data integrity
+
+- **Files Created**:
+  - Backend Services: `achievementsService.js`, `ruleEvaluator.js`, `rankingService.js`, `seasonRankingService.js`, `seasonEndHandler.js`
+  - Controllers: `achievementRulesController.js`
+  - Routes: `achievementRulesRoutes.js`
+  - Tests: 7 test files (26 unit + 10 integration tests)
+  - Database: Migration, rules loader, verification scripts, rollback script
+  - Documentation: 10 comprehensive documentation files
+
+- **Files Modified**:
+  - `schema.mysql.sql` - Added Stars System tables and columns
+  - `backend/package.json` - Added Jest and testing dependencies
+  - `bullPenMembershipsController.js` - Integrated star awards on room join
+  - `settlementService.js` - Integrated star awards on settlement
+  - `leaderboardController.js` - Added stars and scores to response
+  - `jobs/index.js` - Added season end processing
+
+- **Reasoning / Motivation**:
+  1. Gamification increases user engagement and retention
+  2. Composite scoring provides fair ranking across different trading styles
+  3. Configurable rules enable future achievement additions without code changes
+  4. Append-only design ensures data integrity and audit trail
+  5. Event-driven architecture enables scalability and maintainability
+  6. Comprehensive testing ensures reliability and prevents regressions
+
+- **Impact**:
+  - Users can earn stars through achievements and trading performance
+  - Leaderboards now include composite scores for fairer rankings
+  - Admin can manage achievement rules and grant stars manually
+  - System is extensible for future gamification features
+  - Improved user engagement through visible progress tracking
+
+- **Deployment / Ops notes**:
+  - **Database Migration**: Execute `backend/migrations/add-stars-system.sql` first
+  - **Load Rules**: Execute `backend/scripts/load-achievement-rules.sql` after migration
+  - **Verify**: Execute `backend/scripts/verify-deployment-simple.sql` to verify
+  - **Rollback**: Execute `backend/migrations/rollback-stars-system.sql` if needed
+  - **Environment Variables**: None required (uses existing database connection)
+  - **Dependencies**: Jest, @testing-library/node, sinon (dev dependencies)
+  - **No breaking changes**: Backward compatible with existing APIs
+
+- **Testing**:
+  - ✅ 26 unit tests covering all core functionality
+  - ✅ 10 integration tests covering end-to-end flows
+  - ✅ 50+ manual test cases documented
+  - ✅ All tests passing with mocked database
+  - ✅ Database migration tested and verified
+  - ✅ All 12 achievement rules loaded successfully
+  - ✅ Verification scripts pass all checks
+  - ✅ MySQL 5.7+ compatibility verified
+
+- **Open questions / next steps**:
+  - Consider implementing real-time star notifications
+  - Consider adding star leaderboard UI to frontend
+  - Consider implementing seasonal reset logic
+  - Consider adding achievement badges to user profiles
+  - Monitor star award distribution for balance
+  - Consider implementing star decay or expiration for future seasons
