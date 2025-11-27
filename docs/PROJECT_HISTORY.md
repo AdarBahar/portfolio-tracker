@@ -1,5 +1,92 @@
 # Project History
 
+## 2025-11-27 – API Smoke Test Enhancements & Automatic Token Fetching
+
+- **Git reference**: `main` branch, uncommitted changes
+- **Summary**: Enhanced API smoke test suite with automatic token fetching for specific email addresses using Puppeteer, fixed market data search test response structure, and improved token expiry handling.
+
+- **Details**:
+  - **New Token Fetcher Module** (`backend/tokenFetcher.js`):
+    - Created Puppeteer-based token fetching for automated Google login
+    - Supports automatic token fetching for `adar@bahar.co.il` and `adarb@bahar.co.il`
+    - Implements local token caching in `.token-cache.json` to avoid repeated authentication
+    - Checks token expiry before using cached tokens (5-minute buffer)
+    - Graceful error handling with fallback to interactive mode
+    - Exports: `fetchTokenForEmail()`, `isTokenExpired()`, `decodeJWT()`
+
+  - **API Smoke Test Updates** (`backend/apiSmokeTest.js`):
+    - Integrated `tokenFetcher` module for automatic credential fetching
+    - Updated main() to auto-fetch tokens for both email addresses if missing/expired
+    - Requires `ADAR_PASSWORD` and `ADARB_PASSWORD` environment variables for auto-fetch
+    - Falls back to interactive mode if auto-fetch fails
+    - Fixed market data search test to use correct response structure (`result` array instead of `results`)
+    - Added `description` field validation for search results (not `name`)
+    - Updated documentation with feature list and environment variable requirements
+    - Improved usage examples showing auto-fetch, manual override, and interactive modes
+
+  - **Test Fixes**:
+    - Fixed `market-data-search-symbols` test to match actual API response format
+    - Response structure: `{ count: number, result: array }` (not `{ results: array }`)
+    - Search result fields: `symbol`, `description`, `displaySymbol`, `type`
+    - Token expiry check now properly skips optional tests instead of failing them
+
+  - **Dependencies**:
+    - Added `puppeteer@24.31.0` to `backend/package.json` devDependencies
+    - Installed successfully (91 packages added/changed)
+
+- **Files Created**:
+  - `backend/tokenFetcher.js` - Puppeteer-based token fetching module
+
+- **Files Modified**:
+  - `backend/apiSmokeTest.js` - Integrated token fetcher, fixed market data test, updated docs
+  - `backend/package.json` - Added puppeteer dependency
+
+- **Reasoning / Motivation**:
+  1. Manual token fetching is tedious and error-prone for repeated test runs
+  2. Puppeteer automation enables CI/CD integration without manual intervention
+  3. Token caching reduces authentication overhead and speeds up test execution
+  4. Automatic email-based fetching supports multiple test users
+  5. Market data test fix ensures accurate API contract validation
+  6. Token expiry handling prevents false test failures
+
+- **Impact**:
+  - Smoke tests can now run automatically without manual token input
+  - Token caching significantly speeds up repeated test runs
+  - Support for multiple test users (adar@bahar.co.il, adarb@bahar.co.il)
+  - Market data search tests now pass with correct response validation
+  - Better developer experience with automatic credential management
+
+- **Deployment / Ops notes**:
+  - **Environment Variables Required**:
+    ```
+    ADAR_PASSWORD=<password_for_adar@bahar.co.il>
+    ADARB_PASSWORD=<password_for_adarb@bahar.co.il>
+    ```
+  - **Optional Overrides**:
+    ```
+    TEST_GOOGLE_CREDENTIAL=<jwt_token>
+    TEST_GOOGLE_CREDENTIAL_2=<jwt_token>
+    ```
+  - Token cache stored in `backend/.token-cache.json` (auto-created)
+  - Puppeteer requires headless browser support (works on Linux, macOS, Windows)
+  - For CI/CD: Ensure headless browser dependencies are installed
+
+- **Testing**:
+  - ✅ Syntax check passed for all modified files
+  - ✅ Puppeteer installed successfully (v24.31.0)
+  - ✅ Market data search test response structure validated
+  - ✅ Token expiry logic verified
+  - ✅ Token caching mechanism tested
+
+- **Open questions / next steps**:
+  1. **CI/CD Integration**: Set up GitHub Actions to run smoke tests on deployment
+  2. **Headless Browser**: Ensure Puppeteer works in CI environment (may need additional setup)
+  3. **Token Refresh**: Implement automatic token refresh when expired during test run
+  4. **Multi-user Testing**: Add support for additional test user accounts
+  5. **Performance**: Monitor token fetch time and optimize if needed
+  6. **Error Handling**: Add retry logic for failed token fetches
+  7. **Logging**: Add detailed logging for token fetch debugging
+
 ## 2025-11-27 – User Detail Page & Comprehensive Audit Logs Implementation
 
 - **Git reference**: `feature/budget-mng` branch
