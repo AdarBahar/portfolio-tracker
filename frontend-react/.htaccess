@@ -1,6 +1,6 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /react/
+  RewriteBase /fantasybroker/react/
 
   # Don't rewrite if it's a real file
   RewriteCond %{REQUEST_FILENAME} !-f
