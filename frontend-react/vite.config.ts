@@ -16,7 +16,8 @@ export default defineConfig({
     open: false,
   },
   build: {
-    outDir: 'dist',
+    outDir: '../react',
+    emptyOutDir: true,
     sourcemap: true,
     minify: 'terser',
   },
