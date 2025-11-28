@@ -17,7 +17,7 @@ class APIClient {
 
     // Add request interceptor for auth token
     this.client.interceptors.request.use((config: any) => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('portfolio_auth_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -29,8 +29,10 @@ class APIClient {
       (response: any) => response,
       async (error: AxiosError) => {
         if (error.response?.status === 401) {
-          localStorage.removeItem('authToken');
-          window.location.href = '/login';
+          localStorage.removeItem('portfolio_auth_token');
+          localStorage.removeItem('portfolio_user');
+          localStorage.removeItem('portfolio_token_expiry');
+          window.location.href = '/fantasybroker/react/login';
         }
         throw error;
       }
