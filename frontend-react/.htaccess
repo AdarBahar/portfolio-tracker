@@ -1,13 +1,15 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /react/
-  
+
   # Don't rewrite if it's a real file
   RewriteCond %{REQUEST_FILENAME} !-f
   # Don't rewrite if it's a real directory
   RewriteCond %{REQUEST_FILENAME} !-d
-  
-  # Rewrite all requests to index.html
+  # Don't rewrite if it's the index.html file
+  RewriteCond %{REQUEST_FILENAME} !index\.html
+
+  # Rewrite all requests to index.html (for React Router)
   RewriteRule ^ index.html [QSA,L]
 </IfModule>
 
@@ -16,6 +18,23 @@
   AddType application/javascript js
   AddType text/css css
   AddType application/json json
+  AddType image/svg+xml svg
+</IfModule>
+
+# Force correct MIME types with headers
+<IfModule mod_headers.c>
+  <FilesMatch "\.js$">
+    Header set Content-Type "application/javascript; charset=utf-8"
+  </FilesMatch>
+  <FilesMatch "\.css$">
+    Header set Content-Type "text/css; charset=utf-8"
+  </FilesMatch>
+  <FilesMatch "\.json$">
+    Header set Content-Type "application/json; charset=utf-8"
+  </FilesMatch>
+  <FilesMatch "\.svg$">
+    Header set Content-Type "image/svg+xml"
+  </FilesMatch>
 </IfModule>
 
 # Enable gzip compression
