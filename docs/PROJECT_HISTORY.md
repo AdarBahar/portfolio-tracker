@@ -1,5 +1,115 @@
 # Project History
 
+## 2025-11-28 – React Migration Infrastructure Setup
+
+- **Git reference**: `react-migration-test` branch, commits `400dfbc`, `b415ecd`, `b735f80`, `9cdf0de`, `0f84cb3`, `e8d544f`, `f1ddbfd`, `12aa4fd`
+- **Summary**: Completed React migration infrastructure setup with Vite build configuration, TypeScript support, Tailwind CSS design system, React Router navigation, and comprehensive deployment documentation. React app now builds directly to root `react/` folder for easy testing and deployment.
+
+- **Details**:
+  - **React Project Infrastructure** (`frontend-react/`):
+    - React 19 with TypeScript for type safety
+    - Vite build tool with HMR (Hot Module Replacement) for fast development
+    - Tailwind CSS v4 with design system tokens (colors, spacing, shadows)
+    - React Router v6 with multi-page navigation (Dashboard, Trade Room, Admin)
+    - React Query v5 for server state management and API data fetching
+    - Axios HTTP client with interceptors for authentication and error handling
+    - lucide-react for icon library
+    - shadcn/ui component library (configured but not yet implemented)
+
+  - **Build Configuration** (`frontend-react/vite.config.ts`):
+    - Configured Vite to output to `../react` (root folder) instead of `dist`
+    - Added `emptyOutDir: true` to clean build folder on each build
+    - Base path set to `/fantasybroker/react/` for production deployment
+    - Terser minification for production builds
+    - Source maps enabled for debugging
+    - Path alias `@` for cleaner imports
+
+  - **Sample Pages Created**:
+    - **Dashboard** (`frontend-react/src/pages/Dashboard.tsx`): Portfolio metrics, navigation, migration status
+    - **Trade Room** (`frontend-react/src/pages/TradeRoom.tsx`): Tournament listing, participant info, join functionality
+    - **Admin Panel** (`frontend-react/src/pages/Admin.tsx`): User management, rake config, analytics, promotions
+    - **404 Page** (`frontend-react/src/pages/NotFound.tsx`): Error handling for invalid routes
+
+  - **Deployment Infrastructure**:
+    - `.htaccess` for URL rewriting and MIME type configuration
+    - Environment configuration (`.env`) with API URL
+    - `.gitignore` to exclude build output from git
+    - CSP headers for Google Fonts and API calls
+    - Cache control headers (1 year for versioned assets, no-cache for HTML)
+
+  - **Documentation Created**:
+    - `docs/REACT_SETUP_SUMMARY.md` - Quick overview and setup guide
+    - `docs/REACT_MIGRATION_GUIDE.md` - Complete migration guide with testing and deployment steps
+    - `docs/REACT_DEPLOYMENT_CHECKLIST.md` - Step-by-step deployment checklist with testing procedures
+
+  - **Files Created**:
+    - `frontend-react/` - Complete React project structure
+    - `react/` - Build output folder with compiled assets
+    - `docs/REACT_SETUP_SUMMARY.md` - Setup documentation
+    - `docs/REACT_MIGRATION_GUIDE.md` - Migration guide
+    - `docs/REACT_DEPLOYMENT_CHECKLIST.md` - Deployment checklist
+
+  - **Files Modified**:
+    - `frontend-react/vite.config.ts` - Changed outDir to `../react`, added emptyOutDir
+    - `frontend-react/src/App.tsx` - Added basename for React Router
+    - `.htaccess` (root) - Updated CSP headers for Google Fonts and APIs
+    - `frontend-react/.htaccess` - URL rewriting and MIME type configuration
+
+- **Reasoning / Motivation**:
+  1. React provides modern component-based architecture vs. vanilla JS
+  2. TypeScript adds type safety and better developer experience
+  3. Vite enables fast builds and HMR for rapid development
+  4. React Router provides client-side routing for SPA
+  5. React Query simplifies API state management
+  6. Tailwind CSS with design tokens ensures consistent styling
+  7. Building to root `react/` folder simplifies deployment and testing
+  8. Comprehensive documentation enables smooth migration process
+
+- **Impact**:
+  - React app can now be built and deployed independently
+  - Build output goes directly to `react/` folder (ready for production)
+  - React app runs at `/fantasybroker/react/` on production
+  - Vanilla JS frontend remains at root for backward compatibility
+  - Easy to test React app before switching from vanilla JS
+  - Clear deployment and rollback procedures documented
+
+- **Deployment / Ops notes**:
+  - **Build Process**: `cd frontend-react && npm run build` → outputs to `react/` folder
+  - **Local Testing**: `cd frontend-react && npm run dev` → http://localhost:5173/fantasybroker/react/
+  - **Production Deployment**: `rsync -avz --delete react/ user@server:/var/www/fantasy-broker/react/`
+  - **Permissions**: `chmod -R 755 react/` and `chmod -R 644 react/assets/*`
+  - **Environment Variables**: Update `react/.env` with production API URL
+  - **Switching to React** (when ready):
+    1. Backup vanilla JS files
+    2. Copy `react/*` to root
+    3. Update root `.htaccess` for React Router
+    4. Test all routes work
+    5. Remove vanilla JS files (optional)
+
+- **Testing**:
+  - ✅ React app builds successfully with no TypeScript errors
+  - ✅ Build output generated in `react/` folder
+  - ✅ Assets include CSS, JS, and source maps
+  - ✅ `.htaccess` configured for URL rewriting
+  - ✅ Environment configuration in place
+  - ✅ Local dev server works with HMR
+  - ✅ Production build optimized with minification
+  - ✅ All sample pages load correctly
+  - ✅ React Router navigation works
+  - ✅ API client configured with error handling
+
+- **Open questions / next steps**:
+  1. **Component Library**: Implement shadcn/ui components for consistent UI
+  2. **API Integration**: Connect all pages to real API endpoints
+  3. **Authentication**: Implement Google OAuth login in React
+  4. **Testing**: Add unit tests and integration tests
+  5. **Performance**: Monitor build size and optimize if needed
+  6. **Accessibility**: Ensure WCAG 2.1 compliance
+  7. **Mobile**: Test responsive design on mobile devices
+  8. **Production Testing**: Deploy to production and test all features
+  9. **Switchover**: When confident, switch vanilla JS to React
+  10. **Cleanup**: Remove vanilla JS files after successful switchover
+
 ## 2025-11-27 – API Smoke Test Enhancements & Automatic Token Fetching
 
 - **Git reference**: `main` branch, uncommitted changes
