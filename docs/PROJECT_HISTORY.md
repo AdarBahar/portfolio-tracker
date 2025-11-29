@@ -1,5 +1,96 @@
 # Project History
 
+## 2025-11-29 – Theme Toggle & User Profile Display
+
+- **Git reference**: `react-migration-test` branch, commit `9197c15`
+- **Summary**: Implemented dark/light theme toggle and user profile display in headers across all pages. Theme preference is persisted in localStorage and applied globally.
+
+- **Details**:
+  - **ThemeContext** (`frontend-react/src/contexts/ThemeContext.tsx`):
+    - Centralized theme management using React Context
+    - Stores theme preference in localStorage with key `portfolio_theme`
+    - Applies `data-color-scheme` attribute to document root
+    - Prevents flash of wrong theme on page load by initializing before render
+    - Exports `useTheme()` hook for accessing theme state and toggle function
+
+  - **ThemeToggle Component** (`frontend-react/src/components/header/ThemeToggle.tsx`):
+    - Displays Sun icon (yellow) in dark mode, Moon icon (slate) in light mode
+    - Uses lucide-react icons for consistent styling
+    - Styled with Tailwind classes for dark background and hover effects
+    - Positioned in header next to user profile
+
+  - **UserProfile Component** (`frontend-react/src/components/header/UserProfile.tsx`):
+    - Displays user avatar (Google profile image or initials in circle)
+    - Shows user name in bold text
+    - Shows admin badge (⭐) if user has admin privileges
+    - Shows "Admin Page" link if user is admin (navigates to /admin)
+    - Shows "Demo Mode" badge if user is in demo mode
+    - Logout button positioned next to profile
+    - Styled with Tailwind classes matching header design
+
+  - **Updated Pages**:
+    - **Dashboard** - Added ThemeToggle and UserProfile to header
+    - **TradeRoom** - Added new header with back button, ThemeToggle, UserProfile
+    - **BullPenDetail** - Added ThemeToggle and UserProfile to header
+    - **Admin** - Updated header with back button, ThemeToggle, UserProfile
+    - **Login** - Replaced emoji theme button with ThemeToggle component
+
+  - **App.tsx Updates**:
+    - Wrapped Router with ThemeProvider to enable theme functionality globally
+    - Theme is now available to all pages via useTheme() hook
+
+  - **Build Results**:
+    - JavaScript: 739.64KB (215.30KB gzipped)
+    - CSS: 25.43KB (5.35KB gzipped)
+    - Total modules: 2457
+    - Build time: 3.91s
+    - ✅ Build successful
+
+  - **Files Created**:
+    - `frontend-react/src/contexts/ThemeContext.tsx`
+    - `frontend-react/src/components/header/ThemeToggle.tsx`
+    - `frontend-react/src/components/header/UserProfile.tsx`
+
+  - **Files Modified**:
+    - `frontend-react/src/App.tsx` - Added ThemeProvider wrapper
+    - `frontend-react/src/pages/Dashboard.tsx` - Added theme and user profile components
+    - `frontend-react/src/pages/TradeRoom.tsx` - Added header with theme and user profile
+    - `frontend-react/src/pages/BullPenDetail.tsx` - Added theme and user profile to header
+    - `frontend-react/src/pages/Admin.tsx` - Updated header with theme and user profile
+    - `frontend-react/src/pages/Login.tsx` - Replaced emoji button with ThemeToggle
+
+- **Reasoning / Motivation**:
+  - Vanilla JS version has theme toggle and user profile display
+  - React version should have feature parity with vanilla JS
+  - Theme preference should persist across sessions
+  - User profile display improves UX and provides quick access to admin panel
+  - Consistent header design across all pages
+
+- **Impact**:
+  - Users can now toggle between light and dark themes
+  - Theme preference is saved and restored on page reload
+  - User profile is displayed in header with admin badge and link
+  - Consistent header design across all pages
+  - Better UX with quick access to admin panel for admins
+
+- **Deployment / Ops notes**:
+  - Deploy updated `react/` folder to production
+  - No database changes required
+  - No environment variable changes required
+  - Theme preference stored in browser localStorage
+
+- **Testing**:
+  - Manual testing: Verified theme toggle works and persists across page reloads
+  - Manual testing: Verified user profile displays correctly with admin badge
+  - Manual testing: Verified admin link navigates to admin page
+  - Manual testing: Verified demo mode badge displays correctly
+  - Build verification: No TypeScript errors, successful production build
+
+- **Open questions / next steps**:
+  - Consider adding theme preference to user profile in backend (optional)
+  - Could add more theme options (e.g., auto, system preference) in future
+  - Proceed with Phase 6: Unit Tests for React Components
+
 ## 2025-11-29 – Phase 5: Charts and Visualizations
 
 - **Git reference**: `react-migration-test` branch, commit `b180708`
