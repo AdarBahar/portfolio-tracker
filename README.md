@@ -260,58 +260,147 @@ This project is **database-ready** with a complete MySQL schema and migration gu
 
 ### React Frontend (Current)
 
-The project now includes a modern React frontend built with Vite. See below for build and deployment instructions.
+The project now includes a modern React frontend built with Vite. See below for comprehensive build and deployment instructions.
+
+#### Prerequisites
+
+- Node.js 14+ and npm
+- Git
+- Access to production server (for deployment)
+- Apache with `mod_headers`, `mod_rewrite`, `mod_deflate` modules
 
 #### Build for Production
+
+**Step 1: Install dependencies**
 
 ```bash
 cd frontend-react
 npm install
+```
+
+**Step 2: Build the production bundle**
+
+```bash
 npm run build
 ```
 
-This creates optimized production build in the `react/` folder:
-- `react/index.html` - Main HTML file
-- `react/assets/` - Minified JavaScript and CSS
+This creates an optimized production build in the `react/` folder:
+- `react/index.html` - Main HTML entry point
+- `react/assets/index-*.css` - Minified CSS (~5.35KB gzipped)
+- `react/assets/index-*.js` - Minified JavaScript (~215.3KB gzipped)
 - `react/.htaccess` - Apache configuration with security headers
+
+**Step 3: Verify the build**
+
+```bash
+# Check that build completed successfully
+ls -lah react/
+# Should show: index.html, assets/, .htaccess, vite.svg
+```
 
 #### Deploy to Production
 
 **Option 1: Using rsync (recommended)**
 
 ```bash
+# From project root directory
 rsync -avz --delete react/ user@server:/var/www/fantasy-broker/react/
+
+# Verify deployment
+ssh user@server "ls -lah /var/www/fantasy-broker/react/"
 ```
 
-**Option 2: Manual upload**
+**Option 2: Using SFTP**
 
-1. Connect to server via SFTP
-2. Upload contents of `react/` folder to `/var/www/fantasy-broker/react/`
-3. Set permissions: `chmod -R 755 react/` and `chmod -R 644 react/assets/*`
+1. Connect to server via SFTP client (e.g., FileZilla, Cyberduck)
+2. Navigate to `/var/www/fantasy-broker/`
+3. Upload entire `react/` folder contents
+4. Verify all files are present
+
+**Option 3: Using Git on server**
+
+```bash
+# On server
+cd /var/www/fantasy-broker
+git clone <repo-url> portfolio-tracker
+cd portfolio-tracker/frontend-react
+npm install
+npm run build
+# Built files are now in ../react/
+```
+
+**Step 4: Set permissions**
+
+```bash
+ssh user@server "chmod -R 755 /var/www/fantasy-broker/react/ && chmod -R 644 /var/www/fantasy-broker/react/assets/*"
+```
 
 #### Verify Deployment
 
-1. Open https://www.bahar.co.il/fantasybroker/react/
-2. Open DevTools Console (F12)
-3. Check for errors - should be NONE
-4. Navigate to dashboard and verify data loads
-5. Check Network tab for API calls
+**Checklist:**
+
+1. **Open the app**
+   ```
+   https://www.bahar.co.il/fantasybroker/react/
+   ```
+
+2. **Check console for errors**
+   - Open DevTools (F12)
+   - Go to Console tab
+   - Should show NO errors (warnings are OK)
+
+3. **Verify page loads**
+   - Login page should display
+   - Google Sign-In button should be visible
+   - Demo Mode button should be visible
+
+4. **Test authentication**
+   - Click "Continue in Demo Mode"
+   - Should redirect to dashboard
+   - Portfolio data should load
+
+5. **Check API connectivity**
+   - Open Network tab (F12)
+   - Navigate to dashboard
+   - Should see successful API calls (200 status)
+   - No 403 or 401 errors
+
+6. **Test theme toggle**
+   - Click theme toggle button (Sun/Moon icon)
+   - Theme should change immediately
+   - Refresh page - theme should persist
+
+7. **Test user profile**
+   - User name should display in header
+   - Avatar should show (image or initials)
+   - Admin badge should show if admin user
+   - Logout button should work
 
 #### Environment Configuration
 
-The React app automatically detects the environment:
+The React app automatically detects the environment based on hostname:
 
-- **Production** (www.bahar.co.il): Uses `https://www.bahar.co.il/fantasybroker-api/api`
-- **Development** (localhost): Uses `http://localhost:4000/api`
+- **Production** (`www.bahar.co.il`): Uses `https://www.bahar.co.il/fantasybroker-api/api`
+- **Development** (`localhost`): Uses `http://localhost:4000/api`
 
-To override, create `.env.production` in `frontend-react/`:
+**To override environment settings:**
+
+Create `.env.production` in `frontend-react/`:
 
 ```env
 VITE_API_URL=https://your-api-endpoint/api
 VITE_GOOGLE_CLIENT_ID=your-google-client-id
 ```
 
+Then rebuild:
+
+```bash
+npm run build
+```
+
 #### Local Development
+
+**Start development server:**
 
 ```bash
 cd frontend-react
@@ -319,33 +408,130 @@ npm install
 npm run dev
 ```
 
-Then open http://localhost:5173/fantasybroker/react/
+**Access the app:**
 
-#### Troubleshooting
+```
+http://localhost:5173/fantasybroker/react/
+```
+
+**Features:**
+- Hot module replacement (HMR) - changes reflect instantly
+- Source maps - easier debugging
+- TypeScript checking - catches errors before build
+
+#### Build Troubleshooting
+
+**Build fails with TypeScript errors**
+
+```bash
+# Check for type errors
+cd frontend-react
+npm run type-check
+
+# Fix errors and rebuild
+npm run build
+```
+
+**Build succeeds but app doesn't load**
+
+1. Check that `react/index.html` exists
+2. Verify `.htaccess` is in `react/` folder
+3. Check Apache error logs: `tail -f /var/log/apache2/error.log`
+4. Verify Apache modules are enabled: `a2enmod headers rewrite deflate`
+
+**Build is slow or hangs**
+
+```bash
+# Clear cache and rebuild
+rm -rf frontend-react/node_modules frontend-react/.vite
+npm install
+npm run build
+```
+
+#### Deployment Troubleshooting
 
 **CSP Errors in Console**
 
 If you see "violates Content Security Policy" errors:
+
 1. Check the error message for the blocked URL
 2. Add the domain to `connect-src` in `frontend-react/public/.htaccess`
 3. Rebuild: `npm run build`
-4. Redeploy
+4. Redeploy: `rsync -avz --delete react/ user@server:/var/www/fantasy-broker/react/`
+
+Example CSP error:
+```
+Refused to connect to 'https://example.com/api' because it violates the Content Security Policy directive: "connect-src 'self' https://www.bahar.co.il/fantasybroker-api/"
+```
+
+Fix:
+```apache
+# In frontend-react/public/.htaccess
+Header set Content-Security-Policy "connect-src 'self' https://www.bahar.co.il/fantasybroker-api/ https://example.com/api"
+```
 
 **API Connection Errors**
 
 If the app can't connect to the API:
+
 1. Verify the API endpoint is correct
+   ```bash
+   curl -I https://www.bahar.co.il/fantasybroker-api/api/health
+   ```
+
 2. Check that the API server is running
+   ```bash
+   ssh user@server "ps aux | grep node"
+   ```
+
 3. Verify CORS headers are set correctly
+   ```bash
+   curl -I -H "Origin: https://www.bahar.co.il" https://www.bahar.co.il/fantasybroker-api/api/health
+   ```
+
 4. Check browser console for detailed error messages
 
 **COOP Errors**
 
 If you see "Cross-Origin-Opener-Policy policy would block the window.postMessage call":
+
 1. This is expected for cross-origin communication
 2. The `.htaccess` file includes proper COOP headers
 3. Verify `.htaccess` is deployed to the server
-4. Check Apache modules: `mod_headers`, `mod_rewrite`, `mod_deflate`
+4. Check Apache modules are enabled:
+   ```bash
+   ssh user@server "apache2ctl -M | grep headers"
+   ```
+
+**Blank page or 404 errors**
+
+1. Verify `react/index.html` exists on server
+2. Check Apache configuration for correct document root
+3. Verify `.htaccess` is in `react/` folder
+4. Check Apache error logs for rewrite errors
+5. Verify base path in `vite.config.ts` matches deployment path
+
+#### Performance Optimization
+
+**Current build metrics:**
+- JavaScript: 739.64KB (215.30KB gzipped)
+- CSS: 25.43KB (5.35KB gzipped)
+- Total modules: 2457
+- Build time: ~3.91s
+
+**To reduce bundle size:**
+
+1. Use dynamic imports for large components
+2. Remove unused dependencies
+3. Enable tree-shaking in `vite.config.ts`
+4. Consider code splitting for routes
+
+**To improve load time:**
+
+1. Enable gzip compression in Apache
+2. Use CDN for static assets
+3. Enable browser caching with `.htaccess`
+4. Minimize API calls on page load
 
 ### Static Hosting (Legacy)
 
