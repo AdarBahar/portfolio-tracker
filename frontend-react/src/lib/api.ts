@@ -1,7 +1,26 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosError } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+// Determine API URL based on environment
+const getApiUrl = (): string => {
+  // Use environment variable if set
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // In production, use the production API endpoint
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'www.bahar.co.il' || hostname === 'bahar.co.il') {
+      return 'https://www.bahar.co.il/fantasybroker-api/api';
+    }
+  }
+
+  // Default to localhost for development
+  return 'http://localhost:4000/api';
+};
+
+const API_BASE_URL = getApiUrl();
 
 class APIClient {
   private client: AxiosInstance;
