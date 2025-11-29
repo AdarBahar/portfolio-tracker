@@ -1,5 +1,91 @@
 # Project History
 
+## 2025-11-29 – Phase 5: Charts and Visualizations
+
+- **Git reference**: `react-migration-test` branch, commit `b180708`
+- **Summary**: Implemented comprehensive data visualization system using Recharts library. Created reusable chart components for portfolio analysis including sector allocation, asset class breakdown, performance tracking, and portfolio trends.
+
+- **Details**:
+  - **Recharts Library Integration**:
+    - Added Recharts (40 packages) for React-native charting
+    - Replaces Chart.js with more React-friendly alternative
+    - Better TypeScript support and component composition
+
+  - **Chart Utility Functions** (`frontend-react/src/utils/chartCalculations.ts`):
+    - `calculateSectorAllocation()` - Breakdown portfolio by sector with color coding
+    - `calculateAssetClassAllocation()` - Breakdown portfolio by asset class (Stocks, Bonds, ETFs, etc.)
+    - `calculatePerformanceByHolding()` - Calculate gain/loss % for each holding with color indicators
+    - `calculatePortfolioTrend()` - Generate time-series data for portfolio value trends
+    - All functions include TypeScript interfaces for type safety
+
+  - **Chart Components** (`frontend-react/src/components/charts/`):
+    - `SectorAllocationChart.tsx` - Pie chart showing sector allocation with percentages
+    - `AssetClassChart.tsx` - Pie chart showing asset class distribution
+    - `PerformanceChart.tsx` - Bar chart showing gain/loss % by holding (green/red coloring)
+    - `PortfolioTrendChart.tsx` - Line chart showing portfolio value over time
+    - All components include:
+      - Custom tooltips with formatted currency/percentages
+      - Loading states and empty state handling
+      - Responsive sizing with ResponsiveContainer
+      - Proper color coding (green for gains, red for losses)
+
+  - **Dashboard Integration** (`frontend-react/src/pages/Dashboard.tsx`):
+    - Added "Portfolio Analysis" section with charts
+    - Sector and Asset Class charts in 2-column grid
+    - Performance chart spanning full width
+    - Charts positioned above Holdings table
+    - All charts receive data from holdings array in real-time
+
+  - **Build Results**:
+    - JavaScript: 736.08KB (214.58KB gzipped) - increased due to Recharts library
+    - CSS: 24.85KB (5.26KB gzipped)
+    - Total modules: 2454 (increased from 1829)
+    - Build time: 3.80s
+    - ✅ Build successful with chunk size warning (expected with Recharts)
+
+  - **Files Created**:
+    - `frontend-react/src/utils/chartCalculations.ts`
+    - `frontend-react/src/components/charts/SectorAllocationChart.tsx`
+    - `frontend-react/src/components/charts/AssetClassChart.tsx`
+    - `frontend-react/src/components/charts/PerformanceChart.tsx`
+    - `frontend-react/src/components/charts/PortfolioTrendChart.tsx`
+
+  - **Files Modified**:
+    - `frontend-react/src/pages/Dashboard.tsx` - Added chart imports and integration
+    - `frontend-react/package.json` - Added recharts dependency
+
+- **Reasoning / Motivation**:
+  - Vanilla JS version uses Chart.js which is not ideal for React
+  - Recharts is React-native and provides better component composition
+  - Visual data representation helps users understand portfolio allocation and performance
+  - Charts update in real-time as portfolio data changes
+  - Improves user experience and decision-making
+
+- **Impact**:
+  - Dashboard now displays comprehensive portfolio analysis
+  - Users can visualize sector and asset class allocation
+  - Performance tracking by individual holding
+  - Better insights into portfolio composition and performance
+  - Larger bundle size due to Recharts library (expected trade-off)
+
+- **Deployment / Ops notes**:
+  - Deploy updated `react/` folder to production
+  - No database changes required
+  - No environment variable changes required
+  - Chunk size warning is expected and not a blocker
+
+- **Testing**:
+  - Manual testing: Verified all charts render correctly with sample data
+  - Manual testing: Verified responsive layout on different screen sizes
+  - Build verification: No TypeScript errors, successful production build
+  - Verified chart data calculations with various portfolio compositions
+
+- **Open questions / next steps**:
+  - Consider code-splitting Recharts to reduce bundle size if needed
+  - Could add more chart types (candlestick, heatmaps, etc.) in future
+  - Could add chart export functionality (PNG, CSV)
+  - Proceed with Phase 6: Unit Tests for React Components
+
 ## 2025-11-29 – Phase 4 Bug Fixes: Admin Panel API Integration & CSP
 
 - **Git reference**: `react-migration-test` branch, commits `9fe651d`, `6fa9286`
