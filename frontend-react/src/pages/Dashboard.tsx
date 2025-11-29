@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Download, Plus, LogOut } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { TrendingUp, TrendingDown, DollarSign, Calendar, Download, Plus } from 'lucide-react';
 import { usePortfolioData } from '@/hooks/usePortfolioData';
 import { formatCurrency, formatPercent, getGainLossClass } from '@/utils/formatting';
 import { calculateSectorAllocation, calculateAssetClassAllocation, calculatePerformanceByHolding } from '@/utils/chartCalculations';
@@ -10,9 +9,10 @@ import AddPositionModal from '@/components/dashboard/AddPositionModal';
 import SectorAllocationChart from '@/components/charts/SectorAllocationChart';
 import AssetClassChart from '@/components/charts/AssetClassChart';
 import PerformanceChart from '@/components/charts/PerformanceChart';
+import ThemeToggle from '@/components/header/ThemeToggle';
+import UserProfile from '@/components/header/UserProfile';
 
 export default function Dashboard() {
-  const { logout } = useAuth();
   const { holdings, metrics, isLoading, error } = usePortfolioData();
   const [showAddModal, setShowAddModal] = useState(false);
   const [lastUpdated] = useState(new Date());
@@ -57,13 +57,8 @@ export default function Dashboard() {
                 <Plus className="w-4 h-4" />
                 Add Position
               </button>
-              <button
-                onClick={logout}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
-              >
-                <LogOut className="w-4 h-4" />
-                Logout
-              </button>
+              <ThemeToggle />
+              <UserProfile />
             </div>
           </div>
         </div>

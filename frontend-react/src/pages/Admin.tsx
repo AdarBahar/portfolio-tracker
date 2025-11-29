@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Users, Settings, BarChart3, Gift } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Users, Settings, BarChart3, Gift, ArrowLeft } from 'lucide-react';
+import ThemeToggle from '@/components/header/ThemeToggle';
+import UserProfile from '@/components/header/UserProfile';
 import { useUsers, useUpdateUserAdmin, useUserDetail } from '@/hooks/useAdmin';
 import { useRakeConfig, useRakeStats, useUpdateRakeConfig } from '@/hooks/useRake';
 import { usePromotions, useCreatePromotion } from '@/hooks/usePromotions';
@@ -11,6 +13,7 @@ import PromotionsList from '@/components/admin/PromotionsList';
 import PromotionForm from '@/components/admin/PromotionForm';
 
 export default function Admin() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'rake' | 'promotions'>('overview');
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [showPromotionForm, setShowPromotionForm] = useState(false);
@@ -63,21 +66,24 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-white/10 bg-card">
+      <header className="border-b border-white/10 bg-slate-800/50 backdrop-blur">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-white">Fantasy Broker</h1>
-            <nav className="flex gap-4">
-              <Link to="/dashboard" className="text-foreground hover:text-primary">
-                Dashboard
-              </Link>
-              <Link to="/trade-room" className="text-foreground hover:text-primary">
-                Trade Room
-              </Link>
-              <Link to="/admin" className="text-foreground hover:text-primary">
-                Admin
-              </Link>
-            </nav>
+            <div>
+              <h1 className="text-3xl font-bold text-white">⚙️ Admin Panel</h1>
+              <p className="text-muted-foreground text-sm">Manage platform settings, users, and promotions</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Portfolio
+              </button>
+              <ThemeToggle />
+              <UserProfile />
+            </div>
           </div>
         </div>
       </header>

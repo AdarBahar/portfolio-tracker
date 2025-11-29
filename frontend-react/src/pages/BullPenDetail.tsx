@@ -5,6 +5,8 @@ import { useBullPen } from '@/hooks/useBullPens';
 import TradingPanel from '@/components/tradeRoom/TradingPanel';
 import PortfolioView from '@/components/tradeRoom/PortfolioView';
 import LeaderboardView from '@/components/tradeRoom/LeaderboardView';
+import ThemeToggle from '@/components/header/ThemeToggle';
+import UserProfile from '@/components/header/UserProfile';
 
 type TabType = 'trading' | 'portfolio' | 'leaderboard';
 
@@ -43,15 +45,21 @@ export default function BullPenDetail() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-white/10 bg-card">
+      <header className="border-b border-white/10 bg-slate-800/50 backdrop-blur">
         <div className="container mx-auto px-6 py-4">
-          <button
-            onClick={() => navigate('/trade-room')}
-            className="flex items-center gap-2 text-primary hover:text-primary/80 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Trade Rooms
-          </button>
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => navigate('/trade-room')}
+              className="flex items-center gap-2 text-primary hover:text-primary/80"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Trade Rooms
+            </button>
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <UserProfile />
+            </div>
+          </div>
           <h1 className="text-3xl font-bold text-white">{bullPen.name}</h1>
           {bullPen.description && (
             <p className="text-muted-foreground mt-2">{bullPen.description}</p>

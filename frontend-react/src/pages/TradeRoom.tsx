@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Loader } from 'lucide-react';
+import { Plus, Loader, ArrowLeft } from 'lucide-react';
 import { useMyBullPens, useAllBullPens } from '@/hooks/useBullPens';
 import BullPenCard from '@/components/tradeRoom/BullPenCard';
 import CreateBullPenModal from '@/components/tradeRoom/CreateBullPenModal';
 import JoinBullPenModal from '@/components/tradeRoom/JoinBullPenModal';
+import ThemeToggle from '@/components/header/ThemeToggle';
+import UserProfile from '@/components/header/UserProfile';
 
 export default function TradeRoom() {
   const navigate = useNavigate();
@@ -29,6 +31,29 @@ export default function TradeRoom() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-white/10 bg-slate-800/50 backdrop-blur">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-white">🎮 Trade Room</h1>
+              <p className="text-muted-foreground text-sm">Join trading tournaments and compete with other traders</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Portfolio
+              </button>
+              <ThemeToggle />
+              <UserProfile />
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         <div className="mb-12">

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { TrendingUp, BarChart3, Lock, Zap } from 'lucide-react';
+import ThemeToggle from '@/components/header/ThemeToggle';
 
 declare global {
   interface Window {
@@ -90,9 +91,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <button className="absolute top-4 right-4 p-2 rounded-lg hover:bg-slate-700 transition">
-        🌙
-      </button>
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
 
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="w-full max-w-md">
