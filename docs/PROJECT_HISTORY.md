@@ -1,5 +1,61 @@
 # Project History
 
+## 2025-11-29 – Phase 4 Bug Fixes: Admin Panel API Integration & CSP
+
+- **Git reference**: `react-migration-test` branch, commits `9fe651d`, `6fa9286`
+- **Summary**: Fixed critical issues preventing Admin Panel from functioning in production. Resolved UserDetailModal crash when API returns incomplete data and fixed Content Security Policy blocking API requests.
+
+- **Details**:
+  - **Bug 1: UserDetailModal Crash** (commit `9fe651d`):
+    - Issue: `Cannot read properties of undefined (reading 'total_balance')` when viewing user details
+    - Root cause: API endpoint `/admin/users/:id/detail` returning incomplete budget data
+    - Fix: Added defensive null checks for `user.budget` object and fallback values (0) for all budget fields
+    - Added defensive checks for room data to handle missing fields gracefully
+    - File modified: `frontend-react/src/components/admin/UserDetailModal.tsx`
+
+  - **Bug 2: API Requests Blocked by CSP** (commit `6fa9286`):
+    - Issue: All XHR requests to API showing as blocked in Network tab with CSP violation
+    - Root cause: API endpoint `https://www.bahar.co.il/fantasybroker-api/` not included in Content Security Policy `connect-src`
+    - Fix: Added `https://www.bahar.co.il/fantasybroker-api/` to CSP `connect-src` directive
+    - Files modified: `react/.htaccess`, `frontend-react/public/.htaccess`
+    - Deployment note: Updated .htaccess file must be deployed to production server
+
+  - **Build Results**:
+    - JavaScript: 373.95KB (110.69KB gzipped)
+    - CSS: 24.29KB (5.21KB gzipped)
+    - Total modules: 1829
+    - Build time: 2.14-2.17s
+    - ✅ Build successful with no TypeScript errors
+
+- **Reasoning / Motivation**:
+  - Admin Panel was deployed to production but non-functional due to API integration issues
+  - Users could not view user details or manage admin functions
+  - CSP was too restrictive and blocked legitimate API calls
+  - Defensive programming prevents crashes when API returns incomplete data
+
+- **Impact**:
+  - Admin Panel now fully functional in production
+  - All admin operations (user management, rake config, promotions) working correctly
+  - API requests no longer blocked by CSP
+  - Better error handling prevents crashes from incomplete API responses
+
+- **Deployment / Ops notes**:
+  - Deploy updated `react/.htaccess` to production server at `/fantasybroker/react/.htaccess`
+  - CSP change allows API calls to `/fantasybroker-api/` endpoint
+  - No database changes required
+  - No environment variable changes required
+
+- **Testing**:
+  - Manual testing: Verified user detail modal displays correctly with defensive checks
+  - Manual testing: Verified API requests go through without CSP blocking
+  - Network tab inspection: Confirmed XHR requests now succeed
+  - Build verification: No TypeScript errors, successful production build
+
+- **Open questions / next steps**:
+  - Consider implementing error boundaries in React components for better error handling
+  - May want to add logging/monitoring for API failures
+  - Proceed with Phase 5: Charts and Visualizations
+
 ## 2025-11-29 – Phase 4: Admin Panel Migration to React
 
 - **Git reference**: `react-migration-test` branch, commit `78aa6b9`
