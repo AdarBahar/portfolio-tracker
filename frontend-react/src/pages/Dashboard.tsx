@@ -3,9 +3,13 @@ import { TrendingUp, TrendingDown, DollarSign, Calendar, Download, Plus, LogOut 
 import { useAuth } from '@/contexts/AuthContext';
 import { usePortfolioData } from '@/hooks/usePortfolioData';
 import { formatCurrency, formatPercent, getGainLossClass } from '@/utils/formatting';
+import { calculateSectorAllocation, calculateAssetClassAllocation, calculatePerformanceByHolding } from '@/utils/chartCalculations';
 import MetricCard from '@/components/dashboard/MetricCard';
 import HoldingsTable from '@/components/dashboard/HoldingsTable';
 import AddPositionModal from '@/components/dashboard/AddPositionModal';
+import SectorAllocationChart from '@/components/charts/SectorAllocationChart';
+import AssetClassChart from '@/components/charts/AssetClassChart';
+import PerformanceChart from '@/components/charts/PerformanceChart';
 
 export default function Dashboard() {
   const { logout } = useAuth();
@@ -94,6 +98,34 @@ export default function Dashboard() {
             icon={<TrendingUp className="w-6 h-6" />}
             className={getGainLossClass(metrics.todayChange)}
           />
+        </div>
+
+        {/* Charts Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-white mb-6">Portfolio Analysis</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="bg-slate-800/50 backdrop-blur border border-white/10 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Sector Allocation</h3>
+              <SectorAllocationChart
+                data={calculateSectorAllocation(holdings)}
+                isLoading={isLoading}
+              />
+            </div>
+            <div className="bg-slate-800/50 backdrop-blur border border-white/10 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Asset Class Allocation</h3>
+              <AssetClassChart
+                data={calculateAssetClassAllocation(holdings)}
+                isLoading={isLoading}
+              />
+            </div>
+          </div>
+          <div className="bg-slate-800/50 backdrop-blur border border-white/10 rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-semibold text-white mb-4">Performance by Holding</h3>
+            <PerformanceChart
+              data={calculatePerformanceByHolding(holdings)}
+              isLoading={isLoading}
+            />
+          </div>
         </div>
 
         {/* Holdings Section */}
