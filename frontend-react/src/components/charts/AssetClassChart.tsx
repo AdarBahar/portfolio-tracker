@@ -44,7 +44,7 @@ export default function AssetClassChart({ data, isLoading }: AssetClassChartProp
   const dataWithTotal = data.map(item => ({ ...item, total }));
 
   return (
-    <div className="w-full h-80">
+    <div style={{ width: '100%', height: '320px' }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
