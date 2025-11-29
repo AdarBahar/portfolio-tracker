@@ -1,5 +1,73 @@
 # Project History
 
+## 2025-11-29 – Phase 3: Trade Room Migration to React
+
+- **Git reference**: `react-migration-test` branch, commit `bf96568`
+- **Summary**: Completed Trade Room migration to React with full trading functionality, portfolio tracking, and leaderboard system. Implemented custom hooks for data management, trading panel with order placement, portfolio view with real-time calculations, and leaderboard rankings.
+
+- **Details**:
+  - **Custom Hooks Created** (`frontend-react/src/hooks/`):
+    - `useBullPens.ts` - Manage bull pen data (fetch, create, join, leave)
+    - `useBullPenOrders.ts` - Manage positions and orders (fetch, place orders)
+    - `useLeaderboard.ts` - Fetch leaderboard rankings and performance data
+    - `useMarketData.ts` - Fetch real-time market prices for symbols
+    - All hooks use React Query with configurable stale times and refetch intervals
+
+  - **Utility Functions** (`frontend-react/src/utils/tradeRoomCalculations.ts`):
+    - `calculatePositionValue()` - Calculate current position value
+    - `calculatePositionGainLoss()` - Calculate absolute and percentage gain/loss
+    - `calculatePortfolioValue()` - Calculate total portfolio value
+    - `calculatePortfolioGainLoss()` - Calculate portfolio-level gain/loss
+    - `formatTimeRemaining()` - Format time remaining for bull pen
+    - `getStatusBadgeClass()` - Get CSS class for status badges
+
+  - **Pages Created**:
+    - `BullPenDetail.tsx` - Main detail page with tabbed interface (Trading, Portfolio, Leaderboard)
+    - Updated `TradeRoom.tsx` - Complete rewrite with filtering, modals, and real API integration
+
+  - **Components Created** (`frontend-react/src/components/tradeRoom/`):
+    - `BullPenCard.tsx` - Reusable card for displaying bull pen information
+    - `CreateBullPenModal.tsx` - Modal for creating new tournaments with form validation
+    - `JoinBullPenModal.tsx` - Modal for joining existing tournaments
+    - `TradingPanel.tsx` - Trading interface for placing buy/sell orders (market/limit)
+    - `PortfolioView.tsx` - Display user's positions with real-time values and gain/loss
+    - `LeaderboardView.tsx` - Tournament rankings with portfolio values and performance metrics
+
+  - **Router Configuration**:
+    - Added route `/trade-room/:id` for Bull Pen Detail page
+    - Route is protected with ProtectedRoute component
+
+  - **API Integration**:
+    - Fixed API client imports (changed from `api` to `apiClient`)
+    - Implemented proper error handling and loading states
+    - Auto-refetching with configurable intervals for real-time data
+
+  - **Build Results**:
+    - JavaScript: 357KB (108KB gzipped)
+    - CSS: 24KB (5KB gzipped)
+    - Total modules: 1821
+    - Build time: 2.12s
+
+  - **Files Created**:
+    - `frontend-react/src/pages/BullPenDetail.tsx`
+    - `frontend-react/src/components/tradeRoom/BullPenCard.tsx`
+    - `frontend-react/src/components/tradeRoom/CreateBullPenModal.tsx`
+    - `frontend-react/src/components/tradeRoom/JoinBullPenModal.tsx`
+    - `frontend-react/src/components/tradeRoom/TradingPanel.tsx`
+    - `frontend-react/src/components/tradeRoom/PortfolioView.tsx`
+    - `frontend-react/src/components/tradeRoom/LeaderboardView.tsx`
+    - `frontend-react/src/hooks/useBullPens.ts`
+    - `frontend-react/src/hooks/useBullPenOrders.ts`
+    - `frontend-react/src/hooks/useLeaderboard.ts`
+    - `frontend-react/src/hooks/useMarketData.ts`
+    - `frontend-react/src/utils/tradeRoomCalculations.ts`
+
+  - **Files Modified**:
+    - `frontend-react/src/App.tsx` - Added route for Bull Pen Detail page
+    - `frontend-react/src/pages/TradeRoom.tsx` - Complete rewrite with real API integration
+
+  - **Status**: ✅ Phase 3 Complete - Trade Room fully migrated to React with all functionality
+
 ## 2025-11-28 – React Migration Infrastructure Setup
 
 - **Git reference**: `react-migration-test` branch, commits `400dfbc`, `b415ecd`, `b735f80`, `9cdf0de`, `0f84cb3`, `e8d544f`, `f1ddbfd`, `12aa4fd`
