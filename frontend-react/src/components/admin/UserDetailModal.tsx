@@ -60,23 +60,25 @@ export default function UserDetailModal({ user, isLoading, onClose }: UserDetail
             </div>
 
             {/* Budget Info */}
-            <div className="bg-background/50 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold text-white mb-4">Budget</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-muted-foreground text-sm">Total Balance</p>
-                  <p className="text-foreground font-semibold">{formatCurrency(user.budget.total_balance)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-sm">Available</p>
-                  <p className="text-success font-semibold">{formatCurrency(user.budget.available_balance)}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-sm">Locked</p>
-                  <p className="text-warning font-semibold">{formatCurrency(user.budget.locked_balance)}</p>
+            {user.budget && (
+              <div className="bg-background/50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-white mb-4">Budget</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-muted-foreground text-sm">Total Balance</p>
+                    <p className="text-foreground font-semibold">{formatCurrency(user.budget.total_balance || 0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-sm">Available</p>
+                    <p className="text-success font-semibold">{formatCurrency(user.budget.available_balance || 0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-sm">Locked</p>
+                    <p className="text-warning font-semibold">{formatCurrency(user.budget.locked_balance || 0)}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Rooms */}
             {user.rooms && user.rooms.length > 0 && (
@@ -86,13 +88,13 @@ export default function UserDetailModal({ user, isLoading, onClose }: UserDetail
                   {user.rooms.map((room: any) => (
                     <div key={room.id} className="flex justify-between items-center py-2 border-b border-white/10">
                       <div>
-                        <p className="text-foreground">{room.name}</p>
-                        <p className="text-muted-foreground text-sm">{room.state}</p>
+                        <p className="text-foreground">{room.name || 'Unknown Room'}</p>
+                        <p className="text-muted-foreground text-sm">{room.state || 'N/A'}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-foreground">{formatCurrency(room.portfolio_value)}</p>
-                        <p className={room.gain_loss >= 0 ? 'text-success text-sm' : 'text-danger text-sm'}>
-                          {room.gain_loss >= 0 ? '+' : ''}{formatCurrency(room.gain_loss)}
+                        <p className="text-foreground">{formatCurrency(room.portfolio_value || 0)}</p>
+                        <p className={(room.gain_loss || 0) >= 0 ? 'text-success text-sm' : 'text-danger text-sm'}>
+                          {(room.gain_loss || 0) >= 0 ? '+' : ''}{formatCurrency(room.gain_loss || 0)}
                         </p>
                       </div>
                     </div>
