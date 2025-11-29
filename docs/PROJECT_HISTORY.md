@@ -1,5 +1,62 @@
 # Project History
 
+## 2025-11-29 – Phase 4: Admin Panel Migration to React
+
+- **Git reference**: `react-migration-test` branch, commit `78aa6b9`
+- **Summary**: Completed Admin Panel migration to React with full user management, rake configuration, and promotion management. Implemented tabbed interface with real API integration for all admin functions.
+
+- **Details**:
+  - **Custom Hooks Created** (`frontend-react/src/hooks/`):
+    - `useAdmin.ts` - User management hooks (useUsers, useUserDetail, useUpdateUserAdmin)
+    - `useRake.ts` - Rake configuration hooks (useRakeConfig, useRakeStats, useRakeHistory, useUpdateRakeConfig)
+    - `usePromotions.ts` - Promotion management hooks (usePromotions, useCreatePromotion)
+    - All hooks use React Query with configurable stale times and refetch intervals
+
+  - **Admin Components Created** (`frontend-react/src/components/admin/`):
+    - `UserTable.tsx` - Display users with admin toggle and detail view
+    - `UserDetailModal.tsx` - Modal showing user details, budget, and room participation
+    - `RakeConfigForm.tsx` - Form for configuring rake percentage and limits
+    - `PromotionsList.tsx` - Table displaying all active promotions
+    - `PromotionForm.tsx` - Modal form for creating new promotions
+
+  - **Admin Page Updated** (`frontend-react/src/pages/Admin.tsx`):
+    - Implemented tabbed interface (Overview, Users, Rake, Promotions)
+    - Overview tab: Quick stats and admin section shortcuts
+    - Users tab: User table with admin toggle and detail view
+    - Rake tab: Rake configuration form with real-time updates
+    - Promotions tab: Promotion list and creation form
+
+  - **API Integration**:
+    - GET /api/admin/users - List all users
+    - GET /api/admin/users/:id/detail - Get user details with budget and rooms
+    - PATCH /api/admin/users/:id/admin - Toggle admin status
+    - GET /api/admin/rake/config - Get rake configuration
+    - POST /api/admin/rake/config - Update rake configuration
+    - GET /api/admin/rake/stats - Get rake statistics
+    - GET /api/admin/promotions - List all promotions
+    - POST /api/admin/promotions - Create new promotion
+
+  - **Build Results**:
+    - JavaScript: 374KB (111KB gzipped)
+    - CSS: 24KB (5KB gzipped)
+    - Total modules: 1829
+    - Build time: 2.15s
+
+  - **Files Created**:
+    - `frontend-react/src/hooks/useAdmin.ts`
+    - `frontend-react/src/hooks/useRake.ts`
+    - `frontend-react/src/hooks/usePromotions.ts`
+    - `frontend-react/src/components/admin/UserTable.tsx`
+    - `frontend-react/src/components/admin/UserDetailModal.tsx`
+    - `frontend-react/src/components/admin/RakeConfigForm.tsx`
+    - `frontend-react/src/components/admin/PromotionsList.tsx`
+    - `frontend-react/src/components/admin/PromotionForm.tsx`
+
+  - **Files Modified**:
+    - `frontend-react/src/pages/Admin.tsx` - Complete rewrite with tabbed interface and real API integration
+
+  - **Status**: ✅ Phase 4 Complete - Admin Panel fully migrated to React with all functionality
+
 ## 2025-11-29 – Phase 3: Trade Room Migration to React
 
 - **Git reference**: `react-migration-test` branch, commit `bf96568`
