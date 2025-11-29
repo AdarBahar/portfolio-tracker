@@ -1,107 +1,116 @@
-import { Link } from 'react-router-dom';
-import { TrendingUp, Zap, Settings } from 'lucide-react';
+import { useState } from 'react';
+import { TrendingUp, TrendingDown, DollarSign, Calendar, Download, Plus, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { usePortfolioData } from '@/hooks/usePortfolioData';
+import { formatCurrency, formatPercent, getGainLossClass } from '@/utils/formatting';
+import MetricCard from '@/components/dashboard/MetricCard';
+import HoldingsTable from '@/components/dashboard/HoldingsTable';
+import AddPositionModal from '@/components/dashboard/AddPositionModal';
 
 export default function Dashboard() {
+  const { logout } = useAuth();
+  const { holdings, metrics, isLoading, error } = usePortfolioData();
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [lastUpdated] = useState(new Date());
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading portfolio...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-4">Error loading portfolio</p>
+          <p className="text-muted-foreground text-sm">{String(error)}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
       {/* Header */}
-      <header className="border-b border-white/10 bg-card">
+      <header className="border-b border-white/10 bg-slate-800/50 backdrop-blur">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-white">Fantasy Broker</h1>
-            <nav className="flex gap-4">
-              <Link to="/dashboard" className="text-foreground hover:text-primary">
-                Dashboard
-              </Link>
-              <Link to="/trade-room" className="text-foreground hover:text-primary">
-                Trade Room
-              </Link>
-              <Link to="/admin" className="text-foreground hover:text-primary">
-                Admin
-              </Link>
-            </nav>
+            <div>
+              <h1 className="text-3xl font-bold text-white">Fantasy Broker</h1>
+              <p className="text-muted-foreground text-sm">Last updated: {lastUpdated.toLocaleTimeString()}</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition"
+              >
+                <Plus className="w-4 h-4" />
+                Add Position
+              </button>
+              <button
+                onClick={logout}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-6">Welcome to React Migration Test</h2>
-          <p className="text-muted-foreground mb-8">
-            This is a feasibility test for the React migration. All components and frameworks are working correctly.
-          </p>
-        </div>
-
         {/* Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
-          <div className="card-base p-6">
-            <div className="flex items-center gap-4">
-              <TrendingUp className="w-8 h-8 text-success" />
-              <div>
-                <p className="text-muted-foreground text-sm">Portfolio Value</p>
-                <p className="text-2xl font-bold text-white">$125,450.00</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="card-base p-6">
-            <div className="flex items-center gap-4">
-              <Zap className="w-8 h-8 text-warning" />
-              <div>
-                <p className="text-muted-foreground text-sm">Total Gain/Loss</p>
-                <p className="text-2xl font-bold text-success">+$12,450.00</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="card-base p-6">
-            <div className="flex items-center gap-4">
-              <Settings className="w-8 h-8 text-primary" />
-              <div>
-                <p className="text-muted-foreground text-sm">Return %</p>
-                <p className="text-2xl font-bold text-primary">+11.0%</p>
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <MetricCard
+            label="Total Portfolio Value"
+            value={formatCurrency(metrics.totalValue)}
+            icon={<DollarSign className="w-6 h-6" />}
+            trend={metrics.totalGainPercent}
+          />
+          <MetricCard
+            label="Total Gain/Loss"
+            value={formatCurrency(metrics.totalGain)}
+            subtext={formatPercent(metrics.totalGainPercent)}
+            icon={metrics.totalGain >= 0 ? <TrendingUp className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
+            className={getGainLossClass(metrics.totalGain)}
+          />
+          <MetricCard
+            label="Dividend Income YTD"
+            value={formatCurrency(metrics.dividendIncome)}
+            icon={<Calendar className="w-6 h-6" />}
+          />
+          <MetricCard
+            label="Today's Change"
+            value={formatCurrency(metrics.todayChange)}
+            subtext={formatPercent(metrics.todayChangePercent)}
+            icon={<TrendingUp className="w-6 h-6" />}
+            className={getGainLossClass(metrics.todayChange)}
+          />
         </div>
 
-        {/* Navigation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Link to="/trade-room">
-            <div className="card-base p-6 hover:border-primary/50 transition-colors cursor-pointer">
-              <h3 className="text-xl font-semibold text-white mb-2">Trade Room</h3>
-              <p className="text-muted-foreground mb-4">
-                Join trading tournaments and compete with other traders
-              </p>
-              <button className="btn-primary">Enter Trade Room →</button>
-            </div>
-          </Link>
-
-          <Link to="/admin">
-            <div className="card-base p-6 hover:border-primary/50 transition-colors cursor-pointer">
-              <h3 className="text-xl font-semibold text-white mb-2">Admin Panel</h3>
-              <p className="text-muted-foreground mb-4">
-                Manage users, rake configuration, and promotions
-              </p>
-              <button className="btn-secondary">Go to Admin →</button>
-            </div>
-          </Link>
-        </div>
-
-        {/* Status Section */}
-        <div className="mt-12 card-base p-6">
-          <h3 className="text-xl font-semibold text-white mb-4">Migration Status</h3>
-          <div className="space-y-2">
-            <p className="text-foreground">✅ React + Vite configured</p>
-            <p className="text-foreground">✅ Tailwind CSS with design tokens</p>
-            <p className="text-foreground">✅ React Router setup</p>
-            <p className="text-foreground">✅ React Query configured</p>
-            <p className="text-foreground">✅ API client ready</p>
-            <p className="text-foreground">✅ Sample pages created</p>
+        {/* Holdings Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold text-white">Holdings ({holdings.length})</h2>
+            <button className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition">
+              <Download className="w-4 h-4" />
+              Export
+            </button>
           </div>
+          <HoldingsTable holdings={holdings} />
         </div>
       </main>
+
+      {/* Add Position Modal */}
+      {showAddModal && <AddPositionModal onClose={() => setShowAddModal(false)} />}
     </div>
   );
 }
