@@ -47,19 +47,41 @@ export function usePortfolioData() {
 
   useEffect(() => {
     if (data) {
-      const holdings = data.holdings || [];
+      // Transform holdings to ensure numeric types
+      const holdings = (data.holdings || []).map((h: any) => ({
+        ...h,
+        shares: Number(h.shares),
+        purchase_price: Number(h.purchase_price || h.purchasePrice),
+        current_price: Number(h.current_price || h.currentPrice),
+      }));
+
       const metrics = calculatePortfolioMetrics(holdings);
 
       // Calculate dividend income
       const dividendIncome = (data.dividends || []).reduce(
-        (sum: number, d: any) => sum + (d.amount || 0),
+        (sum: number, d: any) => sum + Number(d.amount || 0),
         0
       );
 
+      // Transform transactions to ensure numeric types
+      const transactions = (data.transactions || []).map((t: any) => ({
+        ...t,
+        shares: Number(t.shares),
+        price: Number(t.price),
+        fees: Number(t.fees || 0),
+      }));
+
+      // Transform dividends to ensure numeric types
+      const dividends = (data.dividends || []).map((d: any) => ({
+        ...d,
+        amount: Number(d.amount),
+        shares: Number(d.shares),
+      }));
+
       setPortfolioData({
         holdings,
-        transactions: data.transactions || [],
-        dividends: data.dividends || [],
+        transactions,
+        dividends,
         metrics: {
           ...metrics,
           dividendIncome,

@@ -161,9 +161,9 @@ export default function HoldingsTable({ holdings }: HoldingsTableProps) {
                 <tr key={holding.id} className="border-b border-white/10 hover:bg-slate-700/50 transition">
                   <td className="px-4 py-3 font-semibold text-white">{holding.ticker}</td>
                   <td className="px-4 py-3 text-muted-foreground">{holding.name}</td>
-                  <td className="px-4 py-3 text-right text-white">{holding.shares.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-right text-white">{formatCurrency(holding.purchase_price)}</td>
-                  <td className="px-4 py-3 text-right text-white">{formatCurrency(holding.current_price)}</td>
+                  <td className="px-4 py-3 text-right text-white">{Number(holding.shares).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right text-white">{formatCurrency(Number(holding.purchase_price))}</td>
+                  <td className="px-4 py-3 text-right text-white">{formatCurrency(Number(holding.current_price))}</td>
                   <td className="px-4 py-3 text-right text-white font-semibold">{formatCurrency(metrics.currentValue)}</td>
                   <td className={`px-4 py-3 text-right font-semibold ${gainLossClass}`}>
                     {formatCurrency(metrics.gainLoss)}
