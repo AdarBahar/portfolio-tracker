@@ -6,6 +6,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TradeRoom from './pages/TradeRoom';
+import BullPenDetail from './pages/BullPenDetail';
 import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
 
@@ -42,6 +43,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <TradeRoom />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/trade-room/:id"
+              element={
+                <ProtectedRoute>
+                  <BullPenDetail />
                 </ProtectedRoute>
               }
             />

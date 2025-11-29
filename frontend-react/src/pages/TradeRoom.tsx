@@ -1,105 +1,112 @@
-import { Link } from 'react-router-dom';
-import { Users, Trophy, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Loader } from 'lucide-react';
+import { useMyBullPens, useAllBullPens } from '@/hooks/useBullPens';
+import BullPenCard from '@/components/tradeRoom/BullPenCard';
+import CreateBullPenModal from '@/components/tradeRoom/CreateBullPenModal';
+import JoinBullPenModal from '@/components/tradeRoom/JoinBullPenModal';
 
 export default function TradeRoom() {
-  const bullPens = [
-    {
-      id: 1,
-      name: 'Tech Titans Tournament',
-      status: 'active',
-      participants: 24,
-      startingCash: 100000,
-      timeRemaining: '5 days',
-    },
-    {
-      id: 2,
-      name: 'Crypto Traders Challenge',
-      status: 'active',
-      participants: 18,
-      startingCash: 50000,
-      timeRemaining: '3 days',
-    },
-    {
-      id: 3,
-      name: 'Dividend Hunters',
-      status: 'scheduled',
-      participants: 12,
-      startingCash: 75000,
-      timeRemaining: 'Starts in 2 days',
-    },
-  ];
+  const navigate = useNavigate();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [filterState, setFilterState] = useState<string>('all');
+
+  const { data: myBullPens = [], isLoading: myLoading } = useMyBullPens();
+  const { isLoading: allLoading } = useAllBullPens();
+
+  const isLoading = myLoading || allLoading;
+
+  // Filter bull pens based on state
+  const filteredBullPens = myBullPens.filter((bp: any) => {
+    if (filterState === 'all') return true;
+    return bp.state === filterState;
+  });
+
+  const handleBullPenClick = (bullPenId: number) => {
+    navigate(`/trade-room/${bullPenId}`);
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-card">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-white">Fantasy Broker</h1>
-            <nav className="flex gap-4">
-              <Link to="/dashboard" className="text-foreground hover:text-primary">
-                Dashboard
-              </Link>
-              <Link to="/trade-room" className="text-foreground hover:text-primary">
-                Trade Room
-              </Link>
-              <Link to="/admin" className="text-foreground hover:text-primary">
-                Admin
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-white">Trade Rooms</h2>
-            <button className="btn-primary">Create New Room</button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowJoinModal(true)}
+                className="btn-secondary"
+              >
+                Join Room
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="btn-primary flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Create Room
+              </button>
+            </div>
           </div>
           <p className="text-muted-foreground">
             Join trading tournaments and compete with other traders in real-time
           </p>
         </div>
 
-        {/* Bull Pens Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {bullPens.map((bullpen) => (
-            <div key={bullpen.id} className="card-base p-6 hover:border-primary/50 transition-colors cursor-pointer">
-              <div className="mb-4">
-                <h3 className="text-xl font-semibold text-white mb-2">{bullpen.name}</h3>
-                <span className={`inline-block px-3 py-1 rounded-md text-sm font-medium ${
-                  bullpen.status === 'active' 
-                    ? 'bg-success/20 text-success' 
-                    : 'bg-warning/20 text-warning'
-                }`}>
-                  {bullpen.status.charAt(0).toUpperCase() + bullpen.status.slice(1)}
-                </span>
-              </div>
-
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="w-4 h-4" />
-                  <span>{bullpen.participants} participants</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Trophy className="w-4 h-4" />
-                  <span>${bullpen.startingCash.toLocaleString()} starting cash</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Clock className="w-4 h-4" />
-                  <span>{bullpen.timeRemaining}</span>
-                </div>
-              </div>
-
-              <button className="w-full btn-primary">Join Tournament</button>
-            </div>
+        {/* Filter Buttons */}
+        <div className="flex gap-2 mb-8">
+          {['all', 'active', 'scheduled', 'completed', 'archived'].map((state) => (
+            <button
+              key={state}
+              onClick={() => setFilterState(state)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                filterState === state
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-card text-foreground hover:bg-card/80'
+              }`}
+            >
+              {state.charAt(0).toUpperCase() + state.slice(1)}
+            </button>
           ))}
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader className="w-8 h-8 text-primary animate-spin" />
+          </div>
+        )}
+
+        {/* Bull Pens Grid */}
+        {!isLoading && filteredBullPens.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {filteredBullPens.map((bullPen: any) => (
+              <BullPenCard
+                key={bullPen.id}
+                bullPen={bullPen}
+                onClick={() => handleBullPenClick(bullPen.id)}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && filteredBullPens.length === 0 && (
+          <div className="card-base p-12 text-center mb-12">
+            <p className="text-muted-foreground mb-4">No trade rooms found</p>
+            <button
+              onClick={() => setShowJoinModal(true)}
+              className="btn-primary"
+            >
+              Join a Room
+            </button>
+          </div>
+        )}
+
         {/* Info Section */}
-        <div className="mt-12 card-base p-6">
+        <div className="card-base p-6">
           <h3 className="text-xl font-semibold text-white mb-4">How It Works</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
@@ -117,6 +124,27 @@ export default function TradeRoom() {
           </div>
         </div>
       </main>
+
+      {/* Modals */}
+      {showCreateModal && (
+        <CreateBullPenModal
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            setShowCreateModal(false);
+            setFilterState('all');
+          }}
+        />
+      )}
+
+      {showJoinModal && (
+        <JoinBullPenModal
+          onClose={() => setShowJoinModal(false)}
+          onSuccess={() => {
+            setShowJoinModal(false);
+            setFilterState('all');
+          }}
+        />
+      )}
     </div>
   );
 }
