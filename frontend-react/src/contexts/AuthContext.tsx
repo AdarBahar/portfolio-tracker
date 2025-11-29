@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { apiClient } from '../lib/api';
+import { apiClient, STORAGE_KEYS } from '../lib/api';
 
 export interface User {
   id: string;
@@ -22,12 +22,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_STORAGE_KEYS = {
-  USER: 'portfolio_user',
-  TOKEN: 'portfolio_auth_token',
-  TOKEN_EXPIRY: 'portfolio_token_expiry',
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,23 +33,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const initialize = async () => {
     try {
-      const userData = localStorage.getItem(AUTH_STORAGE_KEYS.USER);
-      const token = localStorage.getItem(AUTH_STORAGE_KEYS.TOKEN);
-      const expiry = localStorage.getItem(AUTH_STORAGE_KEYS.TOKEN_EXPIRY);
+      const userData = localStorage.getItem(STORAGE_KEYS.USER);
+      const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+      const expiry = localStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY);
 
       if (userData && token) {
-        const parsedUser = JSON.parse(userData);
-        
-        // Check token expiry for non-demo users
-        if (!parsedUser.isDemo && expiry) {
-          const expiryTime = parseInt(expiry, 10);
-          if (Date.now() > expiryTime) {
-            logout();
-            return;
-          }
-        }
+        try {
+          const parsedUser = JSON.parse(userData);
 
-        setUser(parsedUser);
+          // Check token expiry for non-demo users
+          if (!parsedUser.isDemo && expiry) {
+            const expiryTime = parseInt(expiry, 10);
+            if (Date.now() > expiryTime) {
+              logout();
+              return;
+            }
+          }
+
+          setUser(parsedUser);
+        } catch (parseError) {
+          // Invalid JSON in user data, clear storage
+          console.error('Failed to parse user data:', parseError);
+          logout();
+        }
       }
     } catch (error) {
       console.error('Failed to initialize auth:', error);
@@ -70,9 +70,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await apiClient.post<any>('/auth/google', { credential });
       const { user: userData, token, expiresIn } = response.data;
 
-      localStorage.setItem(AUTH_STORAGE_KEYS.USER, JSON.stringify(userData));
-      localStorage.setItem(AUTH_STORAGE_KEYS.TOKEN, token);
-      localStorage.setItem(AUTH_STORAGE_KEYS.TOKEN_EXPIRY, String(Date.now() + expiresIn * 1000));
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+      localStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, String(Date.now() + expiresIn * 1000));
 
       setUser(userData);
       return userData;
@@ -92,8 +92,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAdmin: false,
       };
 
-      localStorage.setItem(AUTH_STORAGE_KEYS.USER, JSON.stringify(demoUser));
-      localStorage.setItem(AUTH_STORAGE_KEYS.TOKEN, 'demo_token');
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(demoUser));
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'demo_token');
+      // Demo users don't have token expiry
 
       setUser(demoUser);
       return demoUser;
@@ -104,9 +105,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem(AUTH_STORAGE_KEYS.USER);
-    localStorage.removeItem(AUTH_STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(AUTH_STORAGE_KEYS.TOKEN_EXPIRY);
+    localStorage.removeItem(STORAGE_KEYS.USER);
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
     setUser(null);
   };
 

@@ -41,15 +41,17 @@ export function formatDateTime(date: string | Date): string {
 }
 
 export function getGainLossClass(value: number): string {
-  if (value > 0) return 'text-green-500';
-  if (value < 0) return 'text-red-500';
-  return 'text-gray-500';
+  // Use design system tokens instead of hardcoded colors
+  if (value > 0) return 'text-success';
+  if (value < 0) return 'text-destructive';
+  return 'text-muted-foreground';
 }
 
 export function getGainLossBgClass(value: number): string {
-  if (value > 0) return 'bg-green-500/10';
-  if (value < 0) return 'bg-red-500/10';
-  return 'bg-gray-500/10';
+  // Use design system tokens instead of hardcoded colors
+  if (value > 0) return 'bg-success/10';
+  if (value < 0) return 'bg-destructive/10';
+  return 'bg-muted/10';
 }
 
 export function truncateText(text: string, maxLength: number): string {

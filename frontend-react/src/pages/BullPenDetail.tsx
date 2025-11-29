@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader } from 'lucide-react';
 import { useBullPen } from '@/hooks/useBullPens';
@@ -18,25 +18,33 @@ export default function BullPenDetail() {
   const bullPenId = id ? parseInt(id, 10) : undefined;
   const { data: bullPen, isLoading } = useBullPen(bullPenId);
 
+  // Navigate to trade-room if bull pen not found (after loading completes)
+  useEffect(() => {
+    if (!isLoading && !bullPen) {
+      // Use setTimeout to ensure navigation happens after render
+      const timer = setTimeout(() => navigate('/trade-room'), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, bullPen, navigate]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader className="w-8 h-8 text-primary animate-spin" />
+        <div className="text-center">
+          <Loader className="w-8 h-8 text-primary animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading bull pen...</p>
+        </div>
       </div>
     );
   }
 
+  // Show placeholder while navigating away
   if (!bullPen) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Bull pen not found</p>
-          <button
-            onClick={() => navigate('/trade-room')}
-            className="btn-primary"
-          >
-            Back to Trade Rooms
-          </button>
+          <p className="text-sm text-muted-foreground">Redirecting...</p>
         </div>
       </div>
     );

@@ -80,8 +80,9 @@ export default function Login() {
   const showToast = (message: string, type: 'success' | 'error') => {
     if (toastRef.current) {
       toastRef.current.textContent = message;
+      // Use design system tokens instead of hardcoded colors
       toastRef.current.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white ${
-        type === 'success' ? 'bg-green-600' : 'bg-red-600'
+        type === 'success' ? 'bg-success' : 'bg-destructive'
       }`;
       setTimeout(() => {
         if (toastRef.current) toastRef.current.className = 'hidden';

@@ -19,9 +19,10 @@ export default function MetricCard({
   className = '',
 }: MetricCardProps) {
   const getTrendColor = (trendValue?: number) => {
+    // Use design system tokens instead of hardcoded colors
     if (trendValue === undefined) return 'text-muted-foreground';
-    if (trendValue > 0) return 'text-green-500';
-    if (trendValue < 0) return 'text-red-500';
+    if (trendValue > 0) return 'text-success';
+    if (trendValue < 0) return 'text-destructive';
     return 'text-muted-foreground';
   };
 

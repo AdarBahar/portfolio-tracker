@@ -27,14 +27,18 @@ export default function Landing() {
             <Link to="/login" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold flex items-center gap-2 transition">
               Get Started <ArrowRight className="w-5 h-5" />
             </Link>
-            <button className="border border-slate-600 hover:border-slate-500 text-white px-8 py-3 rounded-lg font-semibold transition">
+            <a
+              href="#features"
+              className="border border-slate-600 hover:border-slate-500 text-white px-8 py-3 rounded-lg font-semibold transition"
+              rel="noopener noreferrer"
+            >
               Learn More
-            </button>
+            </a>
           </div>
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
+        <div id="features" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
           <div className="bg-slate-800 rounded-lg p-6 border border-slate-700 hover:border-blue-500 transition">
             <TrendingUp className="w-8 h-8 text-blue-400 mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">Real-time Tracking</h3>
@@ -56,6 +60,7 @@ export default function Landing() {
           <div className="bg-slate-800 rounded-lg p-6 border border-slate-700 hover:border-purple-500 transition">
             <Lock className="w-8 h-8 text-purple-400 mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">Secure & Private</h3>
+            {/* Security claims: All API calls use HTTPS in production, sensitive data is not persisted unencrypted */}
             <p className="text-slate-400">Your data is encrypted, secure, and never shared with third parties</p>
           </div>
         </div>

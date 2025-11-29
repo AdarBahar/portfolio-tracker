@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Calendar, Download, Plus } from 'lucide-react';
 import { usePortfolioData } from '@/hooks/usePortfolioData';
 import { formatCurrency, formatPercent, getGainLossClass } from '@/utils/formatting';
@@ -15,7 +15,14 @@ import UserProfile from '@/components/header/UserProfile';
 export default function Dashboard() {
   const { holdings, metrics, isLoading, error } = usePortfolioData();
   const [showAddModal, setShowAddModal] = useState(false);
-  const [lastUpdated] = useState(new Date());
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+
+  // Update lastUpdated whenever data changes (not just on mount)
+  useEffect(() => {
+    if (!isLoading && holdings.length > 0) {
+      setLastUpdated(new Date());
+    }
+  }, [holdings, isLoading]);
 
   if (isLoading) {
     return (
@@ -29,11 +36,24 @@ export default function Dashboard() {
   }
 
   if (error) {
+    // Log error details for debugging (in development only)
+    if (import.meta.env.DEV) {
+      console.error('Portfolio loading error:', error);
+    }
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">Error loading portfolio</p>
-          <p className="text-muted-foreground text-sm">{String(error)}</p>
+          <p className="text-destructive mb-4">Unable to load portfolio</p>
+          <p className="text-muted-foreground text-sm">
+            We encountered an issue loading your portfolio data. Please try refreshing the page or contact support if the problem persists.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition"
+          >
+            Refresh Page
+          </button>
         </div>
       </div>
     );

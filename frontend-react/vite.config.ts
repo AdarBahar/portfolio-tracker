@@ -5,6 +5,8 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // Base path for production deployment
+  // Note: Keep in sync with server configuration and .htaccess RewriteBase
   base: '/fantasybroker/react/',
   resolve: {
     alias: {
@@ -18,7 +20,20 @@ export default defineConfig({
   build: {
     outDir: '../react',
     emptyOutDir: true,
-    sourcemap: true,
+    // Disable sourcemaps in production to avoid leaking source code
+    // Enable only in staging or with restricted access
+    sourcemap: false,
     minify: 'terser',
+    terserOptions: {
+      compress: {
+        // Remove console.* and debugger statements in production
+        drop_console: true,
+        drop_debugger: true,
+      },
+      mangle: true,
+      format: {
+        comments: false,
+      },
+    },
   },
 })

@@ -68,9 +68,9 @@ export default function LeaderboardView({ bullPenId }: LeaderboardViewProps) {
                       <div className="flex items-center gap-2">
                         {entry.rank <= 3 && (
                           <Trophy className={`w-4 h-4 ${
-                            entry.rank === 1 ? 'text-yellow-500' :
-                            entry.rank === 2 ? 'text-gray-400' :
-                            'text-orange-600'
+                            entry.rank === 1 ? 'text-warning' :
+                            entry.rank === 2 ? 'text-muted-foreground' :
+                            'text-warning'
                           }`} />
                         )}
                         {entry.rank}
