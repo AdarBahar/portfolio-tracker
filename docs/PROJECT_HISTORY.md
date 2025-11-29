@@ -2211,3 +2211,118 @@ Successfully applied Phase 3 schema migration to local database:
   - Consider adding achievement badges to user profiles
   - Monitor star award distribution for balance
   - Consider implementing star decay or expiration for future seasons
+
+## 2025-11-29 – React Production Deployment & Bug Fixes
+
+- **Git reference**: `react-migration-test` branch, commits `4f05f27`, `4522779`, `800f2b1`, `7528862`, `0249f1a`, `9b3d36b`
+- **Summary**: Fixed critical production deployment issues for React app including API endpoint configuration, data type conversion, and cross-origin communication headers. React dashboard now fully functional in production with proper CSP headers and API connectivity.
+
+- **Details**:
+  - **API Endpoint Configuration** (`frontend-react/src/lib/api.ts`):
+    - Added smart hostname detection for automatic API endpoint selection
+    - Production: `https://www.bahar.co.il/fantasybroker-api/api`
+    - Development: `http://localhost:4000/api`
+    - Respects `VITE_API_URL` environment variable override
+    - Handles both camelCase and snake_case field names from API
+
+  - **Data Type Conversion** (`frontend-react/src/hooks/usePortfolioData.ts`):
+    - Fixed "toFixed is not a function" error caused by API returning strings
+    - MySQL DECIMAL fields returned as strings from API
+    - Added data transformation to convert all numeric fields to numbers
+    - Converts: shares, prices, amounts, fees in holdings, transactions, dividends
+    - Defensive Number() conversion in HoldingsTable component
+
+  - **Cross-Origin Communication** (`frontend-react/public/.htaccess`):
+    - Added Cross-Origin-Opener-Policy (COOP) header: `same-origin-allow-popups`
+    - Added Cross-Origin-Embedder-Policy (COEP) header: `require-corp`
+    - Enables Google Sign-In popup to communicate with main window
+    - Allows cross-origin resources to be loaded
+
+  - **Environment Configuration**:
+    - Created `frontend-react/.env.production` with production API URL
+    - Vite automatically uses `.env.production` during build
+    - Environment files properly gitignored for security
+
+  - **Apache Configuration** (`frontend-react/public/.htaccess`):
+    - Moved from root to public folder for inclusion in build output
+    - Vite copies public files to build output automatically
+    - Includes React Router rewrite rules
+    - Includes CSP headers allowing production API endpoint
+    - Includes security headers (XSS, MIME sniffing, Referrer Policy)
+    - Includes caching configuration (1 year for versioned assets, no-cache for HTML)
+
+  - **Documentation Created**:
+    - `docs/REACT_API_CONFIGURATION.md` - API endpoint configuration guide
+    - `docs/COOP_COEP_HEADERS.md` - Cross-origin headers documentation
+
+- **Files Created**:
+  - `frontend-react/.env.production` - Production environment configuration
+  - `frontend-react/public/.htaccess` - Apache configuration (copied to build output)
+  - `docs/REACT_API_CONFIGURATION.md` - API configuration documentation
+  - `docs/COOP_COEP_HEADERS.md` - COOP/COEP headers documentation
+
+- **Files Modified**:
+  - `frontend-react/src/lib/api.ts` - Added hostname detection for API endpoint
+  - `frontend-react/src/hooks/usePortfolioData.ts` - Added data type conversion
+  - `frontend-react/src/components/dashboard/HoldingsTable.tsx` - Added defensive Number() conversion
+  - `react/.htaccess` - Updated with COOP/COEP headers (generated during build)
+
+- **Reasoning / Motivation**:
+  1. Production deployment revealed CSP errors blocking external resources
+  2. API endpoint was hardcoded to localhost, not accessible in production
+  3. MySQL DECIMAL fields returned as strings, breaking numeric calculations
+  4. Google Sign-In popup couldn't communicate with main window (COOP issue)
+  5. Need for automatic environment detection to support multiple deployments
+  6. Proper security headers required for modern browser security policies
+
+- **Impact**:
+  - React dashboard now fully functional in production
+  - API calls work correctly with production endpoint
+  - Portfolio data displays correctly with proper numeric formatting
+  - Google Sign-In works without console errors
+  - Cross-origin communication enabled for OAuth and external resources
+  - Automatic environment detection simplifies deployment
+
+- **Deployment / Ops notes**:
+  - **Build Process**: `cd frontend-react && npm run build`
+    - Automatically uses `.env.production` for production builds
+    - Copies `.htaccess` from public folder to build output
+    - Outputs to `react/` folder ready for deployment
+  - **Deploy to Production**: `rsync -avz react/ user@server:/var/www/fantasy-broker/react/`
+  - **Verify Deployment**:
+    1. Navigate to https://www.bahar.co.il/fantasybroker/react/dashboard
+    2. Open DevTools Console (F12)
+    3. Should see NO CSP errors
+    4. Portfolio data should load successfully
+    5. Check Network tab for API calls to production endpoint
+  - **Environment Variables**:
+    - `.env.production` is gitignored (not committed)
+    - Create on production server if needed
+    - Vite automatically detects production build and uses `.env.production`
+  - **Apache Modules Required**:
+    - `mod_rewrite` - For URL rewriting (React Router)
+    - `mod_headers` - For security headers (CSP, COOP, COEP)
+    - `mod_deflate` - For compression
+    - `mod_expires` - For cache control
+  - **No Breaking Changes**: Backward compatible with existing APIs
+
+- **Testing**:
+  - ✅ Build successful with production configuration
+  - ✅ API endpoint correctly detected based on hostname
+  - ✅ Portfolio data fetches from production API
+  - ✅ Numeric calculations work correctly (toFixed, etc.)
+  - ✅ No CSP errors in console
+  - ✅ No COOP errors in console
+  - ✅ Google Sign-In popup communication works
+  - ✅ Cross-origin resources load correctly
+  - ✅ Dashboard displays all metrics and holdings
+  - ✅ Holdings table renders with correct formatting
+
+- **Open questions / next steps**:
+  - Monitor production for any remaining console errors
+  - Consider implementing error boundary for better error handling
+  - Consider adding loading states for API calls
+  - Consider implementing retry logic for failed API calls
+  - Consider adding analytics to track production issues
+  - Plan Phase 3: Trade Room migration to React
+  - Plan Phase 4: Admin Panel migration to React

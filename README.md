@@ -258,9 +258,98 @@ This project is **database-ready** with a complete MySQL schema and migration gu
 
 ## Deployment
 
-### Static Hosting (Current)
+### React Frontend (Current)
 
-Deploy to any static hosting service:
+The project now includes a modern React frontend built with Vite. See below for build and deployment instructions.
+
+#### Build for Production
+
+```bash
+cd frontend-react
+npm install
+npm run build
+```
+
+This creates optimized production build in the `react/` folder:
+- `react/index.html` - Main HTML file
+- `react/assets/` - Minified JavaScript and CSS
+- `react/.htaccess` - Apache configuration with security headers
+
+#### Deploy to Production
+
+**Option 1: Using rsync (recommended)**
+
+```bash
+rsync -avz --delete react/ user@server:/var/www/fantasy-broker/react/
+```
+
+**Option 2: Manual upload**
+
+1. Connect to server via SFTP
+2. Upload contents of `react/` folder to `/var/www/fantasy-broker/react/`
+3. Set permissions: `chmod -R 755 react/` and `chmod -R 644 react/assets/*`
+
+#### Verify Deployment
+
+1. Open https://www.bahar.co.il/fantasybroker/react/
+2. Open DevTools Console (F12)
+3. Check for errors - should be NONE
+4. Navigate to dashboard and verify data loads
+5. Check Network tab for API calls
+
+#### Environment Configuration
+
+The React app automatically detects the environment:
+
+- **Production** (www.bahar.co.il): Uses `https://www.bahar.co.il/fantasybroker-api/api`
+- **Development** (localhost): Uses `http://localhost:4000/api`
+
+To override, create `.env.production` in `frontend-react/`:
+
+```env
+VITE_API_URL=https://your-api-endpoint/api
+VITE_GOOGLE_CLIENT_ID=your-google-client-id
+```
+
+#### Local Development
+
+```bash
+cd frontend-react
+npm install
+npm run dev
+```
+
+Then open http://localhost:5173/fantasybroker/react/
+
+#### Troubleshooting
+
+**CSP Errors in Console**
+
+If you see "violates Content Security Policy" errors:
+1. Check the error message for the blocked URL
+2. Add the domain to `connect-src` in `frontend-react/public/.htaccess`
+3. Rebuild: `npm run build`
+4. Redeploy
+
+**API Connection Errors**
+
+If the app can't connect to the API:
+1. Verify the API endpoint is correct
+2. Check that the API server is running
+3. Verify CORS headers are set correctly
+4. Check browser console for detailed error messages
+
+**COOP Errors**
+
+If you see "Cross-Origin-Opener-Policy policy would block the window.postMessage call":
+1. This is expected for cross-origin communication
+2. The `.htaccess` file includes proper COOP headers
+3. Verify `.htaccess` is deployed to the server
+4. Check Apache modules: `mod_headers`, `mod_rewrite`, `mod_deflate`
+
+### Static Hosting (Legacy)
+
+Deploy vanilla JS frontend to any static hosting service:
 - Netlify
 - Vercel
 - GitHub Pages
@@ -271,8 +360,8 @@ Deploy to any static hosting service:
 
 1. Set up MySQL database (see Database Migration above)
 2. Deploy backend API (Node.js/Python)
-3. Deploy frontend (Netlify, Vercel, or cPanel)
-4. Update API base URL in production build
+3. Deploy React frontend (see React Frontend section above)
+4. Update API base URL in production build (automatic via hostname detection)
 
 ## Contributing
 
@@ -292,16 +381,29 @@ For issues or questions, please open an issue on GitHub.
 
 ## Roadmap
 
+### Completed ✅
 - [x] Google OAuth authentication
 - [x] Multi-user support
 - [x] Database schema (MySQL)
-- [ ] Backend API implementation
-- [ ] Unit tests
+- [x] Backend API implementation (Node.js + Express)
+- [x] TypeScript migration (React frontend)
+- [x] Build process (Vite)
+- [x] React migration (Landing page, Login, Dashboard)
+- [x] Production deployment (React frontend)
+
+### In Progress 🚀
+- [ ] Trade Room migration to React
+- [ ] Admin Panel migration to React
+- [ ] Charts and visualizations (React)
+- [ ] Unit tests (React components)
+
+### Planned 📋
 - [ ] Real stock data API integration
-- [ ] TypeScript migration
-- [ ] Build process (Vite)
 - [ ] PWA support
 - [ ] Mobile app
+- [ ] Performance optimization
+- [ ] E2E testing
+- [ ] Analytics integration
 
 ## Credits
 
