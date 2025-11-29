@@ -72,6 +72,13 @@ Options +FollowSymLinks
     # Referrer Policy
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
 
+    # Cross-Origin-Opener-Policy - Allow postMessage from cross-origin windows
+    # Required for Google Sign-In and other cross-origin communication
+    Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+
+    # Cross-Origin-Embedder-Policy - Allow cross-origin resources
+    Header always set Cross-Origin-Embedder-Policy "require-corp"
+
     # Strong cache for versioned assets
     <FilesMatch "\.(css|js|png|jpe?g|gif|webp|avif|svg|woff2)$">
         Header set Cache-Control "public, max-age=31536000, immutable"
