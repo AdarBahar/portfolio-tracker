@@ -11,3 +11,9 @@ assume user - as an admin, I can assume the user's identify and login and act on
 UI automation testing to cover all flows
 Send emails/notifications on major events
 
+Ideas:
+User can open a private room, where he can play with investments
+UI - dashboard:
+Total users?
+Total money in the game
+Total losses/wins
