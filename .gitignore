@@ -23,6 +23,7 @@ yarn.lock
 dist/
 backend/dist/
 build/
+react/
 
 # IDE
 .vscode/
