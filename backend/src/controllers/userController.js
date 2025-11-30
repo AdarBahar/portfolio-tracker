@@ -15,17 +15,15 @@ async function getUserProfile(req, res) {
 
     // Get user profile
     const [userRows] = await db.execute(
-      `SELECT 
+      `SELECT
         id,
         name,
         email,
-        picture,
-        username,
-        tier,
-        lifetime_stars AS lifetimeStars,
-        net_profit AS netProfit,
+        profile_picture AS picture,
+        auth_provider AS authProvider,
+        is_admin AS isAdmin,
         created_at AS createdAt
-      FROM users 
+      FROM users
       WHERE id = ? AND deleted_at IS NULL`,
       [userId]
     );
@@ -89,10 +87,10 @@ async function getUserProfile(req, res) {
         name: user.name,
         email: user.email,
         picture: user.picture,
-        username: user.username,
-        tier: user.tier,
-        lifetimeStars: user.lifetimeStars || 0,
-        netProfit: parseFloat(user.netProfit) || 0,
+        username: user.name, // Use name as username for now
+        tier: 'Unranked', // TODO: Calculate tier based on stats
+        lifetimeStars: 0, // TODO: Calculate from user_star_events
+        netProfit: 0, // TODO: Calculate from portfolio
         isNewUser,
         createdAt: user.createdAt
       },
