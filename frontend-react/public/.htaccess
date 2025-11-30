@@ -72,9 +72,10 @@ Options +FollowSymLinks -Indexes
     # Referrer Policy
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
 
-    # Cross-Origin-Opener-Policy - Allow postMessage from cross-origin windows
-    # Required for Google Sign-In and other cross-origin communication
-    Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups"
+    # Cross-Origin-Opener-Policy - Allow postMessage from same-origin popups
+    # Required for Google Sign-In which uses postMessage for popup communication
+    # Note: Google Sign-In popup is same-origin, so "same-origin" is sufficient
+    Header always set Cross-Origin-Opener-Policy "same-origin"
 
     # Cross-Origin-Embedder-Policy - Strict mode requires CORS headers on all cross-origin resources
     # If you see runtime failures with third-party scripts/fonts/images, ensure they return proper CORS headers
