@@ -22,6 +22,7 @@ const rakeRoutes = require('./routes/rakeRoutes');
 const bonusRoutes = require('./routes/bonusRoutes');
 const adminPromotionRoutes = require('./routes/adminPromotionRoutes');
 const achievementRulesRoutes = require('./routes/achievementRulesRoutes');
+const userRoutes = require('./routes/userRoutes');
 const openapi = require('../openapi.json');
 const db = require('./db');
 const { internalError } = require('./utils/apiError');
@@ -84,6 +85,9 @@ app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, bullPenOrdersRoutes);
 app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, leaderboardRoutes);
 app.use(`${BASE_PATH}/api/my`, authenticateToken, myBullPensRoutes);
 app.use(`${BASE_PATH}/api/market-data`, marketDataRoutes);
+
+// User routes (authenticated)
+app.use(`${BASE_PATH}/api/users`, authenticateToken, userRoutes);
 
 // Budget routes (public, authenticated)
 app.use(`${BASE_PATH}/api/v1/budget`, authenticateToken, budgetRoutes);
