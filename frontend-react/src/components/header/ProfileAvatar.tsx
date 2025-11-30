@@ -23,6 +23,7 @@ export default function ProfileAvatar({
 }: AvatarProps) {
   const [isHovering, setIsHovering] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
 
   // Size mappings
   const sizeMap = {
@@ -81,11 +82,13 @@ export default function ProfileAvatar({
           ${isLoading || isUploading ? 'opacity-75' : ''}
         `}
       >
-        {src ? (
+        {src && !imageLoadFailed ? (
           <img
             src={src}
             alt={name}
             className="w-full h-full object-cover"
+            crossOrigin="anonymous"
+            onError={() => setImageLoadFailed(true)}
           />
         ) : (
           <span className={`${sizes.text} font-bold text-white`}>
