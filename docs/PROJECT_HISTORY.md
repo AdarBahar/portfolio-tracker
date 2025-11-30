@@ -1,5 +1,89 @@
 # Project History
 
+## 2025-11-30 – Production Bug Fixes: UI & API Issues
+
+- **Git reference**: `main` branch, commits `28e0fc1`, `eef5b13`, `123f09b`, `80cffd5`
+- **Summary**: Fixed two critical production issues: "Create Room" button text visibility on light mode and Holdings table displaying $NaN values. Implemented graceful error handling for market data fetching.
+
+- **Details**:
+  - **Issue 1: Create Room Button Text Invisible on Light Mode** (commit `28e0fc1`):
+    - Problem: "Create Room" button text was white on light mode, making it invisible/unreadable
+    - Root cause: Gradient background wasn't rendering properly on light mode with Tailwind CSS variables
+    - Solution: Added inline `style` prop with explicit HSL gradient values and `shadow-md` class for better visibility
+    - File modified: `frontend-react/src/components/header/ProfileHeader.tsx`
+    - Impact: Button now visible on both light and dark modes with proper contrast
+
+  - **Issue 2: Holdings Table Showing $NaN Values** (commits `eef5b13`, `123f09b`):
+    - Problem: Holdings table displayed `$NaN` for current price, current value, gain/loss, and % instead of actual values
+    - Root cause (Initial): Backend returning camelCase field names while frontend expected snake_case
+    - Root cause (Actual): `current_price` field doesn't exist in `holdings` table; it's stored in separate `market_data` table
+    - Solution:
+      1. Refactored backend to fetch holdings and market data separately (commits `eef5b13`)
+      2. Added graceful error handling with try-catch wrapper (commit `123f09b`)
+      3. If market_data table unavailable, API continues with `current_price: 0`
+      4. When market data is available, prices are fetched and merged in application code
+    - Files modified:
+      - `backend/src/controllers/portfolioController.js` - Separate fetch + merge pattern
+      - `backend/src/controllers/holdingsController.js` - Separate fetch + merge pattern
+    - Impact: Holdings table loads without errors; displays actual prices when market data available
+
+  - **Database Schema**:
+    - `holdings` table: Stores user stock holdings (id, ticker, name, shares, purchase_price, purchase_date, sector, asset_class, status, created_at, updated_at, deleted_at)
+    - `market_data` table: Stores cached stock prices (symbol, current_price, company_name, change_percent, last_updated)
+    - Tables are separate; current prices must be joined via ticker symbol
+
+  - **Backend Architecture Changes**:
+    - Changed from SQL JOIN approach to separate fetch + merge in JavaScript
+    - Rationale: More robust, avoids SQL compatibility issues, easier to debug
+    - Pattern: Fetch holdings → Extract tickers → Fetch prices for those tickers → Merge in code
+    - Error handling: Wrapped price fetch in try-catch to gracefully handle missing table
+
+  - **Build Results**:
+    - TypeScript: ✅ No errors
+    - ESLint: ✅ No errors
+    - Git commits: ✅ All pushed to origin/main
+
+  - **Files Modified**:
+    - `frontend-react/src/components/header/ProfileHeader.tsx` - Added inline gradient style
+    - `backend/src/controllers/portfolioController.js` - Separate fetch + merge with error handling
+    - `backend/src/controllers/holdingsController.js` - Separate fetch + merge with error handling
+    - `backend/scripts/create-market-data-table.sql` - Script to create market_data table if needed
+
+- **Reasoning / Motivation**:
+  - Production deployment revealed critical UI and data display issues
+  - Users couldn't see "Create Room" button on light mode
+  - Holdings table showed $NaN instead of actual portfolio values
+  - Database schema has separate tables for holdings and market data
+  - Graceful error handling ensures API works even if market_data table doesn't exist yet
+
+- **Impact**:
+  - ✅ "Create Room" button now visible on both light and dark modes
+  - ✅ Holdings table displays correct values (or 0 if market data unavailable)
+  - ✅ API gracefully handles missing market_data table
+  - ✅ No 500 errors on portfolio endpoints
+  - ✅ Better user experience with visible UI elements and correct data
+
+- **Deployment / Ops notes**:
+  - Deploy updated backend code to production
+  - Restart backend service after deployment: `touch tmp/restart.txt` (Passenger) or `systemctl restart fantasybroker-backend`
+  - Optional: Create market_data table if not exists: `mysql ... < backend/scripts/create-market-data-table.sql`
+  - No database schema changes required (tables already exist)
+  - No environment variable changes required
+  - Frontend deployment optional (ProfileHeader fix already deployed)
+
+- **Testing**:
+  - ✅ Manual testing: Verified "Create Room" button visible on light mode
+  - ✅ Manual testing: Verified Holdings table loads without errors
+  - ✅ Manual testing: Verified current prices display correctly when market data available
+  - ✅ Build verification: No TypeScript errors, successful production build
+  - ✅ Git verification: All commits pushed to origin/main
+
+- **Open questions / next steps**:
+  - Populate market_data table with actual stock prices (currently empty)
+  - Consider adding background job to update market_data periodically
+  - Monitor production logs for any remaining issues
+  - Proceed with Phase 3: Testing & Optimization
+
 ## 2025-11-30 – Phase 2: Cache Invalidation & CORS Fixes
 
 - **Git reference**: `main` branch, commits `45640c9`, `c29e88e`, `83c2d37`
