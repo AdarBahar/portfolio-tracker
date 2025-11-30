@@ -28,13 +28,20 @@ describe('useUserProfile Hook - Data Validation', () => {
 
     it('should have correct data types', () => {
       const { profile, stats } = mockUserProfile;
-      expect(typeof profile.id).toBe('number');
+      expect(typeof profile.id).toBe('string');
       expect(typeof profile.email).toBe('string');
       expect(typeof profile.name).toBe('string');
-      expect(typeof profile.isAdmin).toBe('boolean');
-      expect(typeof profile.isDemo).toBe('boolean');
-      expect(typeof stats.totalHoldings).toBe('number');
-      expect(typeof stats.totalValue).toBe('number');
+      expect(typeof profile.username).toBe('string');
+      expect(typeof profile.tier).toBe('string');
+      expect(typeof profile.lifetimeStars).toBe('number');
+      expect(typeof profile.netProfit).toBe('number');
+      expect(typeof profile.isNewUser).toBe('boolean');
+      expect(typeof stats.globalRank).toBe('object'); // null is object type
+      expect(typeof stats.winRate).toBe('number');
+      expect(typeof stats.totalRoomsPlayed).toBe('number');
+      expect(typeof stats.totalWins).toBe('number');
+      expect(typeof stats.winStreak).toBe('number');
+      expect(typeof stats.activityStreak).toBe('number');
     });
   });
 
@@ -50,8 +57,11 @@ describe('useUserProfile Hook - Data Validation', () => {
 
     it('should have valid stats values', () => {
       const { stats } = mockUserProfile;
-      expect(stats.totalHoldings).toBeGreaterThanOrEqual(0);
-      expect(stats.totalValue).toBeGreaterThanOrEqual(0);
+      expect(stats.winRate).toBeGreaterThanOrEqual(0);
+      expect(stats.totalRoomsPlayed).toBeGreaterThanOrEqual(0);
+      expect(stats.totalWins).toBeGreaterThanOrEqual(0);
+      expect(stats.winStreak).toBeGreaterThanOrEqual(0);
+      expect(stats.activityStreak).toBeGreaterThanOrEqual(0);
     });
   });
 });

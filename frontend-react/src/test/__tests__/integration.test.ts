@@ -10,7 +10,7 @@ describe('API Integration - Data Flow', () => {
     });
 
     it('should have consistent user ID across profile and stats', () => {
-      expect(mockUserProfile.profile.id).toBe(1);
+      expect(mockUserProfile.profile.id).toBe('1');
     });
 
     it('should have valid email format', () => {
@@ -20,8 +20,9 @@ describe('API Integration - Data Flow', () => {
 
     it('should have non-negative financial values', () => {
       const { stats } = mockUserProfile;
-      expect(stats.totalValue).toBeGreaterThanOrEqual(0);
-      expect(stats.totalHoldings).toBeGreaterThanOrEqual(0);
+      expect(stats.winRate).toBeGreaterThanOrEqual(0);
+      expect(stats.totalRoomsPlayed).toBeGreaterThanOrEqual(0);
+      expect(stats.totalWins).toBeGreaterThanOrEqual(0);
     });
   });
 

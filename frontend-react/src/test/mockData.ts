@@ -3,18 +3,23 @@ import type { User, UserDetailResponse, AuditLog } from '@/hooks/useAdmin';
 
 export const mockUserProfile: UserProfileResponse = {
   profile: {
-    id: 1,
-    email: 'test@example.com',
+    id: '1',
     name: 'Test User',
+    email: 'test@example.com',
     picture: 'https://example.com/avatar.jpg',
-    isAdmin: false,
-    isDemo: false,
+    username: 'testuser',
+    tier: 'Unranked',
+    lifetimeStars: 0,
+    netProfit: 0,
+    isNewUser: true,
   },
   stats: {
-    totalHoldings: 5,
-    totalValue: 50000,
-    totalGainLoss: 5000,
-    portfolioPercentChange: 11.11,
+    globalRank: null,
+    winRate: 0,
+    totalRoomsPlayed: 0,
+    totalWins: 0,
+    winStreak: 0,
+    activityStreak: 0,
   },
 };
 
