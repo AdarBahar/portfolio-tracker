@@ -5,6 +5,8 @@ const {
   updateUserAdminStatus,
   getUserDetail,
   grantStars,
+  removeStars,
+  adjustBudget,
 } = require('../controllers/adminController');
 
 const router = express.Router();
@@ -23,6 +25,12 @@ router.patch('/users/:id/admin', updateUserAdminStatus);
 
 // POST /api/admin/users/:id/grant-stars - Grant stars to user
 router.post('/users/:id/grant-stars', grantStars);
+
+// POST /api/admin/users/:id/remove-stars - Remove stars from user
+router.post('/users/:id/remove-stars', removeStars);
+
+// POST /api/admin/users/:id/adjust-budget - Adjust user budget (add/remove money)
+router.post('/users/:id/adjust-budget', adjustBudget);
 
 module.exports = router;
 

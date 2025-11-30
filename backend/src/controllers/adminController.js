@@ -381,11 +381,210 @@ async function grantStars(req, res) {
   }
 }
 
+/**
+ * Remove stars from a user (admin only)
+ * POST /api/admin/users/:id/remove-stars
+ */
+async function removeStars(req, res) {
+  const userId = parseInt(req.params.id, 10);
+  const { stars, reason } = req.body;
+  const adminId = req.user && req.user.id;
+
+  if (!userId || !stars || stars <= 0) {
+    return res.status(400).json({ error: 'Missing or invalid userId or stars' });
+  }
+
+  if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+    return res.status(400).json({ error: 'Missing or invalid reason' });
+  }
+
+  try {
+    // Verify user exists
+    const [userRows] = await db.execute(
+      'SELECT id, email, name FROM users WHERE id = ? AND deleted_at IS NULL',
+      [userId]
+    );
+
+    if (userRows.length === 0) {
+      return notFound(res, 'User not found');
+    }
+
+    const user = userRows[0];
+
+    // Remove stars using achievementsService
+    const achievementsService = require('../services/achievementsService');
+    const result = await achievementsService.removeStars(
+      userId,
+      'admin_remove',
+      stars,
+      { bullPenId: null, seasonId: null, source: 'admin_remove', meta: { reason, removedBy: adminId } }
+    );
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.message });
+    }
+
+    // Log admin action
+    await auditLog.log({
+      userId: adminId,
+      eventType: 'admin_remove_stars',
+      eventCategory: 'admin',
+      description: `Removed ${stars} stars from user ${user.email} (${user.name}). Reason: ${reason}`,
+      newValues: { targetUserId: userId, starsRemoved: stars, reason }
+    });
+
+    return res.json({
+      success: true,
+      message: `Removed ${stars} stars from user ${user.email}`,
+      totalStars: result.totalStars,
+    });
+  } catch (err) {
+    logger.error('[Admin] Error removing stars:', err);
+    return internalError(res, 'Failed to remove stars');
+  }
+}
+
+/**
+ * Adjust user budget (add or remove money) - admin only
+ * POST /api/admin/users/:id/adjust-budget
+ */
+async function adjustBudget(req, res) {
+  const userId = parseInt(req.params.id, 10);
+  const { amount, direction, reason } = req.body;
+  const adminId = req.user && req.user.id;
+  const adminName = req.user && req.user.name;
+
+  if (!userId || !amount || amount <= 0) {
+    return res.status(400).json({ error: 'Missing or invalid userId or amount' });
+  }
+
+  if (!direction || !['IN', 'OUT'].includes(direction)) {
+    return res.status(400).json({ error: 'Direction must be IN or OUT' });
+  }
+
+  if (!reason || typeof reason !== 'string' || reason.trim().length === 0) {
+    return res.status(400).json({ error: 'Missing or invalid reason' });
+  }
+
+  try {
+    // Verify user exists
+    const [userRows] = await db.execute(
+      'SELECT id, email, name FROM users WHERE id = ? AND deleted_at IS NULL',
+      [userId]
+    );
+
+    if (userRows.length === 0) {
+      return notFound(res, 'User not found');
+    }
+
+    const user = userRows[0];
+
+    // Get current budget
+    const [budgetRows] = await db.execute(
+      'SELECT available_balance FROM user_budgets WHERE user_id = ? AND deleted_at IS NULL',
+      [userId]
+    );
+
+    if (budgetRows.length === 0) {
+      return notFound(res, 'User budget not found');
+    }
+
+    const balanceBefore = budgetRows[0].available_balance;
+
+    // Check if debit would result in negative balance
+    if (direction === 'OUT' && balanceBefore < amount) {
+      return res.status(400).json({
+        error: 'INSUFFICIENT_FUNDS',
+        message: `User has insufficient balance. Available: ${balanceBefore}, Requested: ${amount}`
+      });
+    }
+
+    // Update budget
+    const newBalance = direction === 'IN' ? balanceBefore + amount : balanceBefore - amount;
+    const [updateResult] = await db.execute(
+      'UPDATE user_budgets SET available_balance = ? WHERE user_id = ? AND deleted_at IS NULL',
+      [newBalance, userId]
+    );
+
+    if (updateResult.affectedRows === 0) {
+      return notFound(res, 'Failed to update budget');
+    }
+
+    // Log the budget transaction
+    const operationType = direction === 'IN' ? 'ADMIN_CREDIT' : 'ADMIN_DEBIT';
+    const [logResult] = await db.execute(
+      `INSERT INTO budget_logs (
+        user_id, direction, operation_type, amount, currency,
+        balance_before, balance_after, correlation_id, meta, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        userId,
+        direction,
+        operationType,
+        amount,
+        'VUSD',
+        balanceBefore,
+        newBalance,
+        `admin-${adminId}-${Date.now()}`,
+        JSON.stringify({ reason, admin_id: adminId, admin_name: adminName })
+      ]
+    );
+
+    // Log admin action in audit log
+    await auditLog.log({
+      userId: adminId,
+      eventType: 'admin_adjust_budget',
+      eventCategory: 'admin',
+      description: `Admin: ${adminName} ${direction === 'IN' ? 'added' : 'removed'} $${amount} ${direction === 'IN' ? 'to' : 'from'} ${user.name} account. Reason: ${reason}`,
+      newValues: {
+        targetUserId: userId,
+        targetUserName: user.name,
+        amount,
+        direction,
+        reason,
+        balanceBefore,
+        balanceAfter: newBalance
+      }
+    });
+
+    // Also log for the target user
+    await auditLog.log({
+      userId: userId,
+      eventType: 'budget_adjusted_by_admin',
+      eventCategory: 'admin',
+      description: `Admin: ${adminName} ${direction === 'IN' ? 'added' : 'removed'} $${amount} ${direction === 'IN' ? 'to' : 'from'} your account. Reason: ${reason}`,
+      newValues: {
+        amount,
+        direction,
+        reason,
+        balanceBefore,
+        balanceAfter: newBalance
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: `${direction === 'IN' ? 'Added' : 'Removed'} $${amount} ${direction === 'IN' ? 'to' : 'from'} user ${user.email}`,
+      user_id: userId,
+      amount,
+      direction,
+      balance_before: balanceBefore,
+      balance_after: newBalance,
+      log_id: logResult.insertId
+    });
+  } catch (err) {
+    logger.error('[Admin] Error adjusting budget:', err);
+    return internalError(res, 'Failed to adjust budget');
+  }
+}
+
 module.exports = {
   listUsers,
   getUserLogs,
   updateUserAdminStatus,
   getUserDetail,
   grantStars,
+  removeStars,
+  adjustBudget,
 };
 

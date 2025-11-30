@@ -172,12 +172,46 @@ export function useGrantStars() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ userId, stars }: { userId: number; stars: number }) => {
-      const response = await apiClient.post(`/admin/users/${userId}/grant-stars`, { stars });
+    mutationFn: async ({ userId, stars, reason }: { userId: number; stars: number; reason: string }) => {
+      const response = await apiClient.post(`/admin/users/${userId}/grant-stars`, { stars, reason });
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, { userId }) => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['userDetail', userId] });
+      queryClient.invalidateQueries({ queryKey: ['userLogs', userId] });
+    },
+  });
+}
+
+export function useRemoveStars() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, stars, reason }: { userId: number; stars: number; reason: string }) => {
+      const response = await apiClient.post(`/admin/users/${userId}/remove-stars`, { stars, reason });
+      return response.data;
+    },
+    onSuccess: (_, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['userDetail', userId] });
+      queryClient.invalidateQueries({ queryKey: ['userLogs', userId] });
+    },
+  });
+}
+
+export function useAdjustBudget() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userId, amount, direction, reason }: { userId: number; amount: number; direction: 'IN' | 'OUT'; reason: string }) => {
+      const response = await apiClient.post(`/admin/users/${userId}/adjust-budget`, { amount, direction, reason });
+      return response.data;
+    },
+    onSuccess: (_, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['userDetail', userId] });
+      queryClient.invalidateQueries({ queryKey: ['userLogs', userId] });
     },
   });
 }

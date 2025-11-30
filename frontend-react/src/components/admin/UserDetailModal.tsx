@@ -1,8 +1,9 @@
-import React from 'react';
-import { X, Loader, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Loader, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { UserDetail } from '@/hooks/useAdmin';
 import { formatCurrency, formatDate } from '@/utils/formatting';
+import BudgetStarsAdjustmentPanel from './BudgetStarsAdjustmentPanel';
 
 interface UserDetailModalProps {
   user: UserDetail | null;
@@ -12,6 +13,7 @@ interface UserDetailModalProps {
 
 export default function UserDetailModal({ user, isLoading, onClose }: UserDetailModalProps): React.ReactElement {
   const navigate = useNavigate();
+  const [showAdjustments, setShowAdjustments] = useState(false);
 
   if (!user && !isLoading) return <></>;
 
@@ -119,6 +121,22 @@ export default function UserDetailModal({ user, isLoading, onClose }: UserDetail
                 </div>
               </div>
             )}
+
+            {/* Admin Adjustments */}
+            <div className="bg-background/50 p-4 rounded-lg border border-white/10">
+              <button
+                onClick={() => setShowAdjustments(!showAdjustments)}
+                className="w-full flex items-center justify-between text-lg font-semibold text-white hover:text-primary transition-colors"
+              >
+                <span>⚙️ Admin Adjustments</span>
+                {showAdjustments ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </button>
+              {showAdjustments && (
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <BudgetStarsAdjustmentPanel user={user} onSuccess={() => setShowAdjustments(false)} />
+                </div>
+              )}
+            </div>
 
             <div className="flex gap-3">
               <button
