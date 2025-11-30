@@ -16,28 +16,50 @@ export interface User {
 
 export interface UserDetail extends User {
   budget: {
+    id: number;
+    user_id: number;
     total_balance: number;
     locked_balance: number;
     available_balance: number;
-  };
-  transactions: Array<{
+    currency: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+  } | null;
+  budget_logs: Array<{
     id: number;
-    type: string;
+    user_id: number;
+    direction: string;
+    operation_type: string;
     amount: number;
+    currency: string;
+    balance_before: number;
+    balance_after: number;
+    bull_pen_id: number | null;
+    season_id: number | null;
+    correlation_id: string | null;
     created_at: string;
   }>;
-  rooms: Array<{
+  trading_rooms: Array<{
     id: number;
     name: string;
     state: string;
-    portfolio_value: number;
-    gain_loss: number;
+    starting_cash: number;
+    host_user_id: number;
+    start_time: string;
+    duration_sec: number;
+    role: string;
+    status: string;
+    cash: number;
+    joined_at: string;
   }>;
   standings: Array<{
-    room_id: number;
+    bull_pen_id: number;
+    bull_pen_name: string;
     rank: number;
     portfolio_value: number;
-    gain_loss: number;
+    pnl_abs: number;
+    pnl_pct: number;
   }>;
 }
 

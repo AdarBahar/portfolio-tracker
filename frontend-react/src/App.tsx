@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import TradeRoom from './pages/TradeRoom';
 import BullPenDetail from './pages/BullPenDetail';
 import Admin from './pages/Admin';
+import AdminUserDetail from './pages/AdminUserDetail';
 import NotFound from './pages/NotFound';
 import ProfileHeaderDemo from './components/header/ProfileHeader.demo';
 
@@ -63,6 +64,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Admin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/user/:userId"
+              element={
+                <ProtectedRoute>
+                  <AdminUserDetail />
                 </ProtectedRoute>
               }
             />

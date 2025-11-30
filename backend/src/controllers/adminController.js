@@ -198,12 +198,12 @@ async function getUserDetail(req, res) {
         id,
         email,
         name,
-        auth_provider AS authProvider,
-        is_demo AS isDemo,
-        is_admin AS isAdmin,
+        auth_provider,
+        is_demo,
+        is_admin,
         status,
-        created_at AS createdAt,
-        last_login AS lastLogin
+        created_at,
+        last_login
       FROM users
       WHERE id = ? AND deleted_at IS NULL`,
       [userId]
@@ -219,13 +219,14 @@ async function getUserDetail(req, res) {
     const [budgetRows] = await db.execute(
       `SELECT
         id,
-        user_id AS userId,
-        available_balance AS availableBalance,
-        locked_balance AS lockedBalance,
+        user_id,
+        available_balance,
+        locked_balance,
+        total_balance,
         currency,
         status,
-        created_at AS createdAt,
-        updated_at AS updatedAt
+        created_at,
+        updated_at
       FROM user_budgets
       WHERE user_id = ? AND deleted_at IS NULL`,
       [userId]
@@ -237,17 +238,17 @@ async function getUserDetail(req, res) {
     const [budgetLogs] = await db.execute(
       `SELECT
         id,
-        user_id AS userId,
+        user_id,
         direction,
-        operation_type AS operationType,
+        operation_type,
         amount,
         currency,
-        balance_before AS balanceBefore,
-        balance_after AS balanceAfter,
-        bull_pen_id AS bullPenId,
-        season_id AS seasonId,
-        correlation_id AS correlationId,
-        created_at AS createdAt
+        balance_before,
+        balance_after,
+        bull_pen_id,
+        season_id,
+        correlation_id,
+        created_at
       FROM budget_logs
       WHERE user_id = ? AND deleted_at IS NULL
       ORDER BY created_at DESC
@@ -261,14 +262,14 @@ async function getUserDetail(req, res) {
         bp.id,
         bp.name,
         bp.state,
-        bp.starting_cash AS startingCash,
-        bp.host_user_id AS hostUserId,
-        bp.start_time AS startTime,
-        bp.duration_sec AS durationSec,
+        bp.starting_cash,
+        bp.host_user_id,
+        bp.start_time,
+        bp.duration_sec,
         bpm.role,
         bpm.status,
         bpm.cash,
-        bpm.joined_at AS joinedAt
+        bpm.joined_at
       FROM bull_pens bp
       JOIN bull_pen_memberships bpm ON bp.id = bpm.bull_pen_id
       WHERE bpm.user_id = ? AND bp.deleted_at IS NULL AND bpm.deleted_at IS NULL
@@ -283,9 +284,9 @@ async function getUserDetail(req, res) {
         const [leaderboard] = await db.execute(
           `SELECT
             rank,
-            portfolio_value AS portfolioValue,
-            pnl_abs AS pnlAbs,
-            pnl_pct AS pnlPct
+            portfolio_value,
+            pnl_abs,
+            pnl_pct
           FROM leaderboard_snapshots
           WHERE bull_pen_id = ? AND user_id = ?
           ORDER BY snapshot_at DESC
@@ -295,8 +296,8 @@ async function getUserDetail(req, res) {
 
         if (leaderboard.length > 0) {
           standings.push({
-            bullPenId: room.id,
-            bullPenName: room.name,
+            bull_pen_id: room.id,
+            bull_pen_name: room.name,
             ...leaderboard[0]
           });
         }
@@ -304,10 +305,25 @@ async function getUserDetail(req, res) {
     }
 
     return res.json({
-      user,
-      budget,
-      budgetLogs,
-      tradingRooms,
+      user: {
+        ...user,
+        auth_provider: user.auth_provider,
+        is_demo: user.is_demo,
+        is_admin: user.is_admin,
+        created_at: user.created_at,
+        last_login: user.last_login
+      },
+      budget: budget ? {
+        ...budget,
+        user_id: budget.user_id,
+        available_balance: budget.available_balance,
+        locked_balance: budget.locked_balance,
+        total_balance: budget.total_balance,
+        created_at: budget.created_at,
+        updated_at: budget.updated_at
+      } : null,
+      budget_logs: budgetLogs,
+      trading_rooms: tradingRooms,
       standings
     });
   } catch (err) {
