@@ -84,18 +84,23 @@ export default function UserDetailModal({ user, isLoading, onClose }: UserDetail
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <p className="text-muted-foreground text-sm">Total Balance</p>
-                    <p className="text-foreground font-semibold">{formatCurrency((user.budget.available_balance || 0) + (user.budget.locked_balance || 0))}</p>
+                    <p className="text-foreground font-semibold">
+                      {formatCurrency(
+                        (typeof user.budget.available_balance === 'number' ? user.budget.available_balance : 0) +
+                        (typeof user.budget.locked_balance === 'number' ? user.budget.locked_balance : 0)
+                      )}
+                    </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-sm">Available</p>
-                    <p className="text-success font-semibold">{formatCurrency(user.budget.available_balance || 0)}</p>
+                    <p className="text-success font-semibold">{formatCurrency(typeof user.budget.available_balance === 'number' ? user.budget.available_balance : 0)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-sm">Locked</p>
-                    <p className="text-warning font-semibold">{formatCurrency(user.budget.locked_balance || 0)}</p>
+                    <p className="text-warning font-semibold">{formatCurrency(typeof user.budget.locked_balance === 'number' ? user.budget.locked_balance : 0)}</p>
                   </div>
                 </div>
-                <p className="text-muted-foreground text-xs mt-2">Currency: {user.budget.currency}</p>
+                <p className="text-muted-foreground text-xs mt-2">Currency: {user.budget.currency || 'VUSD'}</p>
               </div>
             )}
 

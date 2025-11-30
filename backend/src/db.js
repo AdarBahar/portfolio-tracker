@@ -19,5 +19,12 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+// Add query method as alias to execute for backward compatibility
+// execute returns [rows, fields], query should return just rows
+pool.query = async function(sql, values) {
+  const [rows] = await this.execute(sql, values);
+  return rows;
+};
+
 module.exports = pool;
 

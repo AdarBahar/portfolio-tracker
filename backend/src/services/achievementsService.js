@@ -31,14 +31,15 @@ class AchievementsService {
       }
 
       // Insert star event
-      const result = await db.query(
-        `INSERT INTO user_star_events 
+      const result = await db.execute(
+        `INSERT INTO user_star_events
          (user_id, bull_pen_id, season_id, source, reason_code, stars_delta, meta, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
         [userId, bullPenId, seasonId, source, reasonCode, starsDelta, JSON.stringify(meta)]
       );
+      const [insertResult] = result;
 
-      const starId = result.insertId;
+      const starId = insertResult.insertId;
 
       // Get total stars for user
       const totalStars = await this.getAggregatedStars(userId, 'lifetime');
