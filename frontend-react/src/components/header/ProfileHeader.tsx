@@ -9,7 +9,7 @@ import type { ProfileHeaderProps } from '@/types/profileHeader';
  * ProfileHeader Component
  * Main dashboard header showing user identity, stats, and actions
  * Features:
- * - Three-column layout (Identity | Stats | Actions)
+ * - Horizontal layout (Avatar + Info | Stats | Actions)
  * - Responsive stacking on mobile
  * - Full light/dark mode support
  * - Loading and error states
@@ -22,7 +22,6 @@ export default function ProfileHeader({
   error = null,
   onJoinRoom,
   onCreateRoom,
-  onViewStats,
   onAvatarUpload,
 }: ProfileHeaderProps) {
   if (error) {
@@ -37,21 +36,32 @@ export default function ProfileHeader({
 
   return (
     <div className="bg-card border border-border rounded-lg p-6 md:p-8 shadow-sm">
-      {/* Main Container - Three Column Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left: Identity Block */}
-        <div className="flex flex-col items-center md:items-start gap-4">
-          <ProfileAvatar
-            src={userProfile.picture}
-            size="lg"
-            name={userProfile.name}
-            editable={true}
-            onUpload={onAvatarUpload}
-            tier={userProfile.tier}
-          />
+      {/* Main Container - Horizontal Layout */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-8">
+        {/* Left: Avatar + User Info */}
+        <div className="flex items-start gap-4 flex-shrink-0">
+          <div className="relative">
+            <ProfileAvatar
+              src={userProfile.picture}
+              size="lg"
+              name={userProfile.name}
+              editable={true}
+              onUpload={onAvatarUpload}
+              tier={userProfile.tier}
+            />
+            {/* Star Badge in corner */}
+            <div className="absolute -bottom-2 -right-2">
+              <StarBadge
+                value={userProfile.lifetimeStars}
+                size="sm"
+                colorScheme="purple"
+                animated={true}
+              />
+            </div>
+          </div>
 
-          <div className="text-center md:text-left">
-            <h2 className="text-2xl font-bold text-foreground">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-xl font-bold text-foreground">
               {userProfile.name}
             </h2>
             {userProfile.username && (
@@ -59,27 +69,20 @@ export default function ProfileHeader({
                 @{userProfile.username}
               </p>
             )}
-          </div>
-
-          {/* Stars and Profit */}
-          <div className="flex items-center gap-4 w-full justify-center md:justify-start">
-            <StarBadge
-              value={userProfile.lifetimeStars}
-              size="md"
-              colorScheme="purple"
-              animated={true}
-            />
-            <ProfitIndicator
-              amount={userProfile.netProfit}
-              currency="USD"
-              animated={true}
-              showSparkle={userProfile.netProfit > 0}
-            />
+            {/* Profit Indicator */}
+            <div className="mt-1">
+              <ProfitIndicator
+                amount={userProfile.netProfit}
+                currency="USD"
+                animated={true}
+                showSparkle={userProfile.netProfit > 0}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Center: Stats Block */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Center: Stats Block - 4 cards in a row */}
+        <div className="flex gap-3 flex-wrap md:flex-nowrap flex-1 justify-center md:justify-start">
           <StatCard
             icon={Trophy}
             label="Global Rank"
@@ -109,14 +112,15 @@ export default function ProfileHeader({
         </div>
 
         {/* Right: Actions Block */}
-        <div className="flex flex-col gap-3 justify-center">
+        <div className="flex gap-3 flex-shrink-0 w-full md:w-auto justify-end">
           <button
             onClick={onJoinRoom}
             className={`
-              px-6 py-3
-              bg-gradient-to-r from-brand-purple to-brand-blue
-              hover:opacity-90
-              text-white font-semibold
+              px-6 py-2.5
+              bg-secondary
+              hover:bg-secondary/80
+              text-foreground
+              font-semibold
               rounded-lg
               transition-all duration-200
               ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
@@ -129,11 +133,10 @@ export default function ProfileHeader({
           <button
             onClick={onCreateRoom}
             className={`
-              px-6 py-3
-              border border-border
-              text-foreground
-              hover:bg-secondary
-              font-semibold
+              px-6 py-2.5
+              bg-gradient-to-r from-brand-purple to-brand-blue
+              hover:opacity-90
+              text-white font-semibold
               rounded-lg
               transition-all duration-200
               ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
@@ -143,22 +146,6 @@ export default function ProfileHeader({
             title={isNewUser ? 'Join a room first to create one' : ''}
           >
             Create Room
-          </button>
-
-          <button
-            onClick={onViewStats}
-            className={`
-              px-6 py-2
-              text-foreground
-              hover:text-primary
-              font-medium
-              text-sm
-              transition-colors duration-200
-              ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
-            `}
-            disabled={isLoading}
-          >
-            View Full Stats →
           </button>
         </div>
       </div>

@@ -67,36 +67,26 @@ export default function ProfitIndicator({
   }).format(displayAmount);
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2">
       {/* Icon */}
-      <div className={`
-        p-2 rounded-lg
-        ${isProfit ? 'bg-success/10' : 'bg-danger/10'}
-      `}>
-        <TrendingUp className={`
-          w-5 h-5
-          ${isProfit ? 'text-success' : 'text-danger'}
-        `} />
-      </div>
+      <TrendingUp className={`
+        w-4 h-4
+        ${isProfit ? 'text-success' : 'text-danger'}
+      `} />
 
-      {/* Content */}
-      <div className="flex flex-col">
-        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-          Net Profit
-        </p>
-        <div className="flex items-center gap-2">
-          <p className={`
-            text-lg font-bold
-            ${isProfit ? 'text-success' : 'text-danger'}
-            ${isAnimating ? 'animate-pulse' : ''}
-          `}>
-            {isProfit ? '+' : ''}{formattedAmount}
-          </p>
-          {showSparkle && isProfit && (
-            <Sparkles className="w-4 h-4 text-warning animate-pulse" />
-          )}
-        </div>
-      </div>
+      {/* Amount */}
+      <p className={`
+        text-sm font-semibold
+        ${isProfit ? 'text-success' : 'text-danger'}
+        ${isAnimating ? 'animate-pulse' : ''}
+      `}>
+        {isProfit ? '+' : ''}{formattedAmount} earned
+      </p>
+
+      {/* Sparkle */}
+      {showSparkle && isProfit && (
+        <Sparkles className="w-3 h-3 text-warning animate-pulse" />
+      )}
     </div>
   );
 }

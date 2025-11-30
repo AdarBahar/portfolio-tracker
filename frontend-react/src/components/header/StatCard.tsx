@@ -52,27 +52,28 @@ export default function StatCard({
         border border-border
         rounded-lg
         p-4
+        min-w-[140px]
         transition-all duration-200
         hover:shadow-md hover:border-primary/50
         ${isLoading ? 'opacity-60 pointer-events-none' : ''}
       `}
     >
       {/* Icon */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <Icon className="w-5 h-5 text-muted-foreground" />
         {trend && getTrendIcon()}
       </div>
 
       {/* Label */}
-      <p className="text-xs text-muted-foreground font-medium mb-2 uppercase tracking-wide">
+      <p className="text-xs text-muted-foreground font-medium mb-1 uppercase tracking-wide">
         {label}
       </p>
 
       {/* Value */}
       {isLoading ? (
-        <div className="h-8 bg-muted rounded animate-pulse mb-2" />
+        <div className="h-7 bg-muted rounded animate-pulse" />
       ) : (
-        <p className={`text-2xl font-bold ${colorMap[color]} mb-2`}>
+        <p className={`text-xl font-bold ${colorMap[color]}`}>
           {value}
         </p>
       )}

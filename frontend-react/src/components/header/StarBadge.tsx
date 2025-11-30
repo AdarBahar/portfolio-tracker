@@ -24,6 +24,11 @@ export default function StarBadge({
   const [isAnimating, setIsAnimating] = useState(false);
   const [prevValue, setPrevValue] = useState(previousValue);
 
+  // Update previous value when value changes
+  useEffect(() => {
+    setPrevValue(value);
+  }, [value]);
+
   // Trigger animation when value increases
   useEffect(() => {
     if (animated && prevValue !== undefined && value > prevValue) {
@@ -31,7 +36,6 @@ export default function StarBadge({
       const timer = setTimeout(() => setIsAnimating(false), 400);
       return () => clearTimeout(timer);
     }
-    setPrevValue(value);
   }, [value, prevValue, animated]);
 
   // Size mappings
