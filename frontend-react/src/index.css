@@ -4,9 +4,10 @@
   box-sizing: border-box;
 }
 
+/* Light mode (default) */
 body {
-  background-color: hsl(222 47% 11%);
-  color: hsl(210 20% 98%);
+  background-color: hsl(0 0% 100%);
+  color: hsl(222 47% 11%);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -14,7 +15,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom component styles */
+/* Dark mode */
+[data-color-scheme="dark"] body {
+  background-color: hsl(222 47% 11%);
+  color: hsl(210 20% 98%);
+}
+
+/* Custom component styles - Light mode */
 .btn-primary {
   background: linear-gradient(to right, hsl(262 83% 58%), hsl(199 89% 48%));
   color: white;
@@ -31,8 +38,8 @@ body {
 }
 
 .btn-secondary {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: hsl(222 47% 11%);
   font-weight: 500;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
@@ -42,14 +49,29 @@ body {
 }
 
 .btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .card-base {
-  background-color: hsl(222 43% 15%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: hsl(0 0% 96%);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+
+/* Dark mode overrides */
+[data-color-scheme="dark"] .btn-secondary {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+[data-color-scheme="dark"] .btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-color-scheme="dark"] .card-base {
+  background-color: hsl(222 43% 15%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .text-success {
