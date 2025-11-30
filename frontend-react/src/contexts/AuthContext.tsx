@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { apiClient, STORAGE_KEYS } from '../lib/api';
 
 export interface User {
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Initialize auth on mount
   useEffect(() => {
@@ -74,6 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
       localStorage.setItem(STORAGE_KEYS.TOKEN_EXPIRY, String(Date.now() + expiresIn * 1000));
 
+      // Clear React Query cache to ensure fresh data for new user
+      queryClient.clear();
+
       setUser(userData);
       return userData;
     } catch (error) {
@@ -96,6 +101,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'demo_token');
       // Demo users don't have token expiry
 
+      // Clear React Query cache to ensure fresh data for demo user
+      queryClient.clear();
+
       setUser(demoUser);
       return demoUser;
     } catch (error) {
@@ -105,9 +113,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    // Clear localStorage
     localStorage.removeItem(STORAGE_KEYS.USER);
     localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
+
+    // Clear React Query cache to prevent stale data from being shown
+    queryClient.clear();
+
     setUser(null);
   };
 
