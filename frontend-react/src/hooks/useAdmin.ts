@@ -158,7 +158,7 @@ export function useUpdateUserAdmin() {
 
   return useMutation({
     mutationFn: async ({ userId, isAdmin }: { userId: number; isAdmin: boolean }) => {
-      const response = await apiClient.put(`/admin/users/${userId}/admin`, { is_admin: isAdmin });
+      const response = await apiClient.patch(`/admin/users/${userId}/admin`, { is_admin: isAdmin });
       return response.data;
     },
     onSuccess: () => {
