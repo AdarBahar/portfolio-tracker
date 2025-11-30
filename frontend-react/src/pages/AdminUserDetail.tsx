@@ -162,11 +162,13 @@ export default function AdminUserDetail() {
                   {logs.map((log) => (
                     <div key={log.id} className="p-3 bg-background/50 rounded-lg text-sm">
                       <div className="flex justify-between items-start mb-1">
-                        <p className="text-foreground font-medium capitalize">{log.event_type.replace(/_/g, ' ')}</p>
+                        <p className="text-foreground font-medium capitalize">
+                          {log.event_type ? log.event_type.replace(/_/g, ' ') : 'Unknown Event'}
+                        </p>
                         <p className="text-muted-foreground text-xs">{formatDate(log.created_at)}</p>
                       </div>
-                      <p className="text-muted-foreground text-xs mb-1">{log.event_category}</p>
-                      <p className="text-foreground text-xs">{log.description}</p>
+                      <p className="text-muted-foreground text-xs mb-1">{log.event_category || 'N/A'}</p>
+                      <p className="text-foreground text-xs">{log.description || 'No description'}</p>
                     </div>
                   ))}
                 </div>
