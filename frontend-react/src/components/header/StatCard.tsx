@@ -1,8 +1,14 @@
-import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
-import type { StatCardData } from '@/types/profileHeader';
+import type { LucideIcon } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 
-interface StatCardProps extends StatCardData {
+interface StatCardProps {
   icon: LucideIcon;
+  label: string;
+  value: string | number;
+  trend?: 'up' | 'down' | 'none';
+  trendValue?: number;
+  color?: 'default' | 'success' | 'danger' | 'warning';
+  isLoading?: boolean;
 }
 
 /**

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Star } from 'lucide-react';
 import type { StarBadgeData } from '@/types/profileHeader';
 
-interface StarBadgeProps extends StarBadgeData {}
+type StarBadgeProps = StarBadgeData;
 
 /**
  * StarBadge Component
@@ -22,15 +22,17 @@ export default function StarBadge({
   previousValue,
 }: StarBadgeProps) {
   const [isAnimating, setIsAnimating] = useState(false);
+  const [prevValue, setPrevValue] = useState(previousValue);
 
   // Trigger animation when value increases
   useEffect(() => {
-    if (animated && previousValue !== undefined && value > previousValue) {
+    if (animated && prevValue !== undefined && value > prevValue) {
       setIsAnimating(true);
       const timer = setTimeout(() => setIsAnimating(false), 400);
       return () => clearTimeout(timer);
     }
-  }, [value, previousValue, animated]);
+    setPrevValue(value);
+  }, [value, prevValue, animated]);
 
   // Size mappings
   const sizeMap = {

@@ -87,7 +87,7 @@ export default function ProfileHeaderDemo() {
           {Object.entries(variants).map(([key, variant]) => (
             <button
               key={key}
-              onClick={() => setSelectedVariant(key as any)}
+              onClick={() => setSelectedVariant(key as keyof typeof variants)}
               className={`
                 px-4 py-2 rounded-lg font-medium transition-all
                 ${selectedVariant === key
