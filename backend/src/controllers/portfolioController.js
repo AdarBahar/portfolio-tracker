@@ -30,15 +30,20 @@ async function getPortfolioAll(req, res) {
     let priceMap = {};
 
     if (tickers.length > 0) {
-      const placeholders = tickers.map(() => '?').join(',');
-      const [priceRows] = await db.execute(
-        `SELECT symbol, current_price FROM market_data WHERE symbol IN (${placeholders})`,
-        tickers
-      );
+      try {
+        const placeholders = tickers.map(() => '?').join(',');
+        const [priceRows] = await db.execute(
+          `SELECT symbol, current_price FROM market_data WHERE symbol IN (${placeholders})`,
+          tickers
+        );
 
-      priceRows.forEach(row => {
-        priceMap[row.symbol] = Number(row.current_price);
-      });
+        priceRows.forEach(row => {
+          priceMap[row.symbol] = Number(row.current_price);
+        });
+      } catch (priceErr) {
+        // If market_data table doesn't exist or query fails, log and continue with 0 prices
+        logger.warn('Warning: Could not fetch current prices from market_data:', priceErr.message);
+      }
     }
 
     // Add current_price to each holding
