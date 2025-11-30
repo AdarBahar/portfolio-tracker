@@ -7,7 +7,7 @@ async function getHoldings(req, res) {
   try {
     const userId = req.user && req.user.id;
     const [rows] = await db.execute(
-      'SELECT id, ticker, name, shares, purchase_price AS purchasePrice, purchase_date AS purchaseDate, sector, asset_class AS assetClass, created_at AS createdAt, updated_at AS updatedAt FROM holdings WHERE user_id = ? AND deleted_at IS NULL ORDER BY ticker',
+      'SELECT id, ticker, name, shares, purchase_price, current_price, purchase_date, sector, asset_class, created_at, updated_at FROM holdings WHERE user_id = ? AND deleted_at IS NULL ORDER BY ticker',
       [userId]
     );
     return res.json({ holdings: rows });

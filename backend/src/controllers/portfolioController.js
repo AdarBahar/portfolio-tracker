@@ -8,15 +8,15 @@ async function getPortfolioAll(req, res) {
 
     const [holdingsResult, dividendsResult, transactionsResult] = await Promise.all([
       db.execute(
-        'SELECT id, ticker, name, shares, purchase_price AS purchasePrice, purchase_date AS purchaseDate, sector, asset_class AS assetClass, created_at AS createdAt, updated_at AS UpdatedAt FROM holdings WHERE user_id = ? ORDER BY ticker',
+        'SELECT id, ticker, name, shares, purchase_price, current_price, purchase_date, sector, asset_class, created_at, updated_at FROM holdings WHERE user_id = ? AND deleted_at IS NULL ORDER BY ticker',
         [userId]
       ),
       db.execute(
-        'SELECT id, ticker, amount, shares, date, created_at AS createdAt FROM dividends WHERE user_id = ? ORDER BY date DESC',
+        'SELECT id, ticker, amount, shares, date, created_at FROM dividends WHERE user_id = ? AND deleted_at IS NULL ORDER BY date DESC',
         [userId]
       ),
       db.execute(
-        'SELECT id, type, ticker, shares, price, fees, date, created_at AS createdAt FROM transactions WHERE user_id = ? ORDER BY date DESC, id DESC',
+        'SELECT id, type, ticker, shares, price, fees, date, created_at FROM transactions WHERE user_id = ? AND deleted_at IS NULL ORDER BY date DESC, id DESC',
         [userId]
       ),
     ]);

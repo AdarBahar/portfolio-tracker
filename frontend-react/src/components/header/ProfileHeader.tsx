@@ -139,9 +139,13 @@ export default function ProfileHeader({
               text-white font-semibold
               rounded-lg
               transition-all duration-200
+              shadow-md
               ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
               ${isNewUser ? 'opacity-50' : ''}
             `}
+            style={{
+              backgroundImage: 'linear-gradient(to right, hsl(262 83% 58%), hsl(199 89% 48%))',
+            }}
             disabled={isLoading || isNewUser}
             title={isNewUser ? 'Join a room first to create one' : ''}
           >
