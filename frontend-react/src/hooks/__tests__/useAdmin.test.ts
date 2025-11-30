@@ -41,10 +41,10 @@ describe('useAdmin Hooks - Data Validation', () => {
     it('should have valid budget data', () => {
       const { budget } = mockUserDetailResponse;
       expect(budget).toHaveProperty('id');
-      expect(budget).toHaveProperty('total_balance');
       expect(budget).toHaveProperty('available_balance');
       expect(budget).toHaveProperty('locked_balance');
-      expect(budget?.total_balance).toBeGreaterThanOrEqual(0);
+      expect(budget?.available_balance).toBeGreaterThanOrEqual(0);
+      expect(budget?.locked_balance).toBeGreaterThanOrEqual(0);
     });
 
     it('should have arrays for logs, rooms, and standings', () => {

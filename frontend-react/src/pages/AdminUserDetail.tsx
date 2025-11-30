@@ -119,7 +119,7 @@ export default function AdminUserDetail() {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <p className="text-muted-foreground text-sm">Total Balance</p>
-                    <p className="text-foreground font-semibold">{formatCurrency(budget.total_balance || 0)}</p>
+                    <p className="text-foreground font-semibold">{formatCurrency((budget.available_balance || 0) + (budget.locked_balance || 0))}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-sm">Available</p>

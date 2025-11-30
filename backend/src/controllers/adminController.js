@@ -222,7 +222,6 @@ async function getUserDetail(req, res) {
         user_id,
         available_balance,
         locked_balance,
-        total_balance,
         currency,
         status,
         created_at,

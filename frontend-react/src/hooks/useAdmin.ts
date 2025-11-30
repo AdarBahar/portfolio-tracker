@@ -19,9 +19,8 @@ export interface UserDetailResponse {
   budget: {
     id: number;
     user_id: number;
-    total_balance: number;
-    locked_balance: number;
     available_balance: number;
+    locked_balance: number;
     currency: string;
     status: string;
     created_at: string;

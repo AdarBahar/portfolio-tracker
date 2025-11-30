@@ -52,7 +52,6 @@ export const mockUserDetailResponse: UserDetailResponse = {
   budget: {
     id: 1,
     user_id: 1,
-    total_balance: 100000,
     locked_balance: 20000,
     available_balance: 80000,
     currency: 'USD',
