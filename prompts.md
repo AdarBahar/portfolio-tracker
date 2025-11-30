@@ -19,3 +19,6 @@ Review the requirements for stars systems and management as described here <REQU
 Understand the flow and objectives and provide analysis and plan on how to implement it.
 provide feedback on problems you identify, Improvments and adjustments.
 Plan how this is integrating with the rest of the code, logic, database tables and endpoints we already have and are described in @/Users/adar.bahar/Code/portfolio-tracker/PROJECT_HISTORY.md. Create a task list, plan and open questions/issues
+
+# UI design system MD
+Update the @/Users/adar.bahar/Code/portfolio-tracker/Specs/UI/design-system.md for changes done on the react UI to make sure that we keep using the same design rules across the app.

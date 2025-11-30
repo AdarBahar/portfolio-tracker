@@ -34,7 +34,7 @@ The Fantasy Broker design combines:
 
 ### Semantic Color Tokens
 
-All colors use HSL format and are defined as CSS custom properties for theme consistency.
+All colors use HSL format and are defined as CSS custom properties for theme consistency. The system supports both light and dark modes via CSS variables.
 
 #### Primary Palette
 ```css
@@ -43,10 +43,37 @@ All colors use HSL format and are defined as CSS custom properties for theme con
 --brand-blue: 199 89% 48%     /* Same as primary - consistency */
 --brand-purple: 262 83% 58%   /* Secondary brand - highlights */
 
-/* Surface Colors */
---background: 222 47% 11%     /* Main dark background (#0a1628) */
---card: 222 43% 15%           /* Elevated surfaces (#0f1c30) */
---popover: 222 43% 15%        /* Dropdowns and tooltips */
+/* Surface Colors - Light Mode Default, Dark Mode via CSS Variables */
+--background: var(--color-background)     /* Main background - light/dark adaptive */
+--card: var(--color-card)                 /* Elevated surfaces - light/dark adaptive */
+--popover: var(--color-popover)           /* Dropdowns and tooltips - light/dark adaptive */
+```
+
+#### CSS Variable Definitions
+```css
+/* Light Mode (default in :root) */
+:root {
+  --color-background: hsl(0 0% 100%);           /* White */
+  --color-card: hsl(0 0% 96%);                  /* Light gray */
+  --color-foreground: hsl(222 47% 11%);         /* Dark text */
+  --color-muted-foreground: hsl(215 16% 35%);   /* Medium gray text */
+  --color-secondary: hsl(222 40% 90%);          /* Light secondary */
+  --color-muted: hsl(222 40% 90%);              /* Light muted */
+  --color-border: hsl(222 40% 85%);             /* Light border */
+  --color-input: hsl(222 40% 85%);              /* Light input */
+}
+
+/* Dark Mode (via [data-color-scheme="dark"]) */
+[data-color-scheme="dark"] {
+  --color-background: hsl(222 47% 11%);         /* Dark background */
+  --color-card: hsl(222 43% 15%);               /* Dark card */
+  --color-foreground: hsl(210 20% 98%);         /* Light text */
+  --color-muted-foreground: hsl(215 16% 65%);   /* Light gray text */
+  --color-secondary: hsl(222 40% 20%);          /* Dark secondary */
+  --color-muted: hsl(222 40% 20%);              /* Dark muted */
+  --color-border: hsl(222 40% 25%);             /* Dark border */
+  --color-input: hsl(222 40% 25%);              /* Dark input */
+}
 ```
 
 #### Functional Colors
@@ -82,21 +109,25 @@ All colors use HSL format and are defined as CSS custom properties for theme con
 ### Usage Rules
 
 #### ✅ DO
-- Use `bg-background` for main page backgrounds (#0a1628)
-- Use `bg-card` for elevated surfaces (#0f1c30)
-- Use `text-foreground` for primary text
-- Use `text-muted-foreground` for secondary text
+- Use `bg-background` for main page backgrounds (adapts to light/dark mode)
+- Use `bg-card` for elevated surfaces (adapts to light/dark mode)
+- Use `text-foreground` for primary text (adapts to light/dark mode)
+- Use `text-muted-foreground` for secondary text (adapts to light/dark mode)
 - Use `text-success` for positive P&L values
 - Use `text-danger` for negative P&L values
 - Use semantic tokens: `bg-primary`, `text-success`, `border-border`
 - Maintain 4.5:1 contrast ratio for text (WCAG AA)
+- Use CSS variables for all theme-dependent colors
+- Test components in both light and dark modes
 
 #### ❌ DON'T
 - Never use direct color values like `text-blue-500` or `bg-[#0a1628]`
-- Don't use `text-white` or `text-black` (use semantic tokens)
+- Don't use `text-white` or `text-black` for body text (use semantic tokens)
+- Don't use hardcoded slate/gray colors (e.g., `text-slate-400`, `bg-slate-800`)
 - Don't use success color for negative values
 - Don't use danger color for positive values
 - Don't mix RGB and HSL formats
+- Don't use `border-white/10` or `border-white/20` (use `border-border` instead)
 
 ### Color Contrast Requirements
 
@@ -142,21 +173,21 @@ font-bold     : 700 - Headings, CTAs
 
 #### Page Title
 ```tsx
-<h1 className="text-3xl font-bold text-white">
+<h1 className="text-3xl font-bold text-foreground">
   Bull Pen Name
 </h1>
 ```
 
 #### Section Heading
 ```tsx
-<h2 className="text-2xl font-bold text-white">
+<h2 className="text-2xl font-bold text-foreground">
   Your Active Trade Rooms
 </h2>
 ```
 
 #### Card Title
 ```tsx
-<h3 className="text-xl font-semibold text-white">
+<h3 className="text-xl font-semibold text-foreground">
   Portfolio Value
 </h3>
 ```
@@ -185,17 +216,19 @@ font-bold     : 700 - Headings, CTAs
 ### Usage Rules
 
 #### ✅ DO
-- Use `text-white` only for hero sections and high-contrast needs
-- Use `text-foreground` for primary content
-- Use `text-muted-foreground` for secondary content
+- Use `text-foreground` for primary content (adapts to light/dark mode)
+- Use `text-muted-foreground` for secondary content (adapts to light/dark mode)
+- Use `text-white` only for buttons and high-contrast CTAs
 - Combine size and weight: `text-2xl font-bold`
 - Maintain hierarchical consistency across pages
+- Test text contrast in both light and dark modes
 
 #### ❌ DON'T
 - Don't skip heading levels (h1 → h3)
 - Don't use more than 3 font weights on a page
 - Don't use text smaller than `text-xs` (12px)
-- Don't use `text-white` for body text on colored backgrounds
+- Don't use `text-white` for body text (use `text-foreground`)
+- Don't use hardcoded color values like `text-slate-400` or `text-gray-300`
 
 ---
 
@@ -256,12 +289,12 @@ The spacing system uses Tailwind's default 4px base unit:
 #### Page Layout
 ```tsx
 <div className="min-h-screen bg-background">
-  <header className="border-b border-white/10 bg-card">
+  <header className="border-b border-border bg-card/50 backdrop-blur">
     <div className="container mx-auto px-6 py-4">
       {/* Navigation */}
     </div>
   </header>
-  
+
   <main className="container mx-auto px-6 py-8">
     {/* Content */}
   </main>
@@ -326,21 +359,21 @@ shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)
 
 #### Secondary Button
 ```tsx
-<Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
+<Button variant="outline" className="border-border text-foreground hover:bg-secondary">
   Join Room
 </Button>
 ```
 **Usage**: Secondary actions, cancel buttons
-**States**: default, hover (bg-white/10), active, disabled
+**States**: default, hover (bg-secondary), active, disabled
 
 #### Ghost Button
 ```tsx
-<Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10">
+<Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-secondary">
   <Settings className="w-5 h-5" />
 </Button>
 ```
 **Usage**: Icon buttons, less prominent actions
-**States**: default, hover (text-white, bg-white/10)
+**States**: default, hover (text-foreground, bg-secondary)
 
 #### Button Sizes
 ```tsx
@@ -354,7 +387,7 @@ shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)
 
 #### Standard Card
 ```tsx
-<Card className="bg-card border-white/10">
+<Card className="bg-card border-border">
   <CardContent className="p-6">
     {/* Content */}
   </CardContent>
@@ -363,11 +396,11 @@ shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)
 
 #### Stat Card
 ```tsx
-<Card className="bg-[#0a1628] border-white/10">
+<Card className="bg-card border-border">
   <CardContent className="p-4 flex items-center gap-3">
     <Trophy className="w-8 h-8 text-warning" />
     <div>
-      <p className="text-white/60 text-sm">Global Rank</p>
+      <p className="text-muted-foreground text-sm">Global Rank</p>
       <p className="text-warning text-2xl font-bold">#156</p>
     </div>
   </CardContent>
@@ -376,12 +409,12 @@ shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)
 
 #### Trade Room Card
 ```tsx
-<Card 
-  className="bg-card border-white/10 hover:border-primary/50 transition-colors cursor-pointer"
+<Card
+  className="bg-card border-border hover:border-primary/50 transition-colors cursor-pointer"
   onClick={() => navigate(`/bullpen/${id}`)}
 >
   <CardContent className="p-6">
-    <h3 className="text-xl font-semibold text-white mb-2">{name}</h3>
+    <h3 className="text-xl font-semibold text-foreground mb-2">{name}</h3>
     <p className="text-sm text-muted-foreground mb-4">{description}</p>
     <div className="grid grid-cols-2 gap-4">
       {/* Stats */}
@@ -469,17 +502,17 @@ shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)
 ```tsx
 <Table>
   <TableHeader>
-    <TableRow className="border-white/10">
-      <TableHead className="text-white/60">Symbol</TableHead>
-      <TableHead className="text-white/60 text-right">Shares</TableHead>
-      <TableHead className="text-white/60 text-right">Price</TableHead>
-      <TableHead className="text-white/60 text-right">Value</TableHead>
-      <TableHead className="text-white/60 text-right">Change</TableHead>
+    <TableRow className="border-border">
+      <TableHead className="text-muted-foreground">Symbol</TableHead>
+      <TableHead className="text-muted-foreground text-right">Shares</TableHead>
+      <TableHead className="text-muted-foreground text-right">Price</TableHead>
+      <TableHead className="text-muted-foreground text-right">Value</TableHead>
+      <TableHead className="text-muted-foreground text-right">Change</TableHead>
     </TableRow>
   </TableHeader>
   <TableBody>
-    <TableRow className="border-white/10 hover:bg-white/5">
-      <TableCell className="font-medium text-white">{symbol}</TableCell>
+    <TableRow className="border-border hover:bg-secondary/50">
+      <TableCell className="font-medium text-foreground">{symbol}</TableCell>
       <TableCell className="text-right text-foreground">{quantity}</TableCell>
       <TableCell className="text-right text-foreground">${price}</TableCell>
       <TableCell className="text-right text-foreground">${value}</TableCell>
@@ -501,8 +534,8 @@ shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)
       <Bell className="w-5 h-5" />
     </Button>
   </PopoverTrigger>
-  <PopoverContent 
-    className="p-0 bg-card border-white/10 z-50" 
+  <PopoverContent
+    className="p-0 bg-card border-border z-50"
     align="end"
     sideOffset={8}
   >
@@ -511,7 +544,7 @@ shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)
 </Popover>
 ```
 
-**Important**: Always set `z-50` or higher on PopoverContent to ensure proper layering.
+**Important**: Always set `z-50` or higher on PopoverContent to ensure proper layering. Use semantic color tokens for all backgrounds and borders.
 
 ---
 
@@ -807,12 +840,12 @@ bg-gradient-to-r from-brand-purple to-brand-blue hover:opacity-90 text-white fon
 
 **Secondary Button**
 ```
-border border-white/20 text-white hover:bg-white/10 font-medium px-6 py-3 rounded-lg
+border border-border text-foreground hover:bg-secondary font-medium px-6 py-3 rounded-lg
 ```
 
 **Stat Card**
 ```
-bg-card border border-white/10 rounded-lg p-6
+bg-card border border-border rounded-lg p-6
 ```
 
 **Positive Value**
@@ -827,12 +860,76 @@ text-danger font-semibold
 
 **Section Heading**
 ```
-text-2xl font-bold text-white mb-6
+text-2xl font-bold text-foreground mb-6
 ```
 
 **Muted Text**
 ```
 text-sm text-muted-foreground
+```
+
+**Header**
+```
+border-b border-border bg-card/50 backdrop-blur
+```
+
+**Page Container**
+```
+min-h-screen bg-background
+```
+
+---
+
+## Light/Dark Mode Implementation
+
+### How It Works
+
+The app uses CSS variables and Tailwind's selector-based dark mode to support light and dark themes:
+
+1. **CSS Variables** are defined in `src/index.css`:
+   - Light mode values in `:root`
+   - Dark mode values in `[data-color-scheme="dark"]`
+
+2. **Theme Toggle** in `ThemeContext.tsx`:
+   - Sets `data-color-scheme` attribute on `document.documentElement`
+   - Persists preference to localStorage
+   - Automatically loads saved preference on page load
+
+3. **Tailwind Configuration** in `tailwind.config.ts`:
+   - All semantic colors use CSS variables
+   - Dark mode selector: `['selector', '[data-color-scheme="dark"]']`
+
+### Testing Light/Dark Mode
+
+When developing new components:
+
+1. **Test in both modes**:
+   - Click the theme toggle (Sun/Moon icon)
+   - Verify all colors change appropriately
+   - Check text contrast in both modes
+
+2. **Verify contrast ratios**:
+   - Use WCAG Contrast Checker
+   - Minimum 4.5:1 for normal text
+   - Minimum 3:1 for large text
+
+3. **Check for hardcoded colors**:
+   - Search for `text-white`, `text-black`, `text-slate-*`, `bg-slate-*`
+   - Replace with semantic tokens: `text-foreground`, `bg-card`, etc.
+   - Use `border-border` instead of `border-white/10`
+
+### Common Mistakes to Avoid
+
+❌ **DON'T**:
+```tsx
+// Hardcoded colors that don't respond to theme
+<div className="bg-slate-900 text-white border-white/10">
+```
+
+✅ **DO**:
+```tsx
+// Semantic tokens that adapt to theme
+<div className="bg-background text-foreground border-border">
 ```
 
 ---
