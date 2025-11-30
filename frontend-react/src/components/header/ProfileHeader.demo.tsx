@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import ProfileHeader from './ProfileHeader';
+import ProfileHeaderContainer from './ProfileHeaderContainer';
 import {
   mockExperiencedUserProfile,
   mockNewUserProfile,
@@ -19,6 +20,7 @@ import {
 export default function ProfileHeaderDemo() {
   const [selectedVariant, setSelectedVariant] = useState<'experienced' | 'new' | 'loss' | 'high'>('experienced');
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'mock' | 'api'>('mock');
 
   const variants = {
     experienced: {
@@ -101,48 +103,101 @@ export default function ProfileHeaderDemo() {
           ))}
         </div>
 
-        {/* Loading Toggle */}
-        <div className="mb-8">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isLoading}
-              onChange={(e) => setIsLoading(e.target.checked)}
-              className="w-4 h-4"
-            />
-            <span className="text-foreground font-medium">Show Loading State</span>
-          </label>
+        {/* Tab Selector */}
+        <div className="mb-8 flex gap-2 border-b border-border">
+          <button
+            onClick={() => setActiveTab('mock')}
+            className={`px-4 py-2 font-medium transition-all border-b-2 ${
+              activeTab === 'mock'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Mock Data (Development)
+          </button>
+          <button
+            onClick={() => setActiveTab('api')}
+            className={`px-4 py-2 font-medium transition-all border-b-2 ${
+              activeTab === 'api'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            API Integration (Live)
+          </button>
         </div>
+
+        {/* Loading Toggle (only for mock tab) */}
+        {activeTab === 'mock' && (
+          <div className="mb-8">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isLoading}
+                onChange={(e) => setIsLoading(e.target.checked)}
+                className="w-4 h-4"
+              />
+              <span className="text-foreground font-medium">Show Loading State</span>
+            </label>
+          </div>
+        )}
 
         {/* Component Demo */}
         <div className="mb-12">
-          <ProfileHeader
-            userProfile={current.profile}
-            userStats={current.stats}
-            isLoading={isLoading}
-            onJoinRoom={handleJoinRoom}
-            onCreateRoom={handleCreateRoom}
-            onViewStats={handleViewStats}
-            onAvatarUpload={handleAvatarUpload}
-          />
+          {activeTab === 'mock' ? (
+            <ProfileHeader
+              userProfile={current.profile}
+              userStats={current.stats}
+              isLoading={isLoading}
+              onJoinRoom={handleJoinRoom}
+              onCreateRoom={handleCreateRoom}
+              onViewStats={handleViewStats}
+              onAvatarUpload={handleAvatarUpload}
+            />
+          ) : (
+            <ProfileHeaderContainer
+              onJoinRoom={handleJoinRoom}
+              onCreateRoom={handleCreateRoom}
+              onAvatarUpload={handleAvatarUpload}
+            />
+          )}
         </div>
 
-        {/* Info Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-lg font-bold text-foreground mb-4">Profile Data</h3>
-            <pre className="text-xs text-muted-foreground overflow-auto bg-background p-4 rounded">
-              {JSON.stringify(current.profile, null, 2)}
-            </pre>
-          </div>
+        {/* Info Section (only for mock tab) */}
+        {activeTab === 'mock' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h3 className="text-lg font-bold text-foreground mb-4">Profile Data</h3>
+              <pre className="text-xs text-muted-foreground overflow-auto bg-background p-4 rounded">
+                {JSON.stringify(current.profile, null, 2)}
+              </pre>
+            </div>
 
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h3 className="text-lg font-bold text-foreground mb-4">Stats Data</h3>
-            <pre className="text-xs text-muted-foreground overflow-auto bg-background p-4 rounded">
-              {JSON.stringify(current.stats, null, 2)}
-            </pre>
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h3 className="text-lg font-bold text-foreground mb-4">Stats Data</h3>
+              <pre className="text-xs text-muted-foreground overflow-auto bg-background p-4 rounded">
+                {JSON.stringify(current.stats, null, 2)}
+              </pre>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* API Info Section */}
+        {activeTab === 'api' && (
+          <div className="bg-card border border-border rounded-lg p-6 mb-6">
+            <h3 className="text-lg font-bold text-foreground mb-4">API Integration</h3>
+            <p className="text-muted-foreground mb-4">
+              This tab shows the ProfileHeader component fetching real data from the API endpoint:
+            </p>
+            <code className="block bg-background p-4 rounded text-xs text-muted-foreground mb-4">
+              GET /api/users/profile
+            </code>
+            <p className="text-sm text-muted-foreground">
+              The component uses React Query for caching and automatic refetching.
+              Make sure you're logged in to see your actual profile data.
+            </p>
+          </div>
+        )}
 
         {/* Features List */}
         <div className="mt-12 bg-card border border-border rounded-lg p-6">
