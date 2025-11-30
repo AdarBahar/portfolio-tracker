@@ -91,7 +91,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-background">
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
@@ -99,10 +99,10 @@ export default function Login() {
       <div className="flex items-center justify-center min-h-screen px-4">
         <div className="w-full max-w-md">
           {/* Login Card */}
-          <div className="bg-slate-800 rounded-lg shadow-xl p-8 border border-slate-700">
+          <div className="bg-card rounded-lg shadow-xl p-8 border border-border">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-white mb-2">📊 Fantasy Broker</h1>
-              <p className="text-slate-400">Track your investments with real-time updates and insights</p>
+              <h1 className="text-3xl font-bold text-foreground mb-2">📊 Fantasy Broker</h1>
+              <p className="text-muted-foreground">Track your investments with real-time updates and insights</p>
             </div>
 
             <div className="mb-8">
@@ -154,14 +154,14 @@ export default function Login() {
               <p className="text-sm text-slate-400">Visualize sector allocation and performance</p>
             </div>
             <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-              <Zap className="w-6 h-6 text-yellow-400 mb-2" />
-              <h3 className="font-semibold text-white mb-1">Dividend Tracking</h3>
-              <p className="text-sm text-slate-400">Track dividend income and estimated returns</p>
+              <Zap className="w-6 h-6 text-warning mb-2" />
+              <h3 className="font-semibold text-foreground mb-1">Dividend Tracking</h3>
+              <p className="text-sm text-muted-foreground">Track dividend income and estimated returns</p>
             </div>
-            <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-              <Lock className="w-6 h-6 text-purple-400 mb-2" />
-              <h3 className="font-semibold text-white mb-1">Secure & Private</h3>
-              <p className="text-sm text-slate-400">Your data is encrypted and secure</p>
+            <div className="bg-card rounded-lg p-4 border border-border">
+              <Lock className="w-6 h-6 text-primary mb-2" />
+              <h3 className="font-semibold text-foreground mb-1">Secure & Private</h3>
+              <p className="text-sm text-muted-foreground">Your data is encrypted and secure</p>
             </div>
           </div>
         </div>

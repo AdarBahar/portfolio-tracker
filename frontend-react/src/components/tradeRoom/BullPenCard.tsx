@@ -19,7 +19,7 @@ export default function BullPenCard({ bullPen, participantCount = 0, onClick }: 
       className="card-base p-6 hover:border-primary/50 transition-colors cursor-pointer"
     >
       <div className="mb-4">
-        <h3 className="text-xl font-semibold text-white mb-2">{bullPen.name}</h3>
+        <h3 className="text-xl font-semibold text-foreground mb-2">{bullPen.name}</h3>
         <span className={`inline-block px-3 py-1 rounded-md text-sm font-medium ${statusClass}`}>
           {bullPen.state.charAt(0).toUpperCase() + bullPen.state.slice(1)}
         </span>

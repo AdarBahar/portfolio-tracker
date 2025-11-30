@@ -26,7 +26,7 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading portfolio...</p>
@@ -42,7 +42,7 @@ export default function Dashboard() {
     }
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-destructive mb-4">Unable to load portfolio</p>
           <p className="text-muted-foreground text-sm">
@@ -60,13 +60,13 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-white/10 bg-slate-800/50 backdrop-blur">
+      <header className="border-b border-border bg-card/50 backdrop-blur">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white">Fantasy Broker</h1>
+              <h1 className="text-3xl font-bold text-foreground">Fantasy Broker</h1>
               <p className="text-muted-foreground text-sm">Last updated: {lastUpdated.toLocaleTimeString()}</p>
             </div>
             <div className="flex items-center gap-4">
@@ -117,25 +117,25 @@ export default function Dashboard() {
 
         {/* Charts Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-6">Portfolio Analysis</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-6">Portfolio Analysis</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="bg-slate-800/50 backdrop-blur border border-white/10 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Sector Allocation</h3>
+            <div className="bg-card backdrop-blur border border-border rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Sector Allocation</h3>
               <SectorAllocationChart
                 data={calculateSectorAllocation(holdings)}
                 isLoading={isLoading}
               />
             </div>
-            <div className="bg-slate-800/50 backdrop-blur border border-white/10 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Asset Class Allocation</h3>
+            <div className="bg-card backdrop-blur border border-border rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Asset Class Allocation</h3>
               <AssetClassChart
                 data={calculateAssetClassAllocation(holdings)}
                 isLoading={isLoading}
               />
             </div>
           </div>
-          <div className="bg-slate-800/50 backdrop-blur border border-white/10 rounded-lg p-6 mb-8">
-            <h3 className="text-lg font-semibold text-white mb-4">Performance by Holding</h3>
+          <div className="bg-card backdrop-blur border border-border rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-semibold text-foreground mb-4">Performance by Holding</h3>
             <PerformanceChart
               data={calculatePerformanceByHolding(holdings)}
               isLoading={isLoading}
@@ -146,8 +146,8 @@ export default function Dashboard() {
         {/* Holdings Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-white">Holdings ({holdings.length})</h2>
-            <button className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition">
+            <h2 className="text-2xl font-bold text-foreground">Holdings ({holdings.length})</h2>
+            <button className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 text-foreground rounded-lg transition">
               <Download className="w-4 h-4" />
               Export
             </button>

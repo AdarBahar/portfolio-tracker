@@ -54,8 +54,8 @@ export default function JoinBullPenModal({ onClose, onSuccess }: JoinBullPenModa
                     onClick={() => setSelectedBullPenId(bp.id)}
                     className={`w-full p-3 rounded-md border text-left transition-colors ${
                       selectedBullPenId === bp.id
-                        ? 'bg-primary/20 border-primary text-white'
-                        : 'bg-background border-white/10 text-foreground hover:border-white/20'
+                        ? 'bg-primary/20 border-primary text-foreground'
+                        : 'bg-background border-border text-foreground hover:border-border/80'
                     }`}
                   >
                     <div className="font-medium">{bp.name}</div>
