@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { TrendingUp, BarChart3, Lock, Zap } from 'lucide-react';
+import { TrendingUp, BarChart3, Lock, Zap, Loader } from 'lucide-react';
 import ThemeToggle from '@/components/header/ThemeToggle';
 
 declare global {
@@ -16,6 +16,7 @@ export default function Login() {
   const { login, loginAsDemo, isAuthenticated } = useAuth();
   const googleButtonRef = useRef<HTMLDivElement>(null);
   const toastRef = useRef<HTMLDivElement>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -27,18 +28,33 @@ export default function Login() {
   // Initialize Google Sign-In
   useEffect(() => {
     const initGoogleSignIn = async () => {
-      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '539842594800-bpqtcpi56vaf7nkiqcf1796socl2cjqp.apps.googleusercontent.com';
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      const apiUrl = import.meta.env.VITE_API_URL;
+
+      // Validate required environment variables
+      if (!googleClientId) {
+        console.error('VITE_GOOGLE_CLIENT_ID environment variable is not set');
+        showToast('Google Sign-In is not configured. Please contact support.', 'error');
+        return;
+      }
+
+      if (!apiUrl) {
+        console.error('VITE_API_URL environment variable is not set');
+        showToast('API is not configured. Please contact support.', 'error');
+        return;
+      }
 
       // Define callback in global scope
       window.handleCredentialResponse = async (response: any) => {
         try {
+          setIsAuthLoading(true);
           await login(response.credential, apiUrl);
           showToast('Welcome back!', 'success');
           setTimeout(() => navigate('/dashboard'), 1000);
         } catch (error) {
           console.error('Google sign-in error:', error);
           showToast('Failed to sign in with Google. Please try again.', 'error');
+          setIsAuthLoading(false);
         }
       };
 
@@ -68,12 +84,14 @@ export default function Login() {
 
   const handleDemoLogin = async () => {
     try {
+      setIsAuthLoading(true);
       await loginAsDemo();
       showToast('Entering demo mode...', 'success');
       setTimeout(() => navigate('/dashboard'), 1000);
     } catch (error) {
       console.error('Demo login error:', error);
       showToast('Failed to enter demo mode. Please try again.', 'error');
+      setIsAuthLoading(false);
     }
   };
 
@@ -124,9 +142,11 @@ export default function Login() {
               {/* Demo Mode Button */}
               <button
                 onClick={handleDemoLogin}
-                className="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-4 rounded-lg transition mb-2"
+                disabled={isAuthLoading}
+                className="w-full bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition mb-2 flex items-center justify-center gap-2"
               >
-                Continue in Demo Mode
+                {isAuthLoading && <Loader className="w-4 h-4 animate-spin" />}
+                {isAuthLoading ? 'Signing in...' : 'Continue in Demo Mode'}
               </button>
               <p className="text-xs text-slate-400 text-center">No login required</p>
             </div>

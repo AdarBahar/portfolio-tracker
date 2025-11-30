@@ -89,8 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginAsDemo = async (): Promise<User> => {
     try {
+      // Generate unique demo session ID
+      const demoSessionId = `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
       const demoUser: User = {
-        id: 'demo_' + Date.now(),
+        id: demoSessionId,
         email: 'demo@demo.local',
         name: 'Demo User',
         isDemo: true,
@@ -98,7 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
 
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(demoUser));
-      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'demo_token');
+      // Generate unique demo token per session
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, `demo_token_${demoSessionId}`);
       // Demo users don't have token expiry
 
       // Clear React Query cache to ensure fresh data for demo user

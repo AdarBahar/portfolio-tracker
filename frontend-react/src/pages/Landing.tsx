@@ -60,8 +60,14 @@ export default function Landing() {
           <div className="bg-slate-800 rounded-lg p-6 border border-slate-700 hover:border-purple-500 transition">
             <Lock className="w-8 h-8 text-purple-400 mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">Secure & Private</h3>
-            {/* Security claims: All API calls use HTTPS in production, sensitive data is not persisted unencrypted */}
-            <p className="text-slate-400">Your data is encrypted, secure, and never shared with third parties</p>
+            {/* Security implementation:
+                - All API calls use HTTPS in production (enforced via environment configuration)
+                - Authentication tokens are stored securely in localStorage with expiry validation
+                - Demo mode data is isolated and never synced to backend
+                - User data is only accessible with valid authentication token
+                - No third-party tracking or data sharing
+            */}
+            <p className="text-slate-400">Your data is protected with secure authentication and never shared with third parties</p>
           </div>
         </div>
 
