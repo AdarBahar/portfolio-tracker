@@ -3,6 +3,15 @@ import { DollarSign, Star, Loader } from 'lucide-react';
 import { useAdjustBudget, useGrantStars, useRemoveStars } from '@/hooks/useAdmin';
 import type { UserDetail } from '@/hooks/useAdmin';
 
+// Format number with comma thousands separator
+const formatNumber = (num: string | number): string => {
+  if (!num && num !== 0) return '0';
+  const numStr = typeof num === 'string' ? num : num.toString();
+  const parts = numStr.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return parts.join('.');
+};
+
 interface BudgetStarsAdjustmentPanelProps {
   user: UserDetail;
   onSuccess?: () => void;
@@ -112,7 +121,7 @@ export default function BudgetStarsAdjustmentPanel({ user, onSuccess }: BudgetSt
             className="w-full btn-primary flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {budgetLoading && <Loader className="w-4 h-4 animate-spin" />}
-            {budgetDirection === 'IN' ? 'Add' : 'Remove'} ${budgetAmount || '0.00'}
+            {budgetDirection === 'IN' ? 'Add' : 'Remove'} ${formatNumber(budgetAmount || '0.00')}
           </button>
         </form>
       </div>
@@ -164,7 +173,7 @@ export default function BudgetStarsAdjustmentPanel({ user, onSuccess }: BudgetSt
             className="w-full btn-primary flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {(grantLoading || removeLoading) && <Loader className="w-4 h-4 animate-spin" />}
-            {starsAction === 'grant' ? 'Grant' : 'Remove'} {starsAmount || '0'} ⭐
+            {starsAction === 'grant' ? 'Grant' : 'Remove'} {formatNumber(starsAmount || '0')} ⭐
           </button>
         </form>
       </div>

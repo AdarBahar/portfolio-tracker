@@ -347,10 +347,12 @@ async function grantStars(req, res) {
     const user = userRows[0];
 
     // Award stars using achievementsService
+    // Use a unique reason code for each admin grant to allow multiple grants
     const achievementsService = require('../services/achievementsService');
+    const uniqueReasonCode = `admin_grant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const result = await achievementsService.awardStars(
       userId,
-      'admin_grant',
+      uniqueReasonCode,
       stars,
       { bullPenId: null, seasonId: null, source: 'admin_grant', meta: { reason, grantedBy: adminId } }
     );
@@ -478,17 +480,24 @@ async function adjustBudget(req, res) {
 
     const user = userRows[0];
 
-    // Get current budget
-    const [budgetRows] = await db.execute(
+    // Get current budget, or create one if it doesn't exist
+    let [budgetRows] = await db.execute(
       'SELECT available_balance FROM user_budgets WHERE user_id = ? AND deleted_at IS NULL',
       [userId]
     );
 
-    if (budgetRows.length === 0) {
-      return notFound(res, 'User budget not found');
-    }
+    let balanceBefore = 0;
 
-    const balanceBefore = budgetRows[0].available_balance;
+    if (budgetRows.length === 0) {
+      // Create budget record if it doesn't exist
+      await db.execute(
+        'INSERT INTO user_budgets (user_id, available_balance, locked_balance, currency, status) VALUES (?, ?, ?, ?, ?)',
+        [userId, 0, 0, 'VUSD', 'active']
+      );
+      balanceBefore = 0;
+    } else {
+      balanceBefore = budgetRows[0].available_balance;
+    }
 
     // Check if debit would result in negative balance
     if (direction === 'OUT' && balanceBefore < amount) {
