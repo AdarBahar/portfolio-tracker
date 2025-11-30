@@ -14,14 +14,12 @@ const DEFAULT_THEME: Theme = 'light';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(DEFAULT_THEME);
-  const [mounted, setMounted] = useState(false);
 
   // Initialize theme from localStorage on mount
   useEffect(() => {
     const savedTheme = (localStorage.getItem(THEME_STORAGE_KEY) as Theme) || DEFAULT_THEME;
     setTheme(savedTheme);
     applyTheme(savedTheme);
-    setMounted(true);
   }, []);
 
   const applyTheme = (newTheme: Theme) => {
@@ -35,11 +33,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyTheme(newTheme);
   };
 
-  // Prevent rendering until theme is loaded to avoid flash
-  if (!mounted) {
-    return <>{children}</>;
-  }
-
+  // Always provide context, even during initial load
+  // This prevents "useTheme must be used within a ThemeProvider" errors
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
