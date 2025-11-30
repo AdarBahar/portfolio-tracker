@@ -27,9 +27,9 @@ export default function JoinBullPenModal({ onClose, onSuccess }: JoinBullPenModa
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-card border border-white/10 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">Join Trade Room</h2>
+          <h2 className="text-2xl font-bold text-foreground">Join Trade Room</h2>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="w-6 h-6" />
           </button>

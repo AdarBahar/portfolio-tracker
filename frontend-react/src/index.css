@@ -4,10 +4,36 @@
   box-sizing: border-box;
 }
 
+/* Light mode (default) - CSS variables */
+:root {
+  --color-background: hsl(0 0% 100%);
+  --color-card: hsl(0 0% 96%);
+  --color-popover: hsl(0 0% 96%);
+  --color-foreground: hsl(222 47% 11%);
+  --color-muted-foreground: hsl(215 16% 35%);
+  --color-secondary: hsl(222 40% 90%);
+  --color-muted: hsl(222 40% 90%);
+  --color-border: hsl(222 40% 85%);
+  --color-input: hsl(222 40% 85%);
+}
+
+/* Dark mode - CSS variables */
+[data-color-scheme="dark"] {
+  --color-background: hsl(222 47% 11%);
+  --color-card: hsl(222 43% 15%);
+  --color-popover: hsl(222 43% 15%);
+  --color-foreground: hsl(210 20% 98%);
+  --color-muted-foreground: hsl(215 16% 65%);
+  --color-secondary: hsl(222 40% 20%);
+  --color-muted: hsl(222 40% 20%);
+  --color-border: hsl(222 40% 25%);
+  --color-input: hsl(222 40% 25%);
+}
+
 /* Light mode (default) */
 body {
-  background-color: hsl(0 0% 100%);
-  color: hsl(222 47% 11%);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -15,13 +41,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Dark mode */
-[data-color-scheme="dark"] body {
-  background-color: hsl(222 47% 11%);
-  color: hsl(210 20% 98%);
-}
-
-/* Custom component styles - Light mode */
+/* Custom component styles - uses CSS variables for light/dark mode */
 .btn-primary {
   background: linear-gradient(to right, hsl(262 83% 58%), hsl(199 89% 48%));
   color: white;
@@ -38,8 +58,8 @@ body {
 }
 
 .btn-secondary {
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  color: hsl(222 47% 11%);
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground);
   font-weight: 500;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
@@ -49,29 +69,14 @@ body {
 }
 
 .btn-secondary:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: var(--color-secondary);
 }
 
 .card-base {
-  background-color: hsl(0 0% 96%);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-}
-
-/* Dark mode overrides */
-[data-color-scheme="dark"] .btn-secondary {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-}
-
-[data-color-scheme="dark"] .btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-[data-color-scheme="dark"] .card-base {
-  background-color: hsl(222 43% 15%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .text-success {
