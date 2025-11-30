@@ -1,5 +1,80 @@
 # Project History
 
+## 2025-11-30 – Phase 2: Cache Invalidation & CORS Fixes
+
+- **Git reference**: `main` branch, commits `45640c9`, `c29e88e`, `83c2d37`
+- **Summary**: Fixed critical production issues with stale data display and profile picture loading. Implemented React Query cache invalidation on login/logout and added CORS support for Google profile pictures.
+
+- **Details**:
+  - **Issue 1: Stale Data on User Switch** (commit `45640c9`):
+    - Problem: When logging out from one user and logging in with another, Profile Header displayed cached data from previous user
+    - Root cause: React Query was caching user profile data with key `['userProfile']` and maintaining cache across user sessions
+    - Solution: Added `queryClient.clear()` calls in `logout()`, `login()`, and `loginAsDemo()` functions in AuthContext
+    - File modified: `frontend-react/src/contexts/AuthContext.tsx`
+    - Impact: Fresh API calls guaranteed on every user switch, no stale data displayed
+
+  - **Issue 2: COEP Error Blocking Profile Pictures** (commit `c29e88e`):
+    - Problem: Browser console showed `net::ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep` error
+    - Root cause: Profile pictures from Google's CDN (lh3.googleusercontent.com) blocked due to missing CORS headers
+    - Solution: Added `crossOrigin="anonymous"` attribute to img tag and implemented graceful fallback to user initials
+    - File modified: `frontend-react/src/components/header/ProfileAvatar.tsx`
+    - Impact: Profile pictures now load correctly from Google CDN with fallback to initials
+
+  - **React Query Cache Management**:
+    - Imported `useQueryClient` from `@tanstack/react-query`
+    - Called `queryClient.clear()` to remove all cached queries
+    - Timing: Called after setting auth token to ensure fresh data for new user
+    - Prevents cache pollution across user sessions
+
+  - **CORS Implementation**:
+    - Added `crossOrigin="anonymous"` to img tag for CORS support
+    - Added `onError` handler to track image load failures
+    - Fallback: Display user initials in gradient circle when image fails
+    - Maintains visual consistency and professional appearance
+
+  - **Build Results**:
+    - TypeScript: ✅ No errors
+    - ESLint: ✅ No errors
+    - Production build: ✅ Successful
+
+  - **Files Modified**:
+    - `frontend-react/src/contexts/AuthContext.tsx` - Added cache invalidation
+    - `frontend-react/src/components/header/ProfileAvatar.tsx` - Added CORS support
+
+- **Reasoning / Motivation**:
+  - Production deployment revealed critical UX issues with data consistency
+  - Users switching accounts saw incorrect profile data
+  - Profile pictures failed to load due to CORS policy
+  - Cache invalidation is essential for multi-user scenarios
+  - CORS support required for cross-origin image loading
+
+- **Impact**:
+  - Users can now switch accounts without seeing stale data
+  - Profile pictures load correctly from Google CDN
+  - Better user experience with instant data refresh on login
+  - No console errors related to CORS or cache issues
+  - Improved reliability in production environment
+
+- **Deployment / Ops notes**:
+  - Deploy updated `react/` folder to production
+  - No database changes required
+  - No environment variable changes required
+  - No backend changes required
+  - Cache invalidation happens automatically on login/logout
+
+- **Testing**:
+  - ✅ Manual testing: Verified login/logout with multiple users shows correct data
+  - ✅ Manual testing: Verified profile pictures load from Google CDN
+  - ✅ Manual testing: Verified fallback to initials when image fails
+  - ✅ Manual testing: Verified no console errors on page load
+  - ✅ Build verification: No TypeScript errors, successful production build
+
+- **Open questions / next steps**:
+  - Consider adding error boundary for better error handling
+  - Could add monitoring for cache-related issues
+  - Proceed with Phase 3: Testing & Optimization
+  - Consider adding E2E tests for user switching scenarios
+
 ## 2025-11-29 – React Production Build & Deployment Complete
 
 - **Git reference**: `main` branch, merged from `react-migration-test`, commit `d938da2`

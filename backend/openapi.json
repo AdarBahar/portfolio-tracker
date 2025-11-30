@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Portfolio Tracker API",
-    "version": "1.2.0",
-    "description": "Backend API for the Portfolio Tracker application (Node.js + Express + MySQL). Includes comprehensive audit logging, soft delete functionality, user/holding status management, and Stars System gamification with achievement rules and composite ranking scores."
+    "version": "1.3.0",
+    "description": "Backend API for the Portfolio Tracker application (Node.js + Express + MySQL). Includes comprehensive audit logging, soft delete functionality, user/holding status management, Stars System gamification with achievement rules and composite ranking scores, and user profile endpoints with React Query integration."
   },
   "servers": [
     {
@@ -845,6 +845,127 @@
           },
           "404": {
             "description": "Transaction not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Unexpected server error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/profile": {
+      "get": {
+        "summary": "Get user profile and stats",
+        "description": "Returns authenticated user's profile information and performance statistics including room participation, wins, and stars.",
+        "tags": ["Users"],
+        "security": [
+          { "BearerAuth": [] }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile and stats retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "John Doe"
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "john@example.com"
+                        },
+                        "picture": {
+                          "type": "string",
+                          "nullable": true,
+                          "example": "https://lh3.googleusercontent.com/..."
+                        },
+                        "username": {
+                          "type": "string",
+                          "example": "John Doe"
+                        },
+                        "tier": {
+                          "type": "string",
+                          "example": "Unranked"
+                        },
+                        "lifetimeStars": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "netProfit": {
+                          "type": "number",
+                          "example": 0
+                        },
+                        "isNewUser": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2025-11-30T10:00:00Z"
+                        }
+                      }
+                    },
+                    "stats": {
+                      "type": "object",
+                      "properties": {
+                        "globalRank": {
+                          "type": "integer",
+                          "nullable": true,
+                          "example": null
+                        },
+                        "winRate": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "totalRoomsPlayed": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "totalWins": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "winStreak": {
+                          "type": "integer",
+                          "example": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - authentication required",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ErrorResponse" }
