@@ -11,6 +11,7 @@ import AssetClassChart from '@/components/charts/AssetClassChart';
 import PerformanceChart from '@/components/charts/PerformanceChart';
 import ThemeToggle from '@/components/header/ThemeToggle';
 import UserProfile from '@/components/header/UserProfile';
+import ProfileHeaderContainer from '@/components/header/ProfileHeaderContainer';
 
 export default function Dashboard() {
   const { holdings, metrics, isLoading, error } = usePortfolioData();
@@ -86,6 +87,14 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
+        {/* Profile Header Section */}
+        <div className="mb-8">
+          <ProfileHeaderContainer
+            onJoinRoom={() => console.log('Join room clicked')}
+            onCreateRoom={() => console.log('Create room clicked')}
+          />
+        </div>
+
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <MetricCard
