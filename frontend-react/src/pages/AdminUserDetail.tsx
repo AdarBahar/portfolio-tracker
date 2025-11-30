@@ -133,6 +133,15 @@ export default function AdminUserDetail() {
               </div>
             )}
 
+            {/* Stars Information */}
+            <div className="bg-card border border-white/10 rounded-lg p-6">
+              <h2 className="text-xl font-bold text-white mb-4">⭐ Stars</h2>
+              <div>
+                <p className="text-muted-foreground text-sm">Total Stars</p>
+                <p className="text-warning font-semibold text-3xl">{userDetailData?.total_stars || 0}</p>
+              </div>
+            </div>
+
             {/* Trading Rooms */}
             {tradingRooms.length > 0 && (
               <div className="bg-card border border-white/10 rounded-lg p-6">

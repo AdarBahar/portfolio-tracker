@@ -303,12 +303,22 @@ async function getUserDetail(req, res) {
       }
     }
 
+    // Get user's total stars (lifetime)
+    const [starsResult] = await db.execute(
+      `SELECT COALESCE(SUM(stars_delta), 0) as total_stars
+       FROM user_star_events
+       WHERE user_id = ? AND deleted_at IS NULL`,
+      [userId]
+    );
+    const totalStars = starsResult[0]?.total_stars || 0;
+
     return res.json({
       user,
       budget,
       budget_logs: budgetLogs,
       trading_rooms: tradingRooms,
-      standings
+      standings,
+      total_stars: totalStars
     });
   } catch (err) {
     logger.error('[Admin] Error fetching user detail:', err);

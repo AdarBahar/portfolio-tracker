@@ -62,6 +62,7 @@ export const mockUserDetailResponse: UserDetailResponse = {
   budget_logs: [],
   trading_rooms: [],
   standings: [],
+  total_stars: 150,
 };
 
 export const mockAuditLog: AuditLog = {

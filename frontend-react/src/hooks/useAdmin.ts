@@ -61,6 +61,7 @@ export interface UserDetailResponse {
     pnl_abs: number;
     pnl_pct: number;
   }>;
+  total_stars: number;
 }
 
 export interface UserDetail extends User {
@@ -68,6 +69,7 @@ export interface UserDetail extends User {
   budget_logs: UserDetailResponse['budget_logs'];
   trading_rooms: UserDetailResponse['trading_rooms'];
   standings: UserDetailResponse['standings'];
+  total_stars: number;
 }
 
 export interface RakeConfig {
@@ -175,10 +177,12 @@ export function useGrantStars() {
       const response = await apiClient.post(`/admin/users/${userId}/grant-stars`, { stars, reason });
       return response.data;
     },
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
-      queryClient.invalidateQueries({ queryKey: ['userDetail', userId] });
-      queryClient.invalidateQueries({ queryKey: ['userLogs', userId] });
+    onSuccess: async (_, { userId }) => {
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['adminUsers'] }),
+        queryClient.refetchQueries({ queryKey: ['userDetail', userId] }),
+        queryClient.refetchQueries({ queryKey: ['userLogs', userId] }),
+      ]);
     },
   });
 }
@@ -191,10 +195,12 @@ export function useRemoveStars() {
       const response = await apiClient.post(`/admin/users/${userId}/remove-stars`, { stars, reason });
       return response.data;
     },
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
-      queryClient.invalidateQueries({ queryKey: ['userDetail', userId] });
-      queryClient.invalidateQueries({ queryKey: ['userLogs', userId] });
+    onSuccess: async (_, { userId }) => {
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['adminUsers'] }),
+        queryClient.refetchQueries({ queryKey: ['userDetail', userId] }),
+        queryClient.refetchQueries({ queryKey: ['userLogs', userId] }),
+      ]);
     },
   });
 }
@@ -207,10 +213,12 @@ export function useAdjustBudget() {
       const response = await apiClient.post(`/admin/users/${userId}/adjust-budget`, { amount, direction, reason });
       return response.data;
     },
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
-      queryClient.invalidateQueries({ queryKey: ['userDetail', userId] });
-      queryClient.invalidateQueries({ queryKey: ['userLogs', userId] });
+    onSuccess: async (_, { userId }) => {
+      await Promise.all([
+        queryClient.refetchQueries({ queryKey: ['adminUsers'] }),
+        queryClient.refetchQueries({ queryKey: ['userDetail', userId] }),
+        queryClient.refetchQueries({ queryKey: ['userLogs', userId] }),
+      ]);
     },
   });
 }

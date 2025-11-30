@@ -104,6 +104,15 @@ export default function UserDetailModal({ user, isLoading, onClose }: UserDetail
               </div>
             )}
 
+            {/* Stars Info */}
+            <div className="bg-background/50 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold text-white mb-4">⭐ Stars</h3>
+              <div>
+                <p className="text-muted-foreground text-sm">Total Stars</p>
+                <p className="text-warning font-semibold text-2xl">{user.total_stars || 0}</p>
+              </div>
+            </div>
+
             {/* Trading Rooms */}
             {user.trading_rooms && user.trading_rooms.length > 0 && (
               <div className="bg-background/50 p-4 rounded-lg">

@@ -235,7 +235,7 @@ export default function Admin() {
 
         {/* Modals */}
         <UserDetailModal
-          user={userDetail ? { ...userDetail.user, budget: userDetail.budget, budget_logs: userDetail.budget_logs, trading_rooms: userDetail.trading_rooms, standings: userDetail.standings } : null}
+          user={userDetail ? { ...userDetail.user, budget: userDetail.budget, budget_logs: userDetail.budget_logs, trading_rooms: userDetail.trading_rooms, standings: userDetail.standings, total_stars: userDetail.total_stars } : null}
           isLoading={userDetailLoading}
           onClose={() => setSelectedUserId(null)}
         />

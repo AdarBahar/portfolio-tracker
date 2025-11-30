@@ -7,6 +7,7 @@ Login - google opens devtools
 Admin page
 show logs - full page (not modal). search by word or time limit
 assume user - as an admin, I can assume the user's identify and login and act on the game as if I was that user
+Admin that gives money or stars - can add free text for reason or choose reason from the dropdown that will show the currently configured awards
 
 UI automation testing to cover all flows
 Send emails/notifications on major events
