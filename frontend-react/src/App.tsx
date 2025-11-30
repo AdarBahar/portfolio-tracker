@@ -10,6 +10,7 @@ import TradeRoom from './pages/TradeRoom';
 import BullPenDetail from './pages/BullPenDetail';
 import Admin from './pages/Admin';
 import NotFound from './pages/NotFound';
+import ProfileHeaderDemo from './components/header/ProfileHeader.demo';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +31,7 @@ function App() {
             {/* Public Routes */}
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/profile-header-demo" element={<ProfileHeaderDemo />} />
 
             {/* Protected Routes */}
             <Route
