@@ -6,17 +6,34 @@ const auditLog = require('../utils/auditLog');
 async function getHoldings(req, res) {
   try {
     const userId = req.user && req.user.id;
-    const [rows] = await db.execute(
-      `SELECT
-        h.id, h.ticker, h.name, h.shares, h.purchase_price, h.purchase_date, h.sector, h.asset_class, h.created_at, h.updated_at,
-        COALESCE(m.current_price, 0) AS current_price
-      FROM holdings h
-      LEFT JOIN market_data m ON h.ticker = m.symbol
-      WHERE h.user_id = ? AND h.deleted_at IS NULL
-      ORDER BY h.ticker`,
+    const [holdings] = await db.execute(
+      'SELECT id, ticker, name, shares, purchase_price, purchase_date, sector, asset_class, created_at, updated_at FROM holdings WHERE user_id = ? AND deleted_at IS NULL ORDER BY ticker',
       [userId]
     );
-    return res.json({ holdings: rows });
+
+    // Fetch current prices for all holdings
+    const tickers = holdings.map(h => h.ticker);
+    let priceMap = {};
+
+    if (tickers.length > 0) {
+      const placeholders = tickers.map(() => '?').join(',');
+      const [priceRows] = await db.execute(
+        `SELECT symbol, current_price FROM market_data WHERE symbol IN (${placeholders})`,
+        tickers
+      );
+
+      priceRows.forEach(row => {
+        priceMap[row.symbol] = Number(row.current_price);
+      });
+    }
+
+    // Add current_price to each holding
+    const holdingsWithPrices = holdings.map(holding => ({
+      ...holding,
+      current_price: priceMap[holding.ticker] || 0
+    }));
+
+    return res.json({ holdings: holdingsWithPrices });
   } catch (err) {
     logger.error('Error fetching holdings:', err);
     return internalError(res, 'Failed to fetch holdings');
