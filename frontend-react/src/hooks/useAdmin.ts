@@ -14,7 +14,8 @@ export interface User {
   last_login: string | null;
 }
 
-export interface UserDetail extends User {
+export interface UserDetailResponse {
+  user: User;
   budget: {
     id: number;
     user_id: number;
@@ -63,6 +64,13 @@ export interface UserDetail extends User {
   }>;
 }
 
+export interface UserDetail extends User {
+  budget: UserDetailResponse['budget'];
+  budget_logs: UserDetailResponse['budget_logs'];
+  trading_rooms: UserDetailResponse['trading_rooms'];
+  standings: UserDetailResponse['standings'];
+}
+
 export interface RakeConfig {
   id: number;
   percentage: number;
@@ -94,6 +102,19 @@ export interface Promotion {
   created_at: string;
 }
 
+export interface AuditLog {
+  id: number;
+  user_id: number;
+  event_type: string;
+  event_category: string;
+  description: string;
+  ip_address: string | null;
+  user_agent: string | null;
+  previous_values: Record<string, any> | null;
+  new_values: Record<string, any> | null;
+  created_at: string;
+}
+
 // Hooks
 export function useUsers() {
   return useQuery({
@@ -113,7 +134,20 @@ export function useUserDetail(userId: number | undefined) {
     queryFn: async () => {
       if (!userId) return null;
       const response = await apiClient.get(`/admin/users/${userId}/detail`);
-      return (response.data as any).user as UserDetail;
+      return response.data as UserDetailResponse;
+    },
+    enabled: !!userId,
+    staleTime: 30000,
+  });
+}
+
+export function useUserLogs(userId: number | undefined) {
+  return useQuery({
+    queryKey: ['userLogs', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const response = await apiClient.get(`/admin/users/${userId}/logs`);
+      return (response.data as any).logs as AuditLog[];
     },
     enabled: !!userId,
     staleTime: 30000,

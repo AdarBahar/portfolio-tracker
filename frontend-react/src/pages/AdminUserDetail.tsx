@@ -2,14 +2,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader } from 'lucide-react';
 import ThemeToggle from '@/components/header/ThemeToggle';
 import UserProfile from '@/components/header/UserProfile';
-import { useUserDetail } from '@/hooks/useAdmin';
+import { useUserDetail, useUserLogs } from '@/hooks/useAdmin';
 import { formatCurrency, formatDate } from '@/utils/formatting';
 
 export default function AdminUserDetail() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const userIdNum = userId ? parseInt(userId, 10) : undefined;
-  const { data: user, isLoading, error } = useUserDetail(userIdNum);
+  const { data: userDetailData, isLoading, error } = useUserDetail(userIdNum);
+  const { data: logs = [] } = useUserLogs(userIdNum);
+
+  const user = userDetailData?.user || null;
+  const budget = userDetailData?.budget || null;
+  const tradingRooms = userDetailData?.trading_rooms || [];
 
   if (isLoading) {
     return (
@@ -108,32 +113,32 @@ export default function AdminUserDetail() {
             </div>
 
             {/* Budget Information */}
-            {user.budget && (
+            {budget && (
               <div className="bg-card border border-white/10 rounded-lg p-6">
                 <h2 className="text-xl font-bold text-white mb-4">Budget</h2>
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <p className="text-muted-foreground text-sm">Total Balance</p>
-                    <p className="text-foreground font-semibold">{formatCurrency(user.budget.total_balance || 0)}</p>
+                    <p className="text-foreground font-semibold">{formatCurrency(budget.total_balance || 0)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-sm">Available</p>
-                    <p className="text-success font-semibold">{formatCurrency(user.budget.available_balance || 0)}</p>
+                    <p className="text-success font-semibold">{formatCurrency(budget.available_balance || 0)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-sm">Locked</p>
-                    <p className="text-warning font-semibold">{formatCurrency(user.budget.locked_balance || 0)}</p>
+                    <p className="text-warning font-semibold">{formatCurrency(budget.locked_balance || 0)}</p>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Trading Rooms */}
-            {user.trading_rooms && user.trading_rooms.length > 0 && (
+            {tradingRooms.length > 0 && (
               <div className="bg-card border border-white/10 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Trading Rooms ({user.trading_rooms.length})</h2>
+                <h2 className="text-xl font-bold text-white mb-4">Trading Rooms ({tradingRooms.length})</h2>
                 <div className="space-y-3">
-                  {user.trading_rooms.map((room) => (
+                  {tradingRooms.map((room: any) => (
                     <div key={room.id} className="flex justify-between items-center p-3 bg-background/50 rounded-lg">
                       <div>
                         <p className="text-foreground font-medium">{room.name}</p>
@@ -143,6 +148,25 @@ export default function AdminUserDetail() {
                         <p className="text-foreground">{formatCurrency(room.cash)}</p>
                         <p className="text-muted-foreground text-xs">{formatDate(room.joined_at)}</p>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Audit Logs */}
+            {logs.length > 0 && (
+              <div className="bg-card border border-white/10 rounded-lg p-6">
+                <h2 className="text-xl font-bold text-white mb-4">Audit Logs ({logs.length})</h2>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {logs.map((log) => (
+                    <div key={log.id} className="p-3 bg-background/50 rounded-lg text-sm">
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="text-foreground font-medium capitalize">{log.event_type.replace(/_/g, ' ')}</p>
+                        <p className="text-muted-foreground text-xs">{formatDate(log.created_at)}</p>
+                      </div>
+                      <p className="text-muted-foreground text-xs mb-1">{log.event_category}</p>
+                      <p className="text-foreground text-xs">{log.description}</p>
                     </div>
                   ))}
                 </div>
@@ -166,7 +190,11 @@ export default function AdminUserDetail() {
                 </div>
                 <div>
                   <p className="text-muted-foreground text-sm">Active Rooms</p>
-                  <p className="text-foreground">{user.trading_rooms?.length || 0}</p>
+                  <p className="text-foreground">{tradingRooms.length}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-sm">Audit Logs</p>
+                  <p className="text-foreground">{logs.length}</p>
                 </div>
               </div>
             </div>

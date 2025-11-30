@@ -10,18 +10,18 @@ const auditLog = require('../utils/auditLog');
 async function listUsers(req, res) {
   try {
     const [rows] = await db.execute(
-      `SELECT 
-        id, 
-        email, 
-        name, 
-        auth_provider AS authProvider,
-        is_demo AS isDemo,
-        is_admin AS isAdmin,
+      `SELECT
+        id,
+        email,
+        name,
+        auth_provider,
+        is_demo,
+        is_admin,
         status,
-        created_at AS createdAt,
-        last_login AS lastLogin
-      FROM users 
-      WHERE deleted_at IS NULL 
+        created_at,
+        last_login
+      FROM users
+      WHERE deleted_at IS NULL
       ORDER BY created_at DESC`
     );
 
@@ -56,19 +56,19 @@ async function getUserLogs(req, res) {
 
     // Fetch audit logs for this user
     const [logs] = await db.execute(
-      `SELECT 
+      `SELECT
         id,
-        user_id AS userId,
-        event_type AS eventType,
-        event_category AS eventCategory,
+        user_id,
+        event_type,
+        event_category,
         description,
-        ip_address AS ipAddress,
-        user_agent AS userAgent,
-        previous_values AS previousValues,
-        new_values AS newValues,
-        created_at AS createdAt
-      FROM user_audit_log 
-      WHERE user_id = ? 
+        ip_address,
+        user_agent,
+        previous_values,
+        new_values,
+        created_at
+      FROM user_audit_log
+      WHERE user_id = ?
       ORDER BY created_at DESC
       LIMIT 1000`,
       [userId]
@@ -305,23 +305,8 @@ async function getUserDetail(req, res) {
     }
 
     return res.json({
-      user: {
-        ...user,
-        auth_provider: user.auth_provider,
-        is_demo: user.is_demo,
-        is_admin: user.is_admin,
-        created_at: user.created_at,
-        last_login: user.last_login
-      },
-      budget: budget ? {
-        ...budget,
-        user_id: budget.user_id,
-        available_balance: budget.available_balance,
-        locked_balance: budget.locked_balance,
-        total_balance: budget.total_balance,
-        created_at: budget.created_at,
-        updated_at: budget.updated_at
-      } : null,
+      user,
+      budget,
       budget_logs: budgetLogs,
       trading_rooms: tradingRooms,
       standings
