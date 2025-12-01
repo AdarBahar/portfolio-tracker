@@ -210,15 +210,22 @@ export function useAdjustBudget() {
 
   return useMutation({
     mutationFn: async ({ userId, amount, direction, reason }: { userId: number; amount: number; direction: 'IN' | 'OUT'; reason: string }) => {
+      console.log('[useAdjustBudget] Calling API with:', { userId, amount, direction, reason });
       const response = await apiClient.post(`/admin/users/${userId}/adjust-budget`, { amount, direction, reason });
+      console.log('[useAdjustBudget] API response:', response.data);
       return response.data;
     },
     onSuccess: async (_, { userId }) => {
+      console.log('[useAdjustBudget] onSuccess called, refetching data...');
       await Promise.all([
         queryClient.refetchQueries({ queryKey: ['adminUsers'] }),
         queryClient.refetchQueries({ queryKey: ['userDetail', userId] }),
         queryClient.refetchQueries({ queryKey: ['userLogs', userId] }),
       ]);
+      console.log('[useAdjustBudget] Refetch complete');
+    },
+    onError: (error) => {
+      console.error('[useAdjustBudget] Error:', error);
     },
   });
 }

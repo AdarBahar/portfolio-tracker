@@ -33,6 +33,8 @@ export default function BudgetStarsAdjustmentPanel({ user, onSuccess }: BudgetSt
     e.preventDefault();
     if (!budgetAmount || !budgetReason.trim()) return;
 
+    console.log('[BudgetStarsAdjustmentPanel] Adjusting budget:', { userId: user.id, amount: budgetAmount, direction: budgetDirection, reason: budgetReason });
+
     adjustBudget(
       {
         userId: user.id,
@@ -42,9 +44,13 @@ export default function BudgetStarsAdjustmentPanel({ user, onSuccess }: BudgetSt
       },
       {
         onSuccess: () => {
+          console.log('[BudgetStarsAdjustmentPanel] Budget adjustment successful');
           setBudgetAmount('');
           setBudgetReason('');
           onSuccess?.();
+        },
+        onError: (error) => {
+          console.error('[BudgetStarsAdjustmentPanel] Budget adjustment error:', error);
         },
       }
     );
