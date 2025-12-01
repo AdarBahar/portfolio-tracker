@@ -136,6 +136,7 @@ async function googleAuth(req, res) {
     const tokenPayload = {
       id: dbUser.id,
       email: dbUser.email,
+      name: dbUser.name,
       authProvider: 'google',
       isDemo: !!dbUser.is_demo,
       isAdmin: !!dbUser.is_admin

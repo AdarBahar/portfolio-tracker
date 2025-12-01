@@ -463,7 +463,7 @@ async function adjustBudget(req, res) {
   const userId = parseInt(req.params.id, 10);
   const { amount, direction, reason } = req.body;
   const adminId = req.user && req.user.id;
-  const adminName = req.user && req.user.name;
+  const adminName = (req.user && req.user.name) || 'Unknown Admin';
 
   if (!userId || !amount || amount <= 0) {
     return res.status(400).json({ error: 'Missing or invalid userId or amount' });
