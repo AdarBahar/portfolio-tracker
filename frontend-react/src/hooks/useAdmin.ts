@@ -213,12 +213,19 @@ export function useAdjustBudget() {
       console.log('[useAdjustBudget] Calling API with:', { userId, amount, direction, reason });
       const response = await apiClient.post(`/admin/users/${userId}/adjust-budget`, { amount, direction, reason });
       console.log('[useAdjustBudget] API response:', response.data);
-      return response.data;
+      return { data: response.data, userId };
     },
-    onSuccess: async (_, { userId }) => {
-      console.log('[useAdjustBudget] onSuccess called, refetching data...');
+    onSuccess: async (result) => {
+      const userId = result.userId;
+      console.log('[useAdjustBudget] onSuccess called, invalidating queries...');
+      // Invalidate queries to mark them as stale
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['userDetail', userId] });
+      queryClient.invalidateQueries({ queryKey: ['userLogs', userId] });
+
+      // Wait for refetch to complete
+      console.log('[useAdjustBudget] Waiting for refetch...');
       await Promise.all([
-        queryClient.refetchQueries({ queryKey: ['adminUsers'] }),
         queryClient.refetchQueries({ queryKey: ['userDetail', userId] }),
         queryClient.refetchQueries({ queryKey: ['userLogs', userId] }),
       ]);
