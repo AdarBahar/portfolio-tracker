@@ -8,13 +8,13 @@ declare global {
   interface Window {
     google?: any;
     handleCredentialResponse?: (response: any) => void;
+    onGoogleLibraryLoad?: () => void;
   }
 }
 
 export default function Login() {
   const navigate = useNavigate();
   const { login, loginAsDemo, isAuthenticated } = useAuth();
-  const googleButtonRef = useRef<HTMLDivElement>(null);
   const toastRef = useRef<HTMLDivElement>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
 
@@ -25,92 +25,52 @@ export default function Login() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Initialize Google Sign-In
+  // Initialize Google Sign-In using declarative approach (like vanilla JS)
   useEffect(() => {
-    const initGoogleSignIn = async () => {
-      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '539842594800-bpqtcpi56vaf7nkiqcf1796socl2cjqp.apps.googleusercontent.com';
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '539842594800-bpqtcpi56vaf7nkiqcf1796socl2cjqp.apps.googleusercontent.com';
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
-      // Define callback in global scope
-      window.handleCredentialResponse = async (response: any) => {
-        try {
-          console.log('[Login] Google Sign-In callback triggered');
-          setIsAuthLoading(true);
-          console.log('[Login] Calling login with credential and apiUrl:', apiUrl);
-          await login(response.credential, apiUrl);
-          console.log('[Login] Login successful');
-          showToast('Welcome back!', 'success');
-          setTimeout(() => navigate('/dashboard'), 1000);
-        } catch (error) {
-          console.error('[Login] Google sign-in error:', error);
-          showToast('Failed to sign in with Google. Please try again.', 'error');
-          setIsAuthLoading(false);
-        }
-      };
-
-      // Wait for Google Sign-In library to load
-      const waitForGoogle = () => {
-        return new Promise<void>((resolve) => {
-          console.log('[Login] Waiting for Google Sign-In library...');
-          if (window.google) {
-            console.log('[Login] Google library already loaded');
-            resolve();
-          } else {
-            const checkInterval = setInterval(() => {
-              console.log('[Login] Checking for Google library...');
-              if (window.google) {
-                console.log('[Login] Google library loaded!');
-                clearInterval(checkInterval);
-                resolve();
-              }
-            }, 100);
-            // Timeout after 5 seconds
-            setTimeout(() => {
-              clearInterval(checkInterval);
-              console.log('[Login] Google library load timeout');
-              resolve();
-            }, 5000);
-          }
-        });
-      };
-
-      await waitForGoogle();
-
-      // Initialize Google Sign-In
-      if (window.google) {
-        try {
-          console.log('[Login] Initializing Google Sign-In with client_id:', googleClientId);
-          window.google.accounts.id.initialize({
-            client_id: googleClientId,
-            callback: window.handleCredentialResponse,
-          });
-
-          if (googleButtonRef.current) {
-            console.log('[Login] Rendering Google Sign-In button');
-            window.google.accounts.id.renderButton(googleButtonRef.current, {
-              type: 'standard',
-              shape: 'rectangular',
-              theme: 'outline',
-              text: 'signin_with',
-              size: 'large',
-              logo_alignment: 'left',
-              width: '320',
-            });
-            console.log('[Login] Google Sign-In button rendered successfully');
-          } else {
-            console.error('[Login] googleButtonRef.current is null');
-          }
-        } catch (error) {
-          console.error('[Login] Error initializing Google Sign-In:', error);
-          showToast('Failed to initialize Google Sign-In. Please refresh the page.', 'error');
-        }
-      } else {
-        console.error('[Login] Google Sign-In library failed to load');
-        showToast('Google Sign-In library failed to load. Please refresh the page.', 'error');
+    // Define callback in global scope FIRST (before Google library processes the DOM)
+    window.handleCredentialResponse = async (response: any) => {
+      try {
+        console.log('[Login] Google Sign-In callback triggered');
+        setIsAuthLoading(true);
+        console.log('[Login] Calling login with credential and apiUrl:', apiUrl);
+        await login(response.credential, apiUrl);
+        console.log('[Login] Login successful');
+        showToast('Welcome back!', 'success');
+        setTimeout(() => navigate('/dashboard'), 1000);
+      } catch (error) {
+        console.error('[Login] Google sign-in error:', error);
+        showToast('Failed to sign in with Google. Please try again.', 'error');
+        setIsAuthLoading(false);
       }
     };
 
-    initGoogleSignIn();
+    // Set up the g_id_onload div with the client ID
+    const googleOnloadDiv = document.getElementById('g_id_onload');
+    if (googleOnloadDiv && googleClientId) {
+      console.log('[Login] Setting Google Client ID on g_id_onload div');
+      googleOnloadDiv.setAttribute('data-client_id', googleClientId);
+
+      // Trigger Google library to process the DOM
+      // This is the declarative approach - Google's library will automatically process g_id_onload and g_id_signin divs
+      if (window.google) {
+        console.log('[Login] Google library already loaded, processing DOM');
+        window.google.accounts.id.renderButton(
+          document.querySelector('.g_id_signin'),
+          {
+            type: 'standard',
+            shape: 'rectangular',
+            theme: 'outline',
+            text: 'signin_with',
+            size: 'large',
+            logo_alignment: 'left',
+            width: '320',
+          }
+        );
+      }
+    }
   }, [login, navigate]);
 
   const handleDemoLogin = async () => {
@@ -158,8 +118,24 @@ export default function Login() {
               <h2 className="text-xl font-semibold text-white mb-2">Welcome Back</h2>
               <p className="text-slate-400 text-sm mb-6">Sign in to access your portfolio</p>
 
-              {/* Google Sign-In Button */}
-              <div ref={googleButtonRef} className="flex justify-center mb-6" />
+              {/* Google Sign-In Button - Using declarative approach */}
+              <div id="g_id_onload"
+                   data-context="signin"
+                   data-ux_mode="popup"
+                   data-callback="handleCredentialResponse"
+                   data-auto_prompt="false"
+                   data-itp_support="true"
+                   style={{ display: 'none' }}>
+              </div>
+              <div className="g_id_signin flex justify-center mb-6"
+                   data-type="standard"
+                   data-shape="rectangular"
+                   data-theme="outline"
+                   data-text="signin_with"
+                   data-size="large"
+                   data-logo_alignment="left"
+                   data-width="320">
+              </div>
 
               <div className="relative mb-6">
                 <div className="absolute inset-0 flex items-center">
