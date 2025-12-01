@@ -34,12 +34,15 @@ export default function Login() {
       // Define callback in global scope
       window.handleCredentialResponse = async (response: any) => {
         try {
+          console.log('[Login] Google Sign-In callback triggered');
           setIsAuthLoading(true);
+          console.log('[Login] Calling login with credential and apiUrl:', apiUrl);
           await login(response.credential, apiUrl);
+          console.log('[Login] Login successful');
           showToast('Welcome back!', 'success');
           setTimeout(() => navigate('/dashboard'), 1000);
         } catch (error) {
-          console.error('Google sign-in error:', error);
+          console.error('[Login] Google sign-in error:', error);
           showToast('Failed to sign in with Google. Please try again.', 'error');
           setIsAuthLoading(false);
         }
@@ -48,11 +51,15 @@ export default function Login() {
       // Wait for Google Sign-In library to load
       const waitForGoogle = () => {
         return new Promise<void>((resolve) => {
+          console.log('[Login] Waiting for Google Sign-In library...');
           if (window.google) {
+            console.log('[Login] Google library already loaded');
             resolve();
           } else {
             const checkInterval = setInterval(() => {
+              console.log('[Login] Checking for Google library...');
               if (window.google) {
+                console.log('[Login] Google library loaded!');
                 clearInterval(checkInterval);
                 resolve();
               }
@@ -60,6 +67,7 @@ export default function Login() {
             // Timeout after 5 seconds
             setTimeout(() => {
               clearInterval(checkInterval);
+              console.log('[Login] Google library load timeout');
               resolve();
             }, 5000);
           }
@@ -71,12 +79,14 @@ export default function Login() {
       // Initialize Google Sign-In
       if (window.google) {
         try {
+          console.log('[Login] Initializing Google Sign-In with client_id:', googleClientId);
           window.google.accounts.id.initialize({
             client_id: googleClientId,
             callback: window.handleCredentialResponse,
           });
 
           if (googleButtonRef.current) {
+            console.log('[Login] Rendering Google Sign-In button');
             window.google.accounts.id.renderButton(googleButtonRef.current, {
               type: 'standard',
               shape: 'rectangular',
@@ -86,13 +96,16 @@ export default function Login() {
               logo_alignment: 'left',
               width: '320',
             });
+            console.log('[Login] Google Sign-In button rendered successfully');
+          } else {
+            console.error('[Login] googleButtonRef.current is null');
           }
         } catch (error) {
-          console.error('Error initializing Google Sign-In:', error);
+          console.error('[Login] Error initializing Google Sign-In:', error);
           showToast('Failed to initialize Google Sign-In. Please refresh the page.', 'error');
         }
       } else {
-        console.error('Google Sign-In library failed to load');
+        console.error('[Login] Google Sign-In library failed to load');
         showToast('Google Sign-In library failed to load. Please refresh the page.', 'error');
       }
     };
