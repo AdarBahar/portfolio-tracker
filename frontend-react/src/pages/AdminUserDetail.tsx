@@ -220,15 +220,13 @@ export default function AdminUserDetail() {
                   </div>
                 </div>
                 <div className="border-t border-white/10 pt-6">
-                  <div className="bg-background/50 p-4 rounded-lg border border-white/10">
-                    <h3 className="text-lg font-semibold text-white mb-4">Adjust Budget</h3>
-                    {user && (
-                      <BudgetStarsAdjustmentPanel
-                        user={user as any}
-                        onSuccess={handleAdjustmentSuccess}
-                      />
-                    )}
-                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-4">Adjust Budget</h3>
+                  {user && (
+                    <BudgetStarsAdjustmentPanel
+                      user={user as any}
+                      onSuccess={handleAdjustmentSuccess}
+                    />
+                  )}
                 </div>
               </div>
             )}
