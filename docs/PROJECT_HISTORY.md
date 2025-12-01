@@ -3233,3 +3233,97 @@ Successfully applied Phase 3 schema migration to local database:
   - Consider adding analytics to track production issues
   - Plan Phase 3: Trade Room migration to React
   - Plan Phase 4: Admin Panel migration to React
+
+## 2025-12-01 – Google Sign-In Fix & Admin Budget Management Complete
+
+- **Git reference**: `main` branch, commits `47b398e` through `1d4625e` (7 commits)
+- **Summary**: Fixed critical Google Sign-In authentication error and completed admin budget/stars management system with transactional consistency and proper React Query caching.
+
+- **Details**:
+  - **Google Sign-In Authentication Fix**:
+    - **Root Cause**: `Cross-Origin-Opener-Policy: same-origin` header was blocking Google Sign-In popup from communicating via `postMessage()` with the main window
+    - **Error**: "Cannot read properties of null (reading 'postMessage')" on Google login popup
+    - **Solution**: Changed COOP header to `same-origin-allow-popups` in `.htaccess` files
+    - **Files Modified**: `frontend-react/public/.htaccess`, `react/.htaccess`
+    - **Impact**: Google Sign-In now works correctly; users can authenticate via Google OAuth
+
+  - **Admin Budget Management System**:
+    - **Backend Fix**: Refactored `adjustBudget` function to use `budgetService` with transactional consistency
+    - **Problem**: Budget updates were not persisting to database (UPDATE query not executing)
+    - **Solution**:
+      - Use database transactions (`BEGIN TRANSACTION`, `COMMIT`, `ROLLBACK`)
+      - Lock budget rows with `FOR UPDATE` to prevent race conditions
+      - Ensure atomic updates - either both balance and log succeed, or both fail
+    - **Files Modified**: `backend/src/controllers/adminController.js`
+    - **Impact**: Budget adjustments now reliably update the database
+
+  - **Frontend React Query Caching Fix**:
+    - **Problem**: UI showed $0.00 even though API returned correct balance
+    - **Root Cause 1**: API returns balance as strings (e.g., `"6000.00"`) but code checked `typeof === 'number'`
+    - **Root Cause 2**: React Query refetch was not waiting for completion before resolving mutation
+    - **Solution 1**: Use `parseFloat()` to convert string values to numbers
+    - **Solution 2**: Modify `useAdjustBudget` hook to invalidate queries first, then wait for refetch
+    - **Files Modified**:
+      - `frontend-react/src/pages/AdminUserDetail.tsx`
+      - `frontend-react/src/hooks/useAdmin.ts`
+    - **Impact**: UI now correctly displays updated budget balances
+
+  - **UI Cleanup**:
+    - Removed duplicate "Adjust Stars" section from Budget box
+    - Stars adjustment now only appears in dedicated Stars box
+    - Simplified `BudgetStarsAdjustmentPanel` component to only handle budget adjustments
+    - **Files Modified**:
+      - `frontend-react/src/components/admin/BudgetStarsAdjustmentPanel.tsx`
+      - `frontend-react/src/pages/AdminUserDetail.tsx`
+
+  - **Swagger/OpenAPI Documentation**:
+    - Added missing admin endpoints to `backend/openapi.json`:
+      - `GET /api/admin/users/{id}/detail` - Get user detail with budget and trading rooms
+      - `POST /api/admin/users/{id}/adjust-budget` - Adjust user budget (add/remove money)
+      - `POST /api/admin/users/{id}/grant-stars` - Grant stars to user
+      - `POST /api/admin/users/{id}/remove-stars` - Remove stars from user
+    - Updated API version to 1.3.0 with comprehensive descriptions
+
+- **Reasoning / Motivation**:
+  - Google Sign-In was completely broken, preventing user authentication
+  - Budget adjustments were not persisting, making admin features unusable
+  - UI was displaying incorrect data due to type mismatches and caching issues
+  - Documentation was incomplete, missing critical admin endpoints
+  - Need to ensure data consistency and reliability for financial operations
+
+- **Impact**:
+  - ✅ Google Sign-In authentication now works reliably
+  - ✅ Admin can successfully add/remove money from user accounts
+  - ✅ Budget changes immediately reflect in UI
+  - ✅ Database maintains transactional consistency
+  - ✅ No more race conditions or data corruption
+  - ✅ API documentation complete and accurate
+  - ✅ Admin interface is now fully functional
+
+- **Deployment / Ops notes**:
+  - **Frontend**: Rebuild required (`npm run build`)
+  - **Backend**: Restart required to pick up new code
+  - **Database**: No schema changes required
+  - **Apache**: `.htaccess` files already updated with COOP header fix
+  - **Environment**: No new environment variables required
+  - **Rollback**: If issues occur, revert to previous COOP header value `same-origin`
+
+- **Testing**:
+  - ✅ Manual testing: Google Sign-In login successful
+  - ✅ Manual testing: Admin can add money to user account
+  - ✅ Manual testing: UI updates immediately after budget adjustment
+  - ✅ Manual testing: Database shows correct balance_after values
+  - ✅ Manual testing: Budget logs show correct transaction history
+  - ✅ Build verification: TypeScript compilation successful
+  - ✅ Build verification: No ESLint errors
+  - ✅ Build verification: Production build successful (768.61 KB, 221.76 KB gzipped)
+  - ✅ API verification: All admin endpoints responding correctly
+  - ✅ Swagger UI: All endpoints documented and accessible
+
+- **Open questions / next steps**:
+  - Monitor production for any remaining authentication issues
+  - Consider implementing rate limiting for budget adjustments
+  - Consider adding approval workflow for large budget adjustments
+  - Consider implementing audit trail for all admin actions
+  - Plan Phase 3: Trade Room migration to React
+  - Plan Phase 4: Additional admin features (user suspension, data export, etc.)
