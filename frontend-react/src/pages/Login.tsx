@@ -58,24 +58,55 @@ export default function Login() {
         }
       };
 
-      // Load Google Sign-In library
-      if (window.google) {
-        window.google.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: window.handleCredentialResponse,
+      // Wait for Google Sign-In library to load
+      const waitForGoogle = () => {
+        return new Promise<void>((resolve) => {
+          if (window.google) {
+            resolve();
+          } else {
+            const checkInterval = setInterval(() => {
+              if (window.google) {
+                clearInterval(checkInterval);
+                resolve();
+              }
+            }, 100);
+            // Timeout after 5 seconds
+            setTimeout(() => {
+              clearInterval(checkInterval);
+              resolve();
+            }, 5000);
+          }
         });
+      };
 
-        if (googleButtonRef.current) {
-          window.google.accounts.id.renderButton(googleButtonRef.current, {
-            type: 'standard',
-            shape: 'rectangular',
-            theme: 'outline',
-            text: 'signin_with',
-            size: 'large',
-            logo_alignment: 'left',
-            width: '320',
+      await waitForGoogle();
+
+      // Initialize Google Sign-In
+      if (window.google) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: window.handleCredentialResponse,
           });
+
+          if (googleButtonRef.current) {
+            window.google.accounts.id.renderButton(googleButtonRef.current, {
+              type: 'standard',
+              shape: 'rectangular',
+              theme: 'outline',
+              text: 'signin_with',
+              size: 'large',
+              logo_alignment: 'left',
+              width: '320',
+            });
+          }
+        } catch (error) {
+          console.error('Error initializing Google Sign-In:', error);
+          showToast('Failed to initialize Google Sign-In. Please refresh the page.', 'error');
         }
+      } else {
+        console.error('Google Sign-In library failed to load');
+        showToast('Google Sign-In library failed to load. Please refresh the page.', 'error');
       }
     };
 
