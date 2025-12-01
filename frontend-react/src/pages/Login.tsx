@@ -47,53 +47,25 @@ export default function Login() {
       }
     };
 
-    // Wait for Google library to load
-    const waitForGoogleAndInitialize = () => {
+    // Set up the g_id_onload div with the client ID
+    const googleOnloadDiv = document.getElementById('g_id_onload');
+    if (googleOnloadDiv && googleClientId) {
+      console.log('[Login] Setting Google Client ID on g_id_onload div');
+      googleOnloadDiv.setAttribute('data-client_id', googleClientId);
+
+      // Dynamically load the Google Sign-In script (like vanilla JS does)
+      // This ensures the script loads AFTER we've set up the callback and client ID
       if (!window.google) {
-        console.log('[Login] Google library not loaded yet, waiting...');
-        setTimeout(waitForGoogleAndInitialize, 100);
-        return;
+        console.log('[Login] Loading Google Sign-In script dynamically');
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        document.body.appendChild(script);
+      } else {
+        console.log('[Login] Google library already loaded');
       }
-
-      console.log('[Login] Google library loaded, initializing...');
-
-      // Set up the g_id_onload div with the client ID
-      const googleOnloadDiv = document.getElementById('g_id_onload');
-      if (googleOnloadDiv && googleClientId) {
-        console.log('[Login] Setting Google Client ID on g_id_onload div');
-        googleOnloadDiv.setAttribute('data-client_id', googleClientId);
-
-        // Initialize Google Sign-In with the client ID
-        try {
-          window.google.accounts.id.initialize({
-            client_id: googleClientId,
-            callback: window.handleCredentialResponse,
-          });
-          console.log('[Login] Google Sign-In initialized');
-
-          // Now render the button
-          const buttonDiv = document.querySelector('.g_id_signin');
-          if (buttonDiv) {
-            console.log('[Login] Rendering Google Sign-In button');
-            window.google.accounts.id.renderButton(buttonDiv, {
-              type: 'standard',
-              shape: 'rectangular',
-              theme: 'outline',
-              text: 'signin_with',
-              size: 'large',
-              logo_alignment: 'left',
-              width: '320',
-            });
-            console.log('[Login] Google Sign-In button rendered successfully');
-          }
-        } catch (error) {
-          console.error('[Login] Error initializing Google Sign-In:', error);
-        }
-      }
-    };
-
-    // Start waiting for Google library
-    waitForGoogleAndInitialize();
+    }
   }, [login, navigate]);
 
   const handleDemoLogin = async () => {
@@ -147,10 +119,10 @@ export default function Login() {
                    data-ux_mode="popup"
                    data-callback="handleCredentialResponse"
                    data-auto_prompt="false"
-                   data-itp_support="true"
-                   style={{ display: 'none' }}>
+                   data-itp_support="true">
               </div>
-              <div className="g_id_signin flex justify-center mb-6"
+
+              <div className="g_id_signin"
                    data-type="standard"
                    data-shape="rectangular"
                    data-theme="outline"
@@ -159,6 +131,8 @@ export default function Login() {
                    data-logo_alignment="left"
                    data-width="320">
               </div>
+
+              <div className="flex justify-center mb-6"></div>
 
               <div className="relative mb-6">
                 <div className="absolute inset-0 flex items-center">
