@@ -2,6 +2,7 @@ const db = require('../db');
 const { internalError, notFound } = require('../utils/apiError');
 const logger = require('../utils/logger');
 const auditLog = require('../utils/auditLog');
+const budgetService = require('../services/budgetService');
 
 /**
  * List all users (admin only)
@@ -490,68 +491,20 @@ async function adjustBudget(req, res) {
 
     const user = userRows[0];
 
-    // Get current budget, or create one if it doesn't exist
-    let [budgetRows] = await db.execute(
-      'SELECT available_balance FROM user_budgets WHERE user_id = ? AND deleted_at IS NULL',
-      [userId]
-    );
-
-    let balanceBefore = 0;
-
-    if (budgetRows.length === 0) {
-      // Create budget record if it doesn't exist
-      await db.execute(
-        'INSERT INTO user_budgets (user_id, available_balance, locked_balance, currency, status) VALUES (?, ?, ?, ?, ?)',
-        [userId, 0, 0, 'VUSD', 'active']
-      );
-      balanceBefore = 0;
-    } else {
-      // Convert to number to ensure proper arithmetic
-      balanceBefore = parseFloat(budgetRows[0].available_balance);
-    }
-
-    // Check if debit would result in negative balance
-    if (direction === 'OUT' && balanceBefore < amount) {
-      return res.status(400).json({
-        error: 'INSUFFICIENT_FUNDS',
-        message: `User has insufficient balance. Available: ${balanceBefore}, Requested: ${amount}`
-      });
-    }
-
-    // Update budget
-    const newBalance = direction === 'IN' ? balanceBefore + amount : balanceBefore - amount;
-    console.log(`[Admin] Adjusting budget for user ${userId}: ${balanceBefore} ${direction === 'IN' ? '+' : '-'} ${amount} = ${newBalance}`);
-
-    const [updateResult] = await db.execute(
-      'UPDATE user_budgets SET available_balance = ? WHERE user_id = ? AND deleted_at IS NULL',
-      [newBalance, userId]
-    );
-
-    console.log(`[Admin] Update result: affectedRows=${updateResult.affectedRows}`);
-
-    if (updateResult.affectedRows === 0) {
-      return notFound(res, 'Failed to update budget');
-    }
-
-    // Log the budget transaction
+    // Use budgetService for transactional consistency
     const operationType = direction === 'IN' ? 'ADMIN_CREDIT' : 'ADMIN_DEBIT';
-    const [logResult] = await db.execute(
-      `INSERT INTO budget_logs (
-        user_id, direction, operation_type, amount, currency,
-        balance_before, balance_after, correlation_id, meta, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [
-        userId,
-        direction,
-        operationType,
-        amount,
-        'VUSD',
-        balanceBefore,
-        newBalance,
-        `admin-${adminId}-${Date.now()}`,
-        JSON.stringify({ reason, admin_id: adminId, admin_name: adminName })
-      ]
-    );
+    const correlationId = `admin-${adminId}-${Date.now()}`;
+
+    const result = await budgetService.adjustBudget(userId, amount, direction, {
+      currency: 'VUSD',
+      operation_type: operationType,
+      correlation_id: correlationId,
+      meta: { reason, admin_id: adminId, admin_name: adminName }
+    });
+
+    if (result.error) {
+      return res.status(result.status || 400).json({ error: result.error });
+    }
 
     // Log admin action in audit log
     await auditLog.log({
@@ -565,8 +518,8 @@ async function adjustBudget(req, res) {
         amount,
         direction,
         reason,
-        balanceBefore,
-        balanceAfter: newBalance
+        balanceBefore: result.balance_before,
+        balanceAfter: result.balance_after
       }
     });
 
@@ -580,8 +533,8 @@ async function adjustBudget(req, res) {
         amount,
         direction,
         reason,
-        balanceBefore,
-        balanceAfter: newBalance
+        balanceBefore: result.balance_before,
+        balanceAfter: result.balance_after
       }
     });
 
@@ -591,9 +544,9 @@ async function adjustBudget(req, res) {
       user_id: userId,
       amount,
       direction,
-      balance_before: balanceBefore,
-      balance_after: newBalance,
-      log_id: logResult.insertId
+      balance_before: result.balance_before,
+      balance_after: result.balance_after,
+      log_id: result.log_id
     });
   } catch (err) {
     logger.error('[Admin] Error adjusting budget:', err);
