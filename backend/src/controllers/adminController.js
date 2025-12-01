@@ -506,7 +506,8 @@ async function adjustBudget(req, res) {
       );
       balanceBefore = 0;
     } else {
-      balanceBefore = budgetRows[0].available_balance;
+      // Convert to number to ensure proper arithmetic
+      balanceBefore = parseFloat(budgetRows[0].available_balance);
     }
 
     // Check if debit would result in negative balance
@@ -519,10 +520,14 @@ async function adjustBudget(req, res) {
 
     // Update budget
     const newBalance = direction === 'IN' ? balanceBefore + amount : balanceBefore - amount;
+    console.log(`[Admin] Adjusting budget for user ${userId}: ${balanceBefore} ${direction === 'IN' ? '+' : '-'} ${amount} = ${newBalance}`);
+
     const [updateResult] = await db.execute(
       'UPDATE user_budgets SET available_balance = ? WHERE user_id = ? AND deleted_at IS NULL',
       [newBalance, userId]
     );
+
+    console.log(`[Admin] Update result: affectedRows=${updateResult.affectedRows}`);
 
     if (updateResult.affectedRows === 0) {
       return notFound(res, 'Failed to update budget');
