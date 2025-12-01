@@ -59,6 +59,12 @@ Options +FollowSymLinks -Indexes
 
 # Security headers for React app
 <IfModule mod_headers.c>
+    # Cross-Origin-Embedder-Policy - Disabled to allow third-party resources like Google Sign-In
+    # Note: Google Sign-In button iframe doesn't send Cross-Origin-Resource-Policy header
+    # Setting to "unsafe-none" allows loading cross-origin resources without CORP headers
+    # This is necessary for Google OAuth to work properly
+    Header always set Cross-Origin-Embedder-Policy "unsafe-none"
+
     # Content Security Policy - Restrict to necessary sources only
     # Note: 'unsafe-inline' for styles is needed for Tailwind; consider using nonces in future
     Header always set Content-Security-Policy "default-src 'self'; img-src 'self' data: blob: https:; script-src 'self' https://cdn.amplitude.com https://accounts.google.com https://apis.google.com https://static.cloudflareinsights.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; frame-src https://accounts.google.com; frame-ancestors 'none'; connect-src 'self' https://www.bahar.co.il https://bahar.co.il https://mytrips-api.bahar.co.il https://fantasybroker-api.bahar.co.il https://api.amplitude.com https://api.eu.amplitude.com https://sr-client-cfg.eu.amplitude.com https://api.brevo.com https://accounts.google.com https://cloudflareinsights.com https://fonts.googleapis.com https://fonts.gstatic.com https://www.bahar.co.il/fantasybroker-api/; object-src 'none'; base-uri 'self'; form-action 'self';"
@@ -76,11 +82,6 @@ Options +FollowSymLinks -Indexes
     # Required for Google Sign-In which uses postMessage for popup communication
     # Note: Google Sign-In popup is same-origin, so "same-origin" is sufficient
     Header always set Cross-Origin-Opener-Policy "same-origin"
-
-    # Cross-Origin-Embedder-Policy - Strict mode requires CORS headers on all cross-origin resources
-    # If you see runtime failures with third-party scripts/fonts/images, ensure they return proper CORS headers
-    # or consider relaxing to "unsafe-none" if cross-origin isolation is not needed
-    Header always set Cross-Origin-Embedder-Policy "require-corp"
 
     # Strong cache for versioned assets
     <FilesMatch "\.(css|js|png|jpe?g|gif|webp|avif|svg|woff2)$">
