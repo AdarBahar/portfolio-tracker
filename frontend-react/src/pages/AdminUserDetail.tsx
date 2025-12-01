@@ -1,20 +1,104 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader } from 'lucide-react';
 import ThemeToggle from '@/components/header/ThemeToggle';
 import UserProfile from '@/components/header/UserProfile';
-import { useUserDetail, useUserLogs } from '@/hooks/useAdmin';
+import { useUserDetail, useUserLogs, useGrantStars, useRemoveStars } from '@/hooks/useAdmin';
 import { formatCurrency, formatDate } from '@/utils/formatting';
+import BudgetStarsAdjustmentPanel from '@/components/admin/BudgetStarsAdjustmentPanel';
+
+// Stars adjustment form component
+function StarsAdjustmentForm({ user, onSuccess }: { user: any; onSuccess: () => void }) {
+  const [starsAmount, setStarsAmount] = useState('');
+  const [starsAction, setStarsAction] = useState<'grant' | 'remove'>('grant');
+  const [starsReason, setStarsReason] = useState('');
+
+  const { mutate: grantStars, isPending: grantLoading } = useGrantStars();
+  const { mutate: removeStars, isPending: removeLoading } = useRemoveStars();
+
+  const handleAdjustStars = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!starsAmount || !starsReason.trim()) return;
+
+    const mutationFn = starsAction === 'grant' ? grantStars : removeStars;
+    mutationFn(
+      {
+        userId: user.id,
+        stars: parseInt(starsAmount, 10),
+        reason: starsReason,
+      },
+      {
+        onSuccess: () => {
+          setStarsAmount('');
+          setStarsReason('');
+          onSuccess?.();
+        },
+      }
+    );
+  };
+
+  return (
+    <form onSubmit={handleAdjustStars} className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-sm text-muted-foreground">Amount</label>
+          <input
+            type="number"
+            min="0"
+            value={starsAmount}
+            onChange={(e) => setStarsAmount(e.target.value)}
+            placeholder="0"
+            className="w-full px-3 py-2 bg-background border border-white/10 rounded text-foreground text-sm"
+          />
+        </div>
+        <div>
+          <label className="text-sm text-muted-foreground">Action</label>
+          <select
+            value={starsAction}
+            onChange={(e) => setStarsAction(e.target.value as 'grant' | 'remove')}
+            className="w-full px-3 py-2 bg-background border border-white/10 rounded text-foreground text-sm"
+          >
+            <option value="grant">Grant Stars</option>
+            <option value="remove">Remove Stars</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label className="text-sm text-muted-foreground">Reason</label>
+        <input
+          type="text"
+          value={starsReason}
+          onChange={(e) => setStarsReason(e.target.value)}
+          placeholder="e.g., Achievement, Correction, Penalty"
+          className="w-full px-3 py-2 bg-background border border-white/10 rounded text-foreground text-sm"
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={grantLoading || removeLoading || !starsAmount || !starsReason.trim()}
+        className="w-full btn-primary flex items-center justify-center gap-2 disabled:opacity-50"
+      >
+        {(grantLoading || removeLoading) && <Loader className="w-4 h-4 animate-spin" />}
+        {starsAction === 'grant' ? 'Grant' : 'Remove'} {starsAmount || '0'} ⭐
+      </button>
+    </form>
+  );
+}
 
 export default function AdminUserDetail() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const userIdNum = userId ? parseInt(userId, 10) : undefined;
-  const { data: userDetailData, isLoading, error } = useUserDetail(userIdNum);
+  const { data: userDetailData, isLoading, error, refetch } = useUserDetail(userIdNum);
   const { data: logs = [] } = useUserLogs(userIdNum);
 
   const user = userDetailData?.user || null;
   const budget = userDetailData?.budget || null;
   const tradingRooms = userDetailData?.trading_rooms || [];
+
+  const handleAdjustmentSuccess = () => {
+    refetch();
+  };
 
   if (isLoading) {
     return (
@@ -116,7 +200,7 @@ export default function AdminUserDetail() {
             {budget && (
               <div className="bg-card border border-white/10 rounded-lg p-6">
                 <h2 className="text-xl font-bold text-white mb-4">Budget</h2>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-4 mb-6">
                   <div>
                     <p className="text-muted-foreground text-sm">Total Balance</p>
                     <p className="text-foreground font-semibold">
@@ -135,15 +219,34 @@ export default function AdminUserDetail() {
                     <p className="text-warning font-semibold">{formatCurrency(typeof budget.locked_balance === 'number' ? budget.locked_balance : 0)}</p>
                   </div>
                 </div>
+                <div className="border-t border-white/10 pt-6">
+                  <div className="bg-background/50 p-4 rounded-lg border border-white/10">
+                    <h3 className="text-lg font-semibold text-white mb-4">Adjust Budget</h3>
+                    {user && (
+                      <BudgetStarsAdjustmentPanel
+                        user={user as any}
+                        onSuccess={handleAdjustmentSuccess}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
             {/* Stars Information */}
             <div className="bg-card border border-white/10 rounded-lg p-6">
               <h2 className="text-xl font-bold text-white mb-4">⭐ Stars</h2>
-              <div>
+              <div className="mb-6">
                 <p className="text-muted-foreground text-sm">Total Stars</p>
                 <p className="text-warning font-semibold text-3xl">{userDetailData?.total_stars || 0}</p>
+              </div>
+              <div className="border-t border-white/10 pt-6">
+                <div className="bg-background/50 p-4 rounded-lg border border-white/10">
+                  <h3 className="text-lg font-semibold text-white mb-4">Adjust Stars</h3>
+                  {user && (
+                    <StarsAdjustmentForm user={user as any} onSuccess={handleAdjustmentSuccess} />
+                  )}
+                </div>
               </div>
             </div>
 

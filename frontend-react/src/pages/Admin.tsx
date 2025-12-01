@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Users, Settings, BarChart3, Gift, ArrowLeft } from 'lucide-react';
 import ThemeToggle from '@/components/header/ThemeToggle';
 import UserProfile from '@/components/header/UserProfile';
-import { useUsers, useUpdateUserAdmin, useUserDetail } from '@/hooks/useAdmin';
+import { useUsers, useUpdateUserAdmin } from '@/hooks/useAdmin';
 import { useRakeConfig, useRakeStats, useUpdateRakeConfig } from '@/hooks/useRake';
 import { usePromotions, useCreatePromotion } from '@/hooks/usePromotions';
 import UserTable from '@/components/admin/UserTable';
-import UserDetailModal from '@/components/admin/UserDetailModal';
 import RakeConfigForm from '@/components/admin/RakeConfigForm';
 import PromotionsList from '@/components/admin/PromotionsList';
 import PromotionForm from '@/components/admin/PromotionForm';
@@ -15,12 +14,10 @@ import PromotionForm from '@/components/admin/PromotionForm';
 export default function Admin() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'rake' | 'promotions'>('overview');
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [showPromotionForm, setShowPromotionForm] = useState(false);
 
   // Hooks
   const { data: users = [], isLoading: usersLoading } = useUsers();
-  const { data: userDetail, isLoading: userDetailLoading } = useUserDetail(selectedUserId || undefined);
   const { mutate: updateUserAdmin } = useUpdateUserAdmin();
   const { data: rakeConfig, isLoading: rakeConfigLoading } = useRakeConfig();
   const { data: rakeStats } = useRakeStats();
@@ -198,7 +195,7 @@ export default function Admin() {
             <UserTable
               users={users}
               isLoading={usersLoading}
-              onViewDetail={(userId) => setSelectedUserId(userId)}
+              onViewDetail={(userId) => navigate(`/admin/user/${userId}`)}
               onToggleAdmin={(userId, isAdmin) => updateUserAdmin({ userId, isAdmin })}
             />
           </div>
@@ -234,12 +231,6 @@ export default function Admin() {
         )}
 
         {/* Modals */}
-        <UserDetailModal
-          user={userDetail ? { ...userDetail.user, budget: userDetail.budget, budget_logs: userDetail.budget_logs, trading_rooms: userDetail.trading_rooms, standings: userDetail.standings, total_stars: userDetail.total_stars } : null}
-          isLoading={userDetailLoading}
-          onClose={() => setSelectedUserId(null)}
-        />
-
         {showPromotionForm && (
           <PromotionForm
             onClose={() => setShowPromotionForm(false)}
