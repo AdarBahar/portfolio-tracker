@@ -28,21 +28,8 @@ export default function Login() {
   // Initialize Google Sign-In
   useEffect(() => {
     const initGoogleSignIn = async () => {
-      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      const apiUrl = import.meta.env.VITE_API_URL;
-
-      // Validate required environment variables
-      if (!googleClientId) {
-        console.error('VITE_GOOGLE_CLIENT_ID environment variable is not set');
-        showToast('Google Sign-In is not configured. Please contact support.', 'error');
-        return;
-      }
-
-      if (!apiUrl) {
-        console.error('VITE_API_URL environment variable is not set');
-        showToast('API is not configured. Please contact support.', 'error');
-        return;
-      }
+      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '539842594800-bpqtcpi56vaf7nkiqcf1796socl2cjqp.apps.googleusercontent.com';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
       // Define callback in global scope
       window.handleCredentialResponse = async (response: any) => {
