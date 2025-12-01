@@ -205,18 +205,18 @@ export default function AdminUserDetail() {
                     <p className="text-muted-foreground text-sm">Total Balance</p>
                     <p className="text-foreground font-semibold">
                       {formatCurrency(
-                        (typeof budget.available_balance === 'number' ? budget.available_balance : 0) +
-                        (typeof budget.locked_balance === 'number' ? budget.locked_balance : 0)
+                        parseFloat(budget.available_balance as any) +
+                        parseFloat(budget.locked_balance as any)
                       )}
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-sm">Available</p>
-                    <p className="text-success font-semibold">{formatCurrency(typeof budget.available_balance === 'number' ? budget.available_balance : 0)}</p>
+                    <p className="text-success font-semibold">{formatCurrency(parseFloat(budget.available_balance as any))}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-sm">Locked</p>
-                    <p className="text-warning font-semibold">{formatCurrency(typeof budget.locked_balance === 'number' ? budget.locked_balance : 0)}</p>
+                    <p className="text-warning font-semibold">{formatCurrency(parseFloat(budget.locked_balance as any))}</p>
                   </div>
                 </div>
                 <div className="border-t border-white/10 pt-6">
