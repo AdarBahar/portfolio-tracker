@@ -78,10 +78,10 @@ Options +FollowSymLinks -Indexes
     # Referrer Policy
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
 
-    # Cross-Origin-Opener-Policy - Allow postMessage from same-origin popups
+    # Cross-Origin-Opener-Policy - Allow postMessage from popups
     # Required for Google Sign-In which uses postMessage for popup communication
-    # Note: Google Sign-In popup is same-origin, so "same-origin" is sufficient
-    Header always set Cross-Origin-Opener-Policy "same-origin"
+    # Must be "same-origin-allow-popups" to allow cross-origin popups to communicate via postMessage
+    Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups"
 
     # Strong cache for versioned assets
     <FilesMatch "\.(css|js|png|jpe?g|gif|webp|avif|svg|woff2)$">
