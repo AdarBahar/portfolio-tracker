@@ -5,7 +5,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
+import DashboardNew from './pages/DashboardNew';
 import TradeRoom from './pages/TradeRoom';
 import BullPenDetail from './pages/BullPenDetail';
 import Admin from './pages/Admin';
@@ -39,7 +39,7 @@ function App() {
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <DashboardNew />
                 </ProtectedRoute>
               }
             />

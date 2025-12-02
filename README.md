@@ -419,6 +419,60 @@ http://localhost:5173/fantasybroker/react/
 - Source maps - easier debugging
 - TypeScript checking - catches errors before build
 
+#### Production Build & Deployment
+
+**Build for production:**
+
+```bash
+cd frontend-react
+npm run build
+```
+
+This creates an optimized production build in the `react/` directory with:
+- Minified JavaScript and CSS
+- Source maps disabled (security)
+- Tree-shaking enabled
+- Code splitting for routes
+- Gzip compression ready
+
+**Deploy to production server:**
+
+```bash
+# Option 1: Using rsync (recommended)
+rsync -avz --delete react/ user@server:/var/www/fantasy-broker/react/
+
+# Option 2: Using SCP
+scp -r react/* user@server:/var/www/fantasy-broker/react/
+
+# Option 3: Using Git
+ssh user@server "cd /var/www/fantasy-broker && git pull origin main && npm run build"
+```
+
+**Verify deployment:**
+
+```bash
+# Check that files are deployed
+ssh user@server "ls -la /var/www/fantasy-broker/react/"
+
+# Test API connectivity
+curl -I https://www.bahar.co.il/fantasybroker-api/api/health
+
+# Check that app loads
+curl -I https://www.bahar.co.il/fantasybroker/react/
+```
+
+**Post-deployment checklist:**
+
+- [ ] Verify app loads at `https://www.bahar.co.il/fantasybroker/react/`
+- [ ] Check browser console for errors (F12)
+- [ ] Test login with Google OAuth
+- [ ] Test demo mode login
+- [ ] Verify API calls are working (Network tab)
+- [ ] Check that debug badge appears/disappears based on `MARKET_DATA_MODE`
+- [ ] Test on mobile devices
+- [ ] Verify dark mode toggle works
+- [ ] Check that all pages load correctly
+
 #### Build Troubleshooting
 
 **Build fails with TypeScript errors**
@@ -447,6 +501,61 @@ rm -rf frontend-react/node_modules frontend-react/.vite
 npm install
 npm run build
 ```
+
+#### Environment Variables for Production
+
+**Frontend environment variables** (set in `frontend-react/.env`):
+
+```bash
+# API endpoint - automatically detected from hostname in production
+# For local development, set explicitly:
+VITE_API_URL=http://localhost:3000
+
+# Google OAuth Client ID - required for Google Sign-In
+VITE_GOOGLE_CLIENT_ID=your-google-client-id-here.apps.googleusercontent.com
+```
+
+**Backend environment variables** (set in `backend/.env`):
+
+```bash
+# Server configuration
+PORT=3000
+NODE_ENV=production
+
+# Database configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=portfolio_user
+DB_PASSWORD=secure_password_here
+DB_NAME=portfolio_tracker
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id-here.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+
+# Market data mode
+# 'production' - Normal behavior: 15-minute cache TTL, calls Finnhub when cache expires
+# 'debug' - Testing mode: Infinite cache, only first call per symbol hits Finnhub (throttles API usage)
+MARKET_DATA_MODE=production
+
+# Finnhub API key
+FINNHUB_API_KEY=your-finnhub-api-key-here
+
+# JWT secret for token signing
+JWT_SECRET=your-secure-jwt-secret-here
+
+# CORS configuration
+CORS_ORIGIN=https://www.bahar.co.il
+```
+
+**Important security notes:**
+
+- Never commit `.env` files to version control
+- Use strong, unique passwords for database
+- Rotate JWT_SECRET regularly
+- Use HTTPS in production
+- Keep API keys secure and rotate them periodically
+- Use environment-specific configurations
 
 #### Deployment Troubleshooting
 
