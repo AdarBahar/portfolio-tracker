@@ -173,13 +173,22 @@ export default function Login() {
 
         // Trigger One Tap prompt directly
         window.google.accounts.id.prompt((notification: any) => {
+          const reason = notification.getNotDisplayedReason?.();
           console.log('[Google Sign-In] Prompt notification:', {
             isDisplayed: notification.isDisplayed?.(),
             isNotDisplayed: notification.isNotDisplayed?.(),
-            getNotDisplayedReason: notification.getNotDisplayedReason?.(),
+            getNotDisplayedReason: reason,
             isSkippedMoment: notification.isSkippedMoment?.(),
             isDismissedMoment: notification.isDismissedMoment?.(),
           });
+
+          // If the prompt is not displayed due to unregistered origin, show helpful message
+          if (reason === 'unregistered_origin') {
+            console.warn('[Google Sign-In] Origin not registered in Google Cloud Console');
+            setFormError(
+              'Google Sign-In is not configured for this origin. Please use Demo Mode or Email/Password login.'
+            );
+          }
         });
       } else {
         console.warn('[Google Sign-In] Google library not loaded yet');
