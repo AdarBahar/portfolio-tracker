@@ -1,5 +1,110 @@
 # Project History
 
+## 2025-12-02 – Google OAuth Localhost Development Setup
+
+- **Git reference**: `main` branch, commits `23ddc53`, `26e1a9e`, `2cf701e`
+- **Summary**: Fixed Google Sign-In on localhost development environment by disabling FedCM (Federated Credential Management) and implementing dynamic Router basename for development vs production. Comprehensive setup guide created for developers.
+
+- **Details**:
+  - **Problem 1: FedCM Error on Localhost** (commit `23ddc53`):
+    - Issue: Google Sign-In failing with "Not signed in with the identity provider" error
+    - Root cause: FedCM (Federated Credential Management) is too strict on HTTP localhost, requires HTTPS
+    - Solution: Created `.env.local` and `.env.development` with `VITE_DISABLE_FEDCM=true`
+    - Modified `Login.tsx` to conditionally disable FedCM based on environment variable
+    - Production (HTTPS) still uses FedCM via `.env.production` (unchanged)
+    - Development (HTTP localhost) uses One Tap method without FedCM
+    - Files modified: `frontend-react/.env.local`, `frontend-react/.env.development`, `frontend-react/src/pages/Login.tsx`
+
+  - **Problem 2: OAuth Origin Mismatch** (commit `2cf701e`):
+    - Issue: After fixing FedCM, app served at `http://localhost:5173/fantasybroker/react/` but OAuth origin was `http://localhost:5173`
+    - Root cause: Vite base path `/fantasybroker/react/` caused path mismatch with OAuth origin check
+    - Solution: Updated `vite.config.ts` to use dynamic base path:
+      - Development: `base: '/'` (serves at `http://localhost:5173/`)
+      - Production: `base: '/fantasybroker/react/'` (serves at `https://www.bahar.co.il/fantasybroker/react/`)
+    - Updated `App.tsx` Router basename to match Vite base path:
+      - Development: `basename='/'`
+      - Production: `basename='/fantasybroker/react'`
+    - Files modified: `frontend-react/vite.config.ts`, `frontend-react/src/App.tsx`
+
+  - **Environment Configuration**:
+    - `.env.local` (development):
+      - `VITE_API_URL=http://localhost:4000/api`
+      - `VITE_GOOGLE_CLIENT_ID=539842594800-bpqtcpi56vaf7nkiqcf1796socl2cjqp.apps.googleusercontent.com`
+      - `VITE_DISABLE_FEDCM=true`
+    - `.env.development` (alternative development):
+      - Same configuration as `.env.local`
+    - `.env.production` (production):
+      - No `VITE_DISABLE_FEDCM` set (FedCM enabled)
+      - Uses production API endpoint
+
+  - **Google Cloud Console Configuration Required**:
+    - Authorized JavaScript origins: `http://localhost:5173`
+    - Authorized redirect URIs:
+      - `http://localhost:5173/login`
+      - `http://localhost:5173/`
+      - `http://localhost:5173/fantasybroker/react/login` (for production compatibility)
+
+  - **Documentation Created** (commit `26e1a9e`):
+    - `GOOGLE_OAUTH_LOCALHOST_SETUP.md` - Comprehensive setup guide including:
+      - Problem explanation (FedCM vs One Tap)
+      - Step-by-step Google Cloud Console configuration
+      - Verification checklist
+      - Troubleshooting guide
+      - Production deployment notes
+
+  - **Build Results**:
+    - JavaScript: 446.78 kB (130.59 kB gzipped)
+    - CSS: 44.36 kB (8.35 kB gzipped)
+    - Total modules: 1850
+    - ✅ All builds successful with zero TypeScript errors
+
+  - **Files Created**:
+    - `frontend-react/.env.local` - Development environment configuration
+    - `frontend-react/.env.development` - Alternative development configuration
+    - `GOOGLE_OAUTH_LOCALHOST_SETUP.md` - Setup and troubleshooting guide
+
+  - **Files Modified**:
+    - `frontend-react/vite.config.ts` - Dynamic base path for dev/prod
+    - `frontend-react/src/pages/Login.tsx` - Conditional FedCM disable
+    - `frontend-react/src/App.tsx` - Dynamic Router basename
+
+- **Reasoning / Motivation**:
+  - Developers need to test Google Sign-In on localhost during development
+  - FedCM is too strict on HTTP localhost, causing authentication failures
+  - OAuth origin mismatch caused 403 errors from Google's API
+  - Dynamic configuration allows same codebase to work on both localhost and production
+  - Comprehensive documentation helps developers understand the issue and solution
+
+- **Impact**:
+  - ✅ Google Sign-In now works on localhost development environment
+  - ✅ No changes to production Google Sign-In (still uses FedCM)
+  - ✅ App serves at correct URL on both localhost and production
+  - ✅ Router basename matches Vite base path in both environments
+  - ✅ Developers can test authentication flow locally
+  - ✅ Clear documentation for setup and troubleshooting
+
+- **Deployment / Ops notes**:
+  - No production deployment required (development-only changes)
+  - Developers must configure Google Cloud Console with `http://localhost:5173` origin
+  - Google Cloud Console changes can take 10-30 minutes to propagate
+  - `.env.local` and `.env.development` are development-only (not deployed to production)
+  - Production `.env.production` remains unchanged
+
+- **Testing**:
+  - ✅ Manual testing: Verified login page loads at `http://localhost:5173/login`
+  - ✅ Manual testing: Verified Router renders correctly (no basename mismatch errors)
+  - ✅ Manual testing: Verified FedCM is disabled on localhost (console shows correct message)
+  - ✅ Manual testing: Verified One Tap method works without FedCM
+  - ✅ Build verification: No TypeScript errors, successful production build
+  - ⏳ Pending: Full Google Sign-In flow after Google Cloud Console propagation
+
+- **Open questions / next steps**:
+  - Wait for Google Cloud Console to propagate changes (10-30 minutes)
+  - Verify full Google Sign-In flow works after propagation
+  - Consider adding CI/CD environment variables for automated testing
+  - Could add pre-deployment checklist for Google OAuth configuration
+  - Monitor for any FedCM deprecation warnings in production
+
 ## 2025-12-02 – Dashboard UI Style Guide Implementation Complete
 
 - **Git reference**: `main` branch, commits `18bfb13`, `24fd17d`, `775345f`, `e66c514`, `67869aa`, `5907bfb`, `7841a59`

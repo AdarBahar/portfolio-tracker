@@ -1,6 +1,7 @@
 # Update history doc
 update @/Users/adar.bahar/Code/portfolio-tracker/docs/PROJECT_HISTORY.md based on the instructions on @/Users/adar.bahar/Code/portfolio-tracker/project_history_prompt.md 
 Add to project_history.md and readme.md instructions on how to build and deploy the react to production. Update the repo with all changes
+Update github repo and merge to main
 
 # PROMPT FOR HISTORY MANAGEMENT and repo, swagger
 Make sure to update the @/Users/adar.bahar/Code/portfolio-tracker/schema.mysql.sql with the recent updates and for it to hold to current, working database and tables configuration.

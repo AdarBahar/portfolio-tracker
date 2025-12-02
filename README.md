@@ -411,13 +411,59 @@ npm run dev
 **Access the app:**
 
 ```
-http://localhost:5173/fantasybroker/react/
+http://localhost:5173/
 ```
+
+**Note:** The development server uses `base: '/'` to avoid OAuth origin mismatches. Production uses `base: '/fantasybroker/react/'`.
 
 **Features:**
 - Hot module replacement (HMR) - changes reflect instantly
 - Source maps - easier debugging
 - TypeScript checking - catches errors before build
+
+#### Google OAuth Setup for Localhost Development
+
+To test Google Sign-In on localhost, you need to configure Google Cloud Console:
+
+**Step 1: Add localhost origin to Google Cloud Console**
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Select your project
+3. Go to APIs & Services → Credentials
+4. Click on your OAuth 2.0 Client ID
+5. Add to **Authorized JavaScript origins**:
+   - `http://localhost:5173`
+6. Add to **Authorized redirect URIs**:
+   - `http://localhost:5173/login`
+   - `http://localhost:5173/`
+   - `http://localhost:5173/fantasybroker/react/login` (for production compatibility)
+7. Click Save
+
+**Step 2: Wait for propagation**
+
+Google's security settings can take 10-30 minutes to propagate. Wait before testing.
+
+**Step 3: Test Google Sign-In**
+
+1. Start the dev server: `npm run dev`
+2. Open `http://localhost:5173/login`
+3. Click "Google" button
+4. You should see the Google One Tap prompt
+5. Sign in with your Google account
+
+**Troubleshooting:**
+
+- **"The given origin is not allowed for the given client ID"**:
+  - Verify you added `http://localhost:5173` (without path) to Authorized JavaScript origins
+  - Wait 10-30 minutes for Google to propagate changes
+  - Try incognito mode to clear browser cache
+
+- **"Not signed in with the identity provider"**:
+  - This is expected on HTTP localhost (FedCM is disabled)
+  - The app uses One Tap method instead
+  - This is normal and secure for development
+
+**Note:** FedCM (Federated Credential Management) is disabled on localhost development to avoid strict HTTPS requirements. Production uses FedCM for enhanced security.
 
 #### Production Build & Deployment
 
