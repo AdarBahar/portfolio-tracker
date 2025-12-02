@@ -1,16 +1,33 @@
-import React from 'react';
-import { Loader } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Loader, TrendingUp, TrendingDown } from 'lucide-react';
 import { usePositions } from '@/hooks/useBullPenOrders';
 import { useMarketData } from '@/hooks/useMarketData';
+import { useUserPositions, useTotalPnL, usePositionStats } from '@/hooks/usePositionTracking';
 import { formatCurrency } from '@/utils/formatting';
 import { calculatePositionValue, calculatePositionGainLoss } from '@/utils/tradeRoomCalculations';
+import { websocketService } from '@/services/websocketService';
 
 interface PortfolioViewProps {
   bullPenId: number;
+  cash?: number;
 }
 
-export default function PortfolioView({ bullPenId }: PortfolioViewProps) {
-  const { data: positions = [], isLoading: positionsLoading } = usePositions(bullPenId, true);
+export default function PortfolioView({ bullPenId, cash = 0 }: PortfolioViewProps) {
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const { data: positions = [], isLoading: positionsLoading, refetch } = usePositions(bullPenId, true);
+
+  // Subscribe to position updates
+  useEffect(() => {
+    if (!websocketService.isConnected()) return;
+
+    const unsubscribe = websocketService.on('position_update', (data) => {
+      if (data.bullPenId === bullPenId && autoRefresh) {
+        refetch();
+      }
+    });
+
+    return unsubscribe;
+  }, [bullPenId, autoRefresh, refetch]);
 
   if (positionsLoading) {
     return (
@@ -19,6 +36,18 @@ export default function PortfolioView({ bullPenId }: PortfolioViewProps) {
       </div>
     );
   }
+
+  // Calculate portfolio stats
+  const positionsWithValues = positions.map((pos: any) => ({
+    ...pos,
+    marketValue: calculatePositionValue(pos, pos.currentPrice || pos.avgCost),
+  }));
+
+  const totalPositionsValue = positionsWithValues.reduce((sum: number, pos: any) => sum + pos.marketValue, 0);
+  const portfolioValue = cash + totalPositionsValue;
+  const totalCost = positionsWithValues.reduce((sum: number, pos: any) => sum + (pos.qty * pos.avgCost), 0);
+  const totalPnL = portfolioValue - (cash + totalCost);
+  const totalPnLPct = totalCost > 0 ? (totalPnL / totalCost) * 100 : 0;
 
   if (positions.length === 0) {
     return (
@@ -30,6 +59,43 @@ export default function PortfolioView({ bullPenId }: PortfolioViewProps) {
 
   return (
     <div className="space-y-6">
+      {/* Portfolio Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="card-base p-4">
+          <p className="text-xs text-muted-foreground mb-1">Cash</p>
+          <p className="text-lg font-semibold text-foreground">{formatCurrency(cash)}</p>
+        </div>
+
+        <div className="card-base p-4">
+          <p className="text-xs text-muted-foreground mb-1">Positions Value</p>
+          <p className="text-lg font-semibold text-foreground">{formatCurrency(totalPositionsValue)}</p>
+        </div>
+
+        <div className="card-base p-4">
+          <p className="text-xs text-muted-foreground mb-1">Portfolio Value</p>
+          <p className="text-lg font-semibold text-foreground">{formatCurrency(portfolioValue)}</p>
+        </div>
+
+        <div className={`card-base p-4 ${totalPnL >= 0 ? 'border-success/30' : 'border-destructive/30'}`}>
+          <p className="text-xs text-muted-foreground mb-1">Total P&L</p>
+          <p className={`text-lg font-semibold ${totalPnL >= 0 ? 'text-success' : 'text-destructive'}`}>
+            {formatCurrency(totalPnL)} ({totalPnLPct.toFixed(2)}%)
+          </p>
+        </div>
+      </div>
+      {/* Controls */}
+      <div className="flex justify-end">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={autoRefresh}
+            onChange={(e) => setAutoRefresh(e.target.checked)}
+            className="w-4 h-4 rounded"
+          />
+          <span className="text-sm text-muted-foreground">Auto-refresh</span>
+        </label>
+      </div>
+
       {/* Positions Table */}
       <div className="card-base overflow-hidden">
         <div className="overflow-x-auto">

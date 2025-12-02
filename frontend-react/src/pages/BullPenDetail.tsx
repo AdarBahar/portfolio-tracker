@@ -5,15 +5,22 @@ import { useBullPen } from '@/hooks/useBullPens';
 import TradingPanel from '@/components/tradeRoom/TradingPanel';
 import PortfolioView from '@/components/tradeRoom/PortfolioView';
 import LeaderboardView from '@/components/tradeRoom/LeaderboardView';
+import PositionTracker from '@/components/tradeRoom/PositionTracker';
+import OrderHistory from '@/components/tradeRoom/OrderHistory';
+import SnapshotHistory from '@/components/tradeRoom/SnapshotHistory';
+import NotificationCenter from '@/components/tradeRoom/NotificationCenter';
 import TopBar from '@/components/dashboard/TopBar';
+import { websocketService } from '@/services/websocketService';
+import { STORAGE_KEYS } from '@/lib/api';
 
-type TabType = 'trading' | 'portfolio' | 'leaderboard';
+type TabType = 'trading' | 'portfolio' | 'leaderboard' | 'positions' | 'orders' | 'history';
 
 export default function BullPenDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('trading');
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [wsConnected, setWsConnected] = useState(false);
 
   const bullPenId = id ? parseInt(id, 10) : undefined;
   const { data: bullPen, isLoading } = useBullPen(bullPenId);
@@ -27,6 +34,23 @@ export default function BullPenDetail() {
   const handleClearNotifications = () => {
     setNotifications([]);
   };
+
+  // Connect to WebSocket on mount
+  useEffect(() => {
+    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    if (token && !websocketService.isConnected()) {
+      websocketService.connect(token)
+        .then(() => setWsConnected(true))
+        .catch(err => console.error('WebSocket connection failed:', err));
+    }
+
+    // Subscribe to connection changes
+    const unsubscribe = websocketService.onConnectionChange((connected) => {
+      setWsConnected(connected);
+    });
+
+    return unsubscribe;
+  }, []);
 
   // Navigate to trade-room if bull pen not found (after loading completes)
   useEffect(() => {
@@ -88,7 +112,7 @@ export default function BullPenDetail() {
 
         {/* Tabs */}
         <div className="flex gap-4 mb-8 border-b border-border overflow-x-auto pb-2">
-          {(['trading', 'portfolio', 'leaderboard'] as const).map((tab) => (
+          {(['trading', 'portfolio', 'positions', 'orders', 'leaderboard', 'history'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -98,24 +122,46 @@ export default function BullPenDetail() {
                   : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'positions' ? 'Positions' : tab === 'orders' ? 'Orders' : tab === 'history' ? 'History' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
 
         {/* Tab Content */}
         {activeTab === 'trading' && bullPenId && (
-          <TradingPanel bullPenId={bullPenId} />
+          <TradingPanel bullPenId={bullPenId} availableCash={bullPen?.startingCash || 0} />
         )}
 
         {activeTab === 'portfolio' && bullPenId && (
-          <PortfolioView bullPenId={bullPenId} />
+          <PortfolioView bullPenId={bullPenId} cash={bullPen?.startingCash || 0} />
+        )}
+
+        {activeTab === 'positions' && bullPenId && (
+          <PositionTracker bullPenId={bullPenId} />
+        )}
+
+        {activeTab === 'orders' && bullPenId && (
+          <OrderHistory bullPenId={bullPenId} limit={50} />
         )}
 
         {activeTab === 'leaderboard' && bullPenId && (
-          <LeaderboardView bullPenId={bullPenId} />
+          <LeaderboardView bullPenId={bullPenId} isHost={bullPen?.hostUserId === parseInt(localStorage.getItem(STORAGE_KEYS.USER) || '0')} />
+        )}
+
+        {activeTab === 'history' && bullPenId && (
+          <SnapshotHistory bullPenId={bullPenId} limit={20} />
         )}
       </main>
+
+      {/* Notification Center */}
+      {bullPenId && <NotificationCenter bullPenId={bullPenId} />}
+
+      {/* WebSocket Status Indicator */}
+      {!wsConnected && (
+        <div className="fixed top-20 right-4 px-4 py-2 bg-warning/10 border border-warning/30 rounded-lg text-warning text-sm">
+          Connecting to real-time updates...
+        </div>
+      )}
     </div>
   );
 }

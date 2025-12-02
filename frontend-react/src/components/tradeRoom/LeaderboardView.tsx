@@ -1,13 +1,39 @@
-import { Loader, Trophy } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Loader, Trophy, RefreshCw, History } from 'lucide-react';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
+import { useLeaderboardSnapshot, useCreateLeaderboardSnapshot } from '@/hooks/useLeaderboardSnapshot';
 import { formatCurrency } from '@/utils/formatting';
+import { websocketService } from '@/services/websocketService';
 
 interface LeaderboardViewProps {
   bullPenId: number;
+  isHost?: boolean;
 }
 
-export default function LeaderboardView({ bullPenId }: LeaderboardViewProps) {
-  const { data: leaderboardData, isLoading } = useLeaderboard(bullPenId);
+export default function LeaderboardView({ bullPenId, isHost = false }: LeaderboardViewProps) {
+  const [showSnapshot, setShowSnapshot] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+
+  const { data: leaderboardData, isLoading, refetch } = useLeaderboard(bullPenId);
+  const { data: snapshotData } = useLeaderboardSnapshot(bullPenId);
+  const { mutate: createSnapshot, isPending: isCreatingSnapshot } = useCreateLeaderboardSnapshot();
+
+  // Subscribe to real-time leaderboard updates
+  useEffect(() => {
+    if (!websocketService.isConnected()) return;
+
+    const unsubscribe = websocketService.on('leaderboard_update', (data) => {
+      if (data.bullPenId === bullPenId && autoRefresh) {
+        refetch();
+      }
+    });
+
+    return unsubscribe;
+  }, [bullPenId, autoRefresh, refetch]);
+
+  const handleCreateSnapshot = () => {
+    createSnapshot(bullPenId);
+  };
 
   if (isLoading) {
     return (
@@ -29,6 +55,47 @@ export default function LeaderboardView({ bullPenId }: LeaderboardViewProps) {
 
   return (
     <div className="space-y-6">
+      {/* Controls */}
+      <div className="flex flex-wrap gap-2 items-center justify-between">
+        <div className="flex gap-2">
+          <button
+            onClick={() => refetch()}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </button>
+
+          {isHost && (
+            <button
+              onClick={handleCreateSnapshot}
+              disabled={isCreatingSnapshot}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-success/10 hover:bg-success/20 text-success transition-colors disabled:opacity-50"
+            >
+              <History className="w-4 h-4" />
+              {isCreatingSnapshot ? 'Creating...' : 'Create Snapshot'}
+            </button>
+          )}
+        </div>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={autoRefresh}
+            onChange={(e) => setAutoRefresh(e.target.checked)}
+            className="w-4 h-4 rounded"
+          />
+          <span className="text-sm text-muted-foreground">Auto-refresh</span>
+        </label>
+      </div>
+
+      {/* Snapshot Info */}
+      {snapshotData && (
+        <div className="text-xs text-muted-foreground text-center">
+          Last snapshot: {new Date(snapshotData.entries[0]?.snapshotAt).toLocaleTimeString()}
+        </div>
+      )}
+
       {/* Leaderboard Table */}
       <div className="card-base overflow-hidden">
         <div className="overflow-x-auto">

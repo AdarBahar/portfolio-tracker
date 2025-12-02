@@ -1,30 +1,56 @@
 import { useState } from 'react';
-import { Loader } from 'lucide-react';
+import { Loader, AlertCircle, CheckCircle } from 'lucide-react';
 import { usePlaceOrder } from '@/hooks/useBullPenOrders';
 import { useMarketData } from '@/hooks/useMarketData';
 import { formatCurrency } from '@/utils/formatting';
 
 interface TradingPanelProps {
   bullPenId: number;
+  availableCash?: number;
 }
 
-export default function TradingPanel({ bullPenId }: TradingPanelProps) {
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export default function TradingPanel({ bullPenId, availableCash = 0 }: TradingPanelProps) {
   const [symbol, setSymbol] = useState('');
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [type, setType] = useState<'market' | 'limit'>('market');
   const [qty, setQty] = useState('');
   const [limitPrice, setLimitPrice] = useState('');
+  const [errors, setErrors] = useState<ValidationError[]>([]);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const { data: marketData, isLoading: priceLoading } = useMarketData(symbol || undefined);
   const { mutate: placeOrder, isPending } = usePlaceOrder(bullPenId);
 
+  const validateOrder = (): boolean => {
+    const newErrors: ValidationError[] = [];
+
+    if (!symbol) newErrors.push({ field: 'symbol', message: 'Symbol is required' });
+    if (!qty || Number(qty) <= 0) newErrors.push({ field: 'qty', message: 'Quantity must be greater than 0' });
+    if (type === 'limit' && (!limitPrice || Number(limitPrice) <= 0)) {
+      newErrors.push({ field: 'limitPrice', message: 'Limit price must be greater than 0' });
+    }
+
+    const currentPrice = marketData?.price || 0;
+    const estimatedTotal = Number(qty) * (type === 'limit' ? Number(limitPrice) : currentPrice);
+
+    if (side === 'buy' && estimatedTotal > availableCash) {
+      newErrors.push({ field: 'qty', message: `Insufficient cash. Need ${formatCurrency(estimatedTotal)}, have ${formatCurrency(availableCash)}` });
+    }
+
+    setErrors(newErrors);
+    return newErrors.length === 0;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setSuccessMessage('');
 
-    if (!symbol || !qty) {
-      alert('Please fill in all required fields');
-      return;
-    }
+    if (!validateOrder()) return;
 
     const orderData = {
       symbol: symbol.toUpperCase(),
@@ -36,11 +62,17 @@ export default function TradingPanel({ bullPenId }: TradingPanelProps) {
 
     placeOrder(orderData, {
       onSuccess: () => {
+        setSuccessMessage(`Order placed successfully!`);
         setSymbol('');
         setQty('');
         setLimitPrice('');
         setSide('buy');
         setType('market');
+        setErrors([]);
+        setTimeout(() => setSuccessMessage(''), 3000);
+      },
+      onError: (error: any) => {
+        setErrors([{ field: 'submit', message: error.message || 'Failed to place order' }]);
       },
     });
   };
@@ -51,6 +83,34 @@ export default function TradingPanel({ bullPenId }: TradingPanelProps) {
   return (
     <div className="card-base p-6 max-w-md">
       <h2 className="text-2xl font-bold text-white mb-6">Place Order</h2>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-4 p-3 bg-success/10 border border-success/30 rounded-md flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 text-success" />
+          <p className="text-sm text-success">{successMessage}</p>
+        </div>
+      )}
+
+      {/* Error Messages */}
+      {errors.length > 0 && (
+        <div className="mb-4 space-y-2">
+          {errors.map((error, idx) => (
+            <div key={idx} className="p-3 bg-destructive/10 border border-destructive/30 rounded-md flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
+              <p className="text-sm text-destructive">{error.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Available Cash */}
+      {availableCash > 0 && (
+        <div className="mb-4 p-3 bg-primary/10 border border-primary/30 rounded-md">
+          <p className="text-xs text-muted-foreground">Available Cash</p>
+          <p className="text-lg font-semibold text-foreground">{formatCurrency(availableCash)}</p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Symbol */}
