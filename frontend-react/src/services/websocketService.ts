@@ -29,9 +29,11 @@ class WebSocketService {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const hostname = window.location.hostname;
 
-    // In production, connect to port 4001 for WebSocket server
-    // In development, also use port 4001
-    const port = ':4001';
+    // In production (Phusion Passenger), WebSocket is attached to same HTTP server
+    // So we connect to the same port as the REST API (port 4000)
+    // The HTTP server will upgrade the connection to WebSocket
+    // In development, also use the same port
+    const port = ':4000';
 
     return `${protocol}//${hostname}${port}`;
   }
