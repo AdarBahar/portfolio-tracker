@@ -25,7 +25,8 @@ class WebSocketServer {
   start() {
     // If httpServer is provided, attach WebSocket to it (Phusion Passenger mode)
     if (this.httpServer) {
-      this.wss = new WebSocket.Server({ server: this.httpServer });
+      // Attach WebSocket to specific path on the HTTP server
+      this.wss = new WebSocket.Server({ server: this.httpServer, path: '/ws' });
     } else {
       // Standalone mode: create WebSocket server on specified port
       this.wss = new WebSocket.Server({ port: this.port });

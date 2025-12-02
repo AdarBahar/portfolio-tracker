@@ -31,11 +31,12 @@ class WebSocketService {
 
     // In production (Phusion Passenger), WebSocket is attached to same HTTP server
     // So we connect to the same port as the REST API (port 4000)
-    // The HTTP server will upgrade the connection to WebSocket
+    // The HTTP server will upgrade the connection to WebSocket at /ws path
     // In development, also use the same port
     const port = ':4000';
+    const path = '/ws';
 
-    return `${protocol}//${hostname}${port}`;
+    return `${protocol}//${hostname}${port}${path}`;
   }
 
   /**
