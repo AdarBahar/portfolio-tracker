@@ -28,7 +28,11 @@ class WebSocketService {
   private getWebSocketUrl(): string {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const hostname = window.location.hostname;
-    const port = window.location.port ? `:${window.location.port}` : '';
+
+    // In production, connect to port 4001 for WebSocket server
+    // In development, also use port 4001
+    const port = ':4001';
+
     return `${protocol}//${hostname}${port}`;
   }
 
