@@ -7,7 +7,8 @@ export default defineConfig({
   plugins: [react()],
   // Base path for production deployment
   // Note: Keep in sync with server configuration and .htaccess RewriteBase
-  base: '/fantasybroker/react/',
+  // For development (localhost), use root path to avoid OAuth origin issues
+  base: process.env.NODE_ENV === 'production' ? '/fantasybroker/react/' : '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

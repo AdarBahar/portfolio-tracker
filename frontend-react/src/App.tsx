@@ -23,11 +23,16 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  // Use different basename for development vs production
+  // Development (localhost): use root path "/"
+  // Production: use "/fantasybroker/react"
+  const basename = import.meta.env.DEV ? '/' : '/fantasybroker/react';
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ThemeProvider>
-          <Router basename="/fantasybroker/react">
+          <Router basename={basename}>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Landing />} />
