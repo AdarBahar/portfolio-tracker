@@ -88,26 +88,34 @@ export default function Login() {
     const initializeGoogle = () => {
       if (window.google?.accounts?.id && googleClientId) {
         console.log('[Google Sign-In] Initializing with client ID:', googleClientId);
+        console.log('[Google Sign-In] Environment:', {
+          isProduction: import.meta.env.PROD,
+          disableFedCM,
+          apiUrl,
+        });
+
         const initConfig: any = {
           client_id: googleClientId,
           callback: window.handleCredentialResponse,
           auto_select: false,
         };
 
-        // Only use FedCM in production (HTTPS)
+        // Only use FedCM in production (HTTPS) if not explicitly disabled
         // On localhost (HTTP), FedCM fails with "Not signed in with the identity provider"
-        if (!disableFedCM) {
+        if (!disableFedCM && import.meta.env.PROD) {
           initConfig.use_fedcm_for_prompt = true;
           console.log('[Google Sign-In] Initialized with FedCM support (production)');
         } else {
-          // Explicitly disable FedCM on localhost
+          // Explicitly disable FedCM on localhost or when disabled via env var
           initConfig.use_fedcm_for_prompt = false;
-          console.log('[Google Sign-In] Initialized without FedCM (localhost development)');
+          const reason = disableFedCM ? 'disabled via VITE_DISABLE_FEDCM' : 'development mode';
+          console.log('[Google Sign-In] Initialized without FedCM (' + reason + ')');
         }
 
         try {
           window.google.accounts.id.initialize(initConfig);
           console.log('[Google Sign-In] Initialization complete');
+          console.log('[Google Sign-In] Config:', initConfig);
         } catch (error) {
           console.error('[Google Sign-In] Initialization error:', error);
         }
@@ -182,20 +190,41 @@ export default function Login() {
         // Trigger One Tap prompt directly
         window.google.accounts.id.prompt((notification: any) => {
           const reason = notification.getNotDisplayedReason?.();
+          const isDisplayed = notification.isDisplayed?.();
+
           console.log('[Google Sign-In] Prompt notification:', {
-            isDisplayed: notification.isDisplayed?.(),
+            isDisplayed,
             isNotDisplayed: notification.isNotDisplayed?.(),
             getNotDisplayedReason: reason,
             isSkippedMoment: notification.isSkippedMoment?.(),
             isDismissedMoment: notification.isDismissedMoment?.(),
           });
 
-          // If the prompt is not displayed due to unregistered origin, show helpful message
+          // If prompt was displayed, user will interact with it
+          if (isDisplayed) {
+            console.log('[Google Sign-In] One Tap prompt displayed successfully');
+            return;
+          }
+
+          // Handle cases where prompt is not displayed
           if (reason === 'unregistered_origin') {
             console.warn('[Google Sign-In] Origin not registered in Google Cloud Console');
             setFormError(
               'Google Sign-In is not configured for this origin. Please use Demo Mode or Email/Password login.'
             );
+            setGoogleButtonState('idle');
+          } else if (reason === 'user_cancel') {
+            console.log('[Google Sign-In] User cancelled the prompt');
+            setGoogleButtonState('idle');
+          } else if (reason === 'credential_unavailable') {
+            console.warn('[Google Sign-In] No credentials available - user may not be signed into Google');
+            setFormError('Please sign in to your Google account first, then try again.');
+            setGoogleButtonState('idle');
+          } else if (reason === 'opt_out_or_no_session') {
+            console.log('[Google Sign-In] User opted out or no session');
+            setGoogleButtonState('idle');
+          } else {
+            console.warn('[Google Sign-In] Prompt not displayed for reason:', reason);
             setGoogleButtonState('idle');
           }
         });
