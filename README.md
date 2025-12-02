@@ -209,6 +209,303 @@ See `BUILD_AND_DEPLOY.md` for complete build and deployment instructions.
 - **Development**: See `GOOGLE_OAUTH_LOCALHOST_SETUP.md`
 - **Production**: See `GOOGLE_OAUTH_FEDCM_SETUP.md`
 
+## Building and Deploying React Frontend
+
+### Prerequisites
+
+- **Node.js** 14+ (check with `node --version`)
+- **npm** 6+ (check with `npm --version`)
+- **Git** (for version control)
+- **Production server** with Apache/Nginx (for deployment)
+- **SSH access** to production server (for rsync/SCP deployment)
+
+### Development Build
+
+**Start the development server:**
+
+```bash
+cd frontend-react
+npm install
+npm run dev
+```
+
+The app will be available at `http://localhost:5173/`
+
+**Features:**
+- Hot Module Replacement (HMR) - changes reflect instantly
+- Source maps - easier debugging
+- TypeScript checking - catches errors before build
+- Automatic browser refresh on file changes
+
+### Production Build
+
+**Step 1: Install dependencies**
+
+```bash
+cd frontend-react
+npm install
+```
+
+**Step 2: Build the production bundle**
+
+```bash
+npm run build
+```
+
+This creates an optimized production build in the `react/` folder with:
+- Minified JavaScript (~471KB, 136KB gzipped)
+- Minified CSS (~51KB, 9.4KB gzipped)
+- Source maps disabled (security)
+- Tree-shaking enabled
+- Code splitting for routes
+- Gzip compression ready
+
+**Step 3: Verify the build**
+
+```bash
+# Check that build completed successfully
+ls -lah react/
+
+# Should show:
+# - index.html (main entry point)
+# - assets/ (minified JS and CSS)
+# - .htaccess (Apache configuration)
+# - vite.svg (favicon)
+```
+
+**Step 4: Test the build locally (optional)**
+
+```bash
+# Install a simple HTTP server
+npm install -g serve
+
+# Serve the build
+serve -s react -l 3000
+
+# Open http://localhost:3000 in your browser
+```
+
+### Deployment Methods
+
+#### Method 1: Using rsync (Recommended)
+
+**Fastest and most reliable method:**
+
+```bash
+# From project root directory
+rsync -avz --delete react/ user@server:/var/www/fantasy-broker/react/
+
+# Verify deployment
+ssh user@server "ls -lah /var/www/fantasy-broker/react/"
+```
+
+**With compression (slower upload, faster transfer):**
+
+```bash
+rsync -avz --compress --delete react/ user@server:/var/www/fantasy-broker/react/
+```
+
+#### Method 2: Using SCP
+
+**Simple file copy method:**
+
+```bash
+# Copy all files
+scp -r react/* user@server:/var/www/fantasy-broker/react/
+
+# Verify
+ssh user@server "ls -la /var/www/fantasy-broker/react/"
+```
+
+#### Method 3: Using Git on Server
+
+**Requires Git on server:**
+
+```bash
+# On server
+cd /var/www/fantasy-broker
+git clone <repo-url> portfolio-tracker
+cd portfolio-tracker/frontend-react
+npm install
+npm run build
+
+# Built files are now in ../react/
+```
+
+#### Method 4: Using SFTP
+
+1. Connect to server via SFTP client (FileZilla, Cyberduck, etc.)
+2. Navigate to `/var/www/fantasy-broker/`
+3. Upload entire `react/` folder contents
+4. Verify all files are present
+
+### Post-Deployment Verification
+
+**Checklist:**
+
+1. **Verify files are deployed**
+   ```bash
+   ssh user@server "ls -la /var/www/fantasy-broker/react/"
+   ```
+
+2. **Check app loads**
+   ```
+   https://www.bahar.co.il/fantasybroker/react/
+   ```
+
+3. **Check browser console for errors**
+   - Open DevTools (F12)
+   - Go to Console tab
+   - Should show NO errors (warnings are OK)
+
+4. **Verify page loads correctly**
+   - Login page should display
+   - Google Sign-In button should be visible
+   - Demo Mode button should be visible
+
+5. **Test authentication**
+   - Click "Continue in Demo Mode"
+   - Should redirect to dashboard
+   - Portfolio data should load
+
+6. **Check API connectivity**
+   - Open Network tab (F12)
+   - Navigate to dashboard
+   - Should see successful API calls (200 status)
+   - No 403 or 401 errors
+
+7. **Test theme toggle**
+   - Click theme toggle button (Sun/Moon icon)
+   - Theme should change immediately
+   - Refresh page - theme should persist
+
+8. **Test on mobile**
+   - Open on mobile device
+   - App should be responsive
+   - Touch interactions should work
+
+### Environment Configuration
+
+**Development environment** (`.env.development`):
+
+```env
+VITE_API_URL=http://localhost:4000/api
+VITE_GOOGLE_CLIENT_ID=your-dev-google-client-id.apps.googleusercontent.com
+VITE_DISABLE_FEDCM=true
+```
+
+**Production environment** (`.env.production`):
+
+```env
+VITE_API_URL=https://www.bahar.co.il/fantasybroker-api/api
+VITE_GOOGLE_CLIENT_ID=your-prod-google-client-id.apps.googleusercontent.com
+```
+
+**Note:** The app automatically detects the environment based on hostname. To override, create `.env.production` in `frontend-react/` and rebuild.
+
+### Build Troubleshooting
+
+**Build fails with TypeScript errors**
+
+```bash
+# Check for type errors
+cd frontend-react
+npm run type-check
+
+# Fix errors and rebuild
+npm run build
+```
+
+**Build succeeds but app doesn't load**
+
+1. Check that `react/index.html` exists
+2. Verify `.htaccess` is in `react/` folder
+3. Check Apache error logs: `tail -f /var/log/apache2/error.log`
+4. Verify Apache modules are enabled: `a2enmod headers rewrite deflate`
+
+**Build is slow or hangs**
+
+```bash
+# Clear cache and rebuild
+rm -rf frontend-react/node_modules frontend-react/.vite
+npm install
+npm run build
+```
+
+**Blank page or 404 errors after deployment**
+
+1. Verify `react/index.html` exists on server
+2. Check Apache configuration for correct document root
+3. Verify `.htaccess` is in `react/` folder
+4. Check Apache error logs for rewrite errors
+5. Verify base path in `vite.config.ts` matches deployment path
+
+### Performance Optimization
+
+**Current build metrics:**
+- JavaScript: 471.06KB (136.29KB gzipped)
+- CSS: 51.13KB (9.42KB gzipped)
+- Total modules: 1864
+- Build time: ~2.67s
+
+**To reduce bundle size:**
+
+1. Use dynamic imports for large components
+2. Remove unused dependencies
+3. Enable tree-shaking in `vite.config.ts`
+4. Consider code splitting for routes
+
+**To improve load time:**
+
+1. Enable gzip compression in Apache
+2. Use CDN for static assets
+3. Enable browser caching with `.htaccess`
+4. Minimize API calls on page load
+
+### Deployment Troubleshooting
+
+**CSP Errors in Console**
+
+If you see "violates Content Security Policy" errors:
+
+1. Check the error message for the blocked URL
+2. Add the domain to `connect-src` in `frontend-react/public/.htaccess`
+3. Rebuild: `npm run build`
+4. Redeploy: `rsync -avz --delete react/ user@server:/var/www/fantasy-broker/react/`
+
+**API Connection Errors**
+
+If the app can't connect to the API:
+
+1. Verify the API endpoint is correct
+   ```bash
+   curl -I https://www.bahar.co.il/fantasybroker-api/api/health
+   ```
+
+2. Check that the API server is running
+   ```bash
+   ssh user@server "ps aux | grep node"
+   ```
+
+3. Verify CORS headers are set correctly
+   ```bash
+   curl -I -H "Origin: https://www.bahar.co.il" https://www.bahar.co.il/fantasybroker-api/api/health
+   ```
+
+4. Check browser console for detailed error messages
+
+**COOP Errors**
+
+If you see "Cross-Origin-Opener-Policy policy would block the window.postMessage call":
+
+1. This is expected for cross-origin communication
+2. The `.htaccess` file includes proper COOP headers
+3. Verify `.htaccess` is deployed to the server
+4. Check Apache modules are enabled:
+   ```bash
+   ssh user@server "apache2ctl -M | grep headers"
+   ```
+
 ## Database Migration
 
 The application is designed for easy migration to a database backend. See `DATABASE_MIGRATION_GUIDE.md` for detailed instructions.
