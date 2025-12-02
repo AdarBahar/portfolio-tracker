@@ -3,7 +3,7 @@ import { TrendingUp, TrendingDown, DollarSign, Calendar, Download, Plus } from '
 import { usePortfolioData } from '@/hooks/usePortfolioData';
 import { formatCurrency, formatPercent, getGainLossClass } from '@/utils/formatting';
 import { calculateSectorAllocation, calculateAssetClassAllocation, calculatePerformanceByHolding } from '@/utils/chartCalculations';
-import { PageLayout, PageHeader, PageSection } from '@/components/layout';
+import { PageLayout, PageHeader } from '@/components/layout';
 import MetricCard from '@/components/dashboard/MetricCard';
 import HoldingsTable from '@/components/dashboard/HoldingsTable';
 import AddPositionModal from '@/components/dashboard/AddPositionModal';

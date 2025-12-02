@@ -1,4 +1,5 @@
-import { ReactNode, useState } from 'react';
+import { useState } from 'react';
+import type { ReactNode } from 'react';
 import TopBar from '@/components/dashboard/TopBar';
 
 interface PageLayoutProps {
@@ -10,18 +11,9 @@ interface PageLayoutProps {
 
 /**
  * PageLayout - Reusable layout component with TopBar header
- * 
+ *
  * Provides consistent header and layout structure across all pages.
  * Manages notifications state if not provided by parent.
- * 
- * Usage:
- * ```tsx
- * <PageLayout>
- *   <main className="max-w-7xl mx-auto px-4 py-8">
- *     {/* Page content */}
- *   </main>
- * </PageLayout>
- * ```
  */
 export default function PageLayout({
   children,

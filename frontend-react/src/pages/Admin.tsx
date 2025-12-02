@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Settings, BarChart3, Gift, ArrowLeft, Shield } from 'lucide-react';
+import { Users, Settings, BarChart3, Gift, Shield } from 'lucide-react';
 import { PageLayout, PageHeader } from '@/components/layout';
 import { useUsers, useUpdateUserAdmin } from '@/hooks/useAdmin';
 import { useRakeConfig, useRakeStats, useUpdateRakeConfig } from '@/hooks/useRake';

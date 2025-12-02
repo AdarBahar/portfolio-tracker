@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
 
 interface PageHeaderProps {
   title: string;
@@ -39,7 +39,7 @@ export default function PageHeader({
         {/* Title and Description */}
         <div className="flex items-start gap-3 sm:gap-4 flex-1">
           {Icon && (
-            <div className={`p-2 bg-${iconColor.split('-')[1]}/20 rounded-lg flex-shrink-0`}>
+            <div className="p-2 bg-primary/20 rounded-lg flex-shrink-0">
               <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${iconColor}`} />
             </div>
           )}
