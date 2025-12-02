@@ -220,17 +220,17 @@ export default function Login() {
     <ErrorBoundary>
       <div className="min-h-screen bg-background flex">
         {/* Left Side - Branding */}
-        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-purple-700 relative overflow-hidden">
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0BA5EC] to-[#7C3AED] relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-20"></div>
 
           <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
             {/* Logo */}
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
-                <TrendingUp className="w-7 h-7" />
+                <TrendingUp className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">Fantasy Trading</h1>
+                <h1 className="text-2xl font-bold text-white">Fantasy Trading</h1>
                 <p className="text-sm text-white/80">Master the Markets</p>
               </div>
             </div>
@@ -238,8 +238,8 @@ export default function Login() {
             {/* Center Content */}
             <div className="space-y-8">
               <div>
-                <h2 className="text-4xl font-bold mb-4">Trade Without Risk,<br />Win Real Rewards</h2>
-                <p className="text-white/80 text-lg max-w-md">
+                <h2 className="text-4xl font-bold mb-4 text-white">Trade Without Risk,<br />Win Real Rewards</h2>
+                <p className="text-white/80 text-lg max-w-md leading-relaxed">
                   Join the ultimate fantasy trading platform where strategy meets competition.
                   Build your portfolio, earn stars, and climb the leaderboard.
                 </p>
@@ -274,23 +274,23 @@ export default function Login() {
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="flex-1 flex items-center justify-center p-8 bg-white">
+        <div className="flex-1 flex items-center justify-center p-8" style={{ backgroundColor: '#0D1829' }}>
           <div className="w-full max-w-md">
             {/* Mobile Logo */}
             <div className="lg:hidden flex items-center gap-3 mb-8">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#0BA5EC] to-[#7C3AED] rounded-xl flex items-center justify-center shadow-lg">
                 <TrendingUp className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-foreground text-2xl font-bold">Fantasy Trading</h1>
-                <p className="text-muted-foreground text-sm">Master the Markets</p>
+                <h1 className="text-white text-2xl font-bold">Fantasy Trading</h1>
+                <p className="text-[#93A3B8] text-sm">Master the Markets</p>
               </div>
             </div>
 
             {/* Form Header */}
             <div className="mb-8">
-              <h2 className="text-foreground text-2xl font-bold mb-2">{isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
-              <p className="text-muted-foreground">
+              <h2 className="text-white text-2xl font-bold mb-2">{isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
+              <p className="text-[#93A3B8]">
                 {isSignUp
                   ? 'Sign up to start your trading journey'
                   : 'Enter your credentials to access your account'}
@@ -299,7 +299,7 @@ export default function Login() {
 
             {/* Error Message */}
             {formError && (
-              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-600 text-sm">
+              <div className="mb-6 p-4 bg-[#EF4444]/10 border border-[#EF4444]/30 rounded-xl text-[#EF4444] text-sm">
                 {formError}
               </div>
             )}
@@ -309,7 +309,7 @@ export default function Login() {
               {/* Name Field (Sign Up Only) */}
               {isSignUp && (
                 <div>
-                  <label className="block text-foreground font-medium mb-2">Full Name</label>
+                  <label className="block text-white font-medium mb-2">Full Name</label>
                   <input
                     type="text"
                     placeholder="Enter your full name"
@@ -317,19 +317,19 @@ export default function Login() {
                       required: isSignUp ? 'Name is required' : false,
                       minLength: { value: 2, message: 'Name must be at least 2 characters' },
                     })}
-                    className={`w-full px-4 py-3 bg-muted/30 border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 transition-all ${
-                      errors.name ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:border-blue-500 focus:ring-blue-500/20'
+                    className={`w-full px-4 py-3 bg-[#1C2842] border rounded-xl text-white placeholder-[#93A3B8] focus:outline-none focus:ring-2 transition-all ${
+                      errors.name ? 'border-[#EF4444] focus:ring-[#EF4444]/20' : 'border-[#243049] focus:border-[#0BA5EC] focus:ring-[#0BA5EC]/20'
                     }`}
                   />
-                  {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+                  {errors.name && <p className="text-[#EF4444] text-sm mt-1">{errors.name.message}</p>}
                 </div>
               )}
 
               {/* Email Field */}
               <div>
-                <label className="block text-foreground font-medium mb-2">Email Address</label>
+                <label className="block text-white font-medium mb-2">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#93A3B8]" />
                   <input
                     type="email"
                     placeholder="Enter your email"
@@ -340,19 +340,19 @@ export default function Login() {
                         message: 'Invalid email address',
                       },
                     })}
-                    className={`w-full pl-11 pr-4 py-3 bg-muted/30 border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 transition-all ${
-                      errors.email ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:border-blue-500 focus:ring-blue-500/20'
+                    className={`w-full pl-11 pr-4 py-3 bg-[#1C2842] border rounded-xl text-white placeholder-[#93A3B8] focus:outline-none focus:ring-2 transition-all ${
+                      errors.email ? 'border-[#EF4444] focus:ring-[#EF4444]/20' : 'border-[#243049] focus:border-[#0BA5EC] focus:ring-[#0BA5EC]/20'
                     }`}
                   />
                 </div>
-                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
+                {errors.email && <p className="text-[#EF4444] text-sm mt-1">{errors.email.message}</p>}
               </div>
 
               {/* Password Field */}
               <div>
-                <label className="block text-foreground font-medium mb-2">Password</label>
+                <label className="block text-white font-medium mb-2">Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#93A3B8]" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
@@ -360,27 +360,27 @@ export default function Login() {
                       required: 'Password is required',
                       minLength: { value: 6, message: 'Password must be at least 6 characters' },
                     })}
-                    className={`w-full pl-11 pr-11 py-3 bg-muted/30 border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 transition-all ${
-                      errors.password ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:border-blue-500 focus:ring-blue-500/20'
+                    className={`w-full pl-11 pr-11 py-3 bg-[#1C2842] border rounded-xl text-white placeholder-[#93A3B8] focus:outline-none focus:ring-2 transition-all ${
+                      errors.password ? 'border-[#EF4444] focus:ring-[#EF4444]/20' : 'border-[#243049] focus:border-[#0BA5EC] focus:ring-[#0BA5EC]/20'
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#93A3B8] hover:text-white transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
-                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
+                {errors.password && <p className="text-[#EF4444] text-sm mt-1">{errors.password.message}</p>}
               </div>
 
               {/* Confirm Password (Sign Up Only) */}
               {isSignUp && (
                 <div>
-                  <label className="block text-foreground font-medium mb-2">Confirm Password</label>
+                  <label className="block text-white font-medium mb-2">Confirm Password</label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#93A3B8]" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Confirm your password"
@@ -389,12 +389,12 @@ export default function Login() {
                         validate: (value) =>
                           isSignUp && value !== password ? 'Passwords do not match' : true,
                       })}
-                      className={`w-full pl-11 pr-4 py-3 bg-muted/30 border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 transition-all ${
-                        errors.confirmPassword ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:border-blue-500 focus:ring-blue-500/20'
+                      className={`w-full pl-11 pr-4 py-3 bg-[#1C2842] border rounded-xl text-white placeholder-[#93A3B8] focus:outline-none focus:ring-2 transition-all ${
+                        errors.confirmPassword ? 'border-[#EF4444] focus:ring-[#EF4444]/20' : 'border-[#243049] focus:border-[#0BA5EC] focus:ring-[#0BA5EC]/20'
                       }`}
                     />
                   </div>
-                  {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>}
+                  {errors.confirmPassword && <p className="text-[#EF4444] text-sm mt-1">{errors.confirmPassword.message}</p>}
                 </div>
               )}
 
@@ -405,13 +405,13 @@ export default function Login() {
                     <input
                       type="checkbox"
                       {...register('rememberMe')}
-                      className="w-4 h-4 rounded border-border text-blue-600 focus:ring-blue-600 focus:ring-offset-0"
+                      className="w-4 h-4 rounded border-[#243049] text-[#0BA5EC] focus:ring-[#0BA5EC] focus:ring-offset-0"
                     />
-                    <span className="text-muted-foreground text-sm">Remember me</span>
+                    <span className="text-[#93A3B8] text-sm">Remember me</span>
                   </label>
                   <button
                     type="button"
-                    className="text-blue-600 hover:text-purple-600 text-sm transition-colors"
+                    className="text-[#0BA5EC] hover:text-[#7C3AED] text-sm transition-colors"
                   >
                     Forgot password?
                   </button>
@@ -426,19 +426,19 @@ export default function Login() {
                     {...register('agreeToTerms', {
                       required: 'You must agree to the Terms of Service and Privacy Policy',
                     })}
-                    className="w-4 h-4 mt-1 rounded border-border text-blue-600 focus:ring-blue-600 focus:ring-offset-0"
+                    className="w-4 h-4 mt-1 rounded border-[#243049] text-[#0BA5EC] focus:ring-[#0BA5EC] focus:ring-offset-0"
                   />
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-[#93A3B8] text-sm">
                     I agree to the{' '}
-                    <button type="button" className="text-blue-600 hover:text-purple-600 transition-colors">
+                    <button type="button" className="text-[#0BA5EC] hover:text-[#7C3AED] transition-colors">
                       Terms of Service
                     </button>{' '}
                     and{' '}
-                    <button type="button" className="text-blue-600 hover:text-purple-600 transition-colors">
+                    <button type="button" className="text-[#0BA5EC] hover:text-[#7C3AED] transition-colors">
                       Privacy Policy
                     </button>
                   </p>
-                  {errors.agreeToTerms && <p className="text-red-500 text-sm">{errors.agreeToTerms.message}</p>}
+                  {errors.agreeToTerms && <p className="text-[#EF4444] text-sm">{errors.agreeToTerms.message}</p>}
                 </div>
               )}
 
@@ -446,7 +446,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={isAuthLoading}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-700 text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gradient-to-r from-[#0BA5EC] to-[#7C3AED] text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
               >
                 {isAuthLoading && <Loader className="w-4 h-4 animate-spin" />}
                 {isAuthLoading ? 'Processing...' : isSignUp ? 'Create Account' : 'Sign In'}
@@ -454,9 +454,9 @@ export default function Login() {
 
               {/* Divider */}
               <div className="flex items-center gap-4">
-                <div className="flex-1 border-t border-border"></div>
-                <span className="text-sm text-muted-foreground whitespace-nowrap">Or continue with</span>
-                <div className="flex-1 border-t border-border"></div>
+                <div className="flex-1 border-t border-[#243049]"></div>
+                <span className="text-sm text-[#93A3B8] whitespace-nowrap">Or continue with</span>
+                <div className="flex-1 border-t border-[#243049]"></div>
               </div>
 
               {/* Social Login */}
@@ -465,7 +465,7 @@ export default function Login() {
                   type="button"
                   onClick={handleGoogleClick}
                   disabled={isAuthLoading}
-                  className="flex items-center justify-center gap-2 py-3 bg-muted/30 hover:bg-muted border border-border rounded-xl text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-2 py-3 bg-[#1C2842] hover:bg-[#243049] border border-[#243049] rounded-xl text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Sign in with Google"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -479,7 +479,7 @@ export default function Login() {
                 <button
                   type="button"
                   disabled={isAuthLoading}
-                  className="flex items-center justify-center gap-2 py-3 bg-muted/30 hover:bg-muted border border-border rounded-xl text-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-2 py-3 bg-[#1C2842] hover:bg-[#243049] border border-[#243049] rounded-xl text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
@@ -491,7 +491,7 @@ export default function Login() {
 
             {/* Toggle Sign Up / Login */}
             <div className="mt-6 text-center">
-              <p className="text-muted-foreground">
+              <p className="text-[#93A3B8]">
                 {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
                 <button
                   type="button"
@@ -500,7 +500,7 @@ export default function Login() {
                     setFormError(null);
                     reset();
                   }}
-                  className="text-blue-600 hover:text-purple-600 transition-colors font-medium"
+                  className="text-[#0BA5EC] hover:text-[#7C3AED] transition-colors font-medium"
                 >
                   {isSignUp ? 'Sign in' : 'Sign up'}
                 </button>
@@ -508,15 +508,15 @@ export default function Login() {
             </div>
 
             {/* Demo Account */}
-            <div className="mt-6 p-4 bg-blue-600/10 border border-blue-600/30 rounded-xl">
-              <p className="text-blue-600 text-sm text-center">
+            <div className="mt-6 p-4 bg-[#0BA5EC]/10 border border-[#0BA5EC]/30 rounded-xl">
+              <p className="text-[#0BA5EC] text-sm text-center">
                 <span className="font-medium">Demo Mode:</span> Click "Sign In" to explore the platform with demo data
               </p>
               <button
                 type="button"
                 onClick={handleDemoLogin}
                 disabled={isAuthLoading}
-                className="w-full mt-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                className="w-full mt-3 py-2 bg-[#0BA5EC] hover:bg-[#0BA5EC]/90 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
               >
                 {isAuthLoading ? 'Loading...' : 'Try Demo Mode'}
               </button>
