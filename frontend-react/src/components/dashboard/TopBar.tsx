@@ -30,7 +30,7 @@ export default function TopBar({
   };
 
   return (
-    <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 h-16">
+    <header className="border-b border-border gradient-card-header backdrop-blur-sm sticky top-0 z-50 h-16">
       <div className="max-w-7xl mx-auto px-4 h-full flex items-center">
         <div className="flex items-center justify-between w-full">
           {/* Logo */}
