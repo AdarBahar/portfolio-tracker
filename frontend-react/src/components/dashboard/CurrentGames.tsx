@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import GameCard from './GameCard';
 import type { BullPen } from '@/hooks/useBullPens';
 
@@ -13,6 +14,8 @@ export default function CurrentGames({
   bullPens,
   isLoading,
 }: CurrentGamesProps) {
+  const navigate = useNavigate();
+
   const filteredGames = useMemo(() => {
     if (!searchQuery) return bullPens;
     return bullPens.filter(
@@ -21,6 +24,10 @@ export default function CurrentGames({
         (game.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
     );
   }, [bullPens, searchQuery]);
+
+  const handleViewRoom = (bullPenId: number) => {
+    navigate(`/trade-room/${bullPenId}`);
+  };
 
   if (isLoading) {
     return (
@@ -75,7 +82,7 @@ export default function CurrentGames({
               key={game.id}
               bullPen={game}
               isJoined={true}
-              onView={() => console.log('View game:', game.id)}
+              onView={() => handleViewRoom(game.id)}
             />
           ))}
         </div>
