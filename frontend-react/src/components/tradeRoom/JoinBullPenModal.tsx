@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Loader } from 'lucide-react';
+import AnimatedButton from '@/components/ui/AnimatedButton';
 import { useJoinBullPen, useAllBullPens } from '@/hooks/useBullPens';
 
 interface JoinBullPenModalProps {
@@ -86,20 +87,27 @@ export default function JoinBullPenModal({ onClose, onSuccess }: JoinBullPenModa
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
-            <button
+            <AnimatedButton
               onClick={onClose}
-              className="flex-1 px-4 py-2 bg-card border border-white/10 text-foreground rounded-md hover:bg-card/80"
+              state="idle"
+              variant="ghost"
+              size="md"
+              className="flex-1"
             >
               Cancel
-            </button>
-            <button
+            </AnimatedButton>
+            <AnimatedButton
               onClick={handleJoin}
-              disabled={!selectedBullPenId || isPending}
-              className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 flex items-center justify-center gap-2"
+              disabled={!selectedBullPenId}
+              state={isPending ? 'loading' : 'idle'}
+              variant="primary"
+              size="md"
+              className="flex-1"
+              loadingText="Joining..."
+              successText="Joined!"
             >
-              {isPending && <Loader className="w-4 h-4 animate-spin" />}
               Join Room
-            </button>
+            </AnimatedButton>
           </div>
         </div>
       </div>

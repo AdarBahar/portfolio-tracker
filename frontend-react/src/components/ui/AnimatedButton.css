@@ -1,4 +1,4 @@
-/* Google Login Button Animations */
+/* Animated Button Component Styles */
 
 /* Pulse animation for loading state */
 @keyframes pulse-glow {
@@ -23,31 +23,6 @@
   }
 }
 
-/* Shimmer effect for loading */
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-/* Success checkmark animation */
-@keyframes success-scale {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
 /* Icon spin animation */
 @keyframes icon-spin {
   from {
@@ -58,48 +33,7 @@
   }
 }
 
-/* Apply animations to Google login button */
-.google-login-btn {
-  position: relative;
-  overflow: hidden;
-}
-
-/* Active/loading state with glow */
-.google-login-btn:not(:disabled):active {
-  animation: scale-click 0.3s ease-out;
-}
-
-/* Loading state glow effect */
-.google-login-btn.animate-pulse {
-  animation: pulse-glow 2s infinite;
-}
-
-/* Smooth transitions for state changes */
-.google-login-btn {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Hover effect with enhanced shadow */
-.google-login-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-}
-
-/* Disabled state */
-.google-login-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-/* Icon animation for loading */
-.google-login-btn .animate-spin {
-  animation: icon-spin 1s linear infinite;
-}
-
 /* Bounce animation for success checkmark */
-.google-login-btn .animate-bounce {
-  animation: bounce 0.6s ease-in-out;
-}
-
 @keyframes bounce {
   0%, 100% {
     transform: translateY(0);
@@ -110,10 +44,6 @@
 }
 
 /* Ping animation for pulse background */
-.google-login-btn .animate-ping {
-  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
 @keyframes ping {
   75%, 100% {
     transform: scale(2);
@@ -121,14 +51,68 @@
   }
 }
 
+/* Apply animations to animated button */
+.animated-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Active/loading state with glow */
+.animated-btn:not(:disabled):active {
+  animation: scale-click 0.3s ease-out;
+}
+
+/* Loading state glow effect */
+.animated-btn.animate-pulse {
+  animation: pulse-glow 2s infinite;
+}
+
+/* Smooth transitions for state changes */
+.animated-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hover effect with enhanced shadow */
+.animated-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+/* Disabled state */
+.animated-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Icon animation for loading */
+.animated-btn .animate-spin {
+  animation: icon-spin 1s linear infinite;
+}
+
+/* Bounce animation for success checkmark */
+.animated-btn .animate-bounce {
+  animation: bounce 0.6s ease-in-out;
+}
+
+/* Ping animation for pulse background */
+.animated-btn .animate-ping {
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
 /* Smooth text transition */
-.google-login-btn span {
+.animated-btn span {
   transition: opacity 0.3s ease-in-out;
 }
 
 /* Focus state for accessibility */
-.google-login-btn:focus-visible {
+.animated-btn:focus-visible {
   outline: 2px solid #0BA5EC;
   outline-offset: 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .animated-btn {
+    font-size: 0.875rem;
+  }
 }
 

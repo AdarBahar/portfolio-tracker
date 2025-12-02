@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Settings, BarChart3, Gift, Shield } from 'lucide-react';
 import { PageLayout, PageHeader } from '@/components/layout';
+import AnimatedButton from '@/components/ui/AnimatedButton';
 import { useUsers, useUpdateUserAdmin } from '@/hooks/useAdmin';
 import { useRakeConfig, useRakeStats, useUpdateRakeConfig } from '@/hooks/useRake';
 import { usePromotions, useCreatePromotion } from '@/hooks/usePromotions';
@@ -15,6 +16,7 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'rake' | 'promotions'>('overview');
   const [showPromotionForm, setShowPromotionForm] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [createPromotionButtonState, setCreatePromotionButtonState] = useState<'idle' | 'loading' | 'success'>('idle');
 
   // Hooks
   const { data: users = [], isLoading: usersLoading } = useUsers();
@@ -209,12 +211,22 @@ export default function Admin() {
         {/* Promotions Tab */}
         {activeTab === 'promotions' && (
           <div className="space-y-6">
-            <button
-              onClick={() => setShowPromotionForm(true)}
-              className="btn-primary"
+            <AnimatedButton
+              onClick={() => {
+                setCreatePromotionButtonState('loading');
+                setTimeout(() => {
+                  setShowPromotionForm(true);
+                  setCreatePromotionButtonState('idle');
+                }, 300);
+              }}
+              state={createPromotionButtonState}
+              variant="primary"
+              size="lg"
+              loadingText="Opening..."
+              successText="Opened!"
             >
               Create Promotion
-            </button>
+            </AnimatedButton>
             <PromotionsList
               promotions={promotions}
               isLoading={promotionsLoading}

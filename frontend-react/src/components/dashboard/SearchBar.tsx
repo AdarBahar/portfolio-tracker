@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Search, Plus } from 'lucide-react';
+import AnimatedButton from '@/components/ui/AnimatedButton';
 
 interface SearchBarProps {
   searchQuery: string;
@@ -11,6 +13,16 @@ export default function SearchBar({
   setSearchQuery,
   onCreateRoom,
 }: SearchBarProps) {
+  const [createRoomButtonState, setCreateRoomButtonState] = useState<'idle' | 'loading' | 'success'>('idle');
+
+  const handleCreateRoom = () => {
+    setCreateRoomButtonState('loading');
+    setTimeout(() => {
+      onCreateRoom();
+      setCreateRoomButtonState('idle');
+    }, 300);
+  };
+
   return (
     <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3">
       {/* Search Input */}
@@ -26,14 +38,19 @@ export default function SearchBar({
       </div>
 
       {/* Create Room Button */}
-      <button
-        onClick={onCreateRoom}
-        className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-gradient-to-r from-[#16A34A] to-[#16A34A]/80 hover:shadow-lg text-white rounded-xl transition-all font-medium whitespace-nowrap text-sm sm:text-base"
+      <AnimatedButton
+        onClick={handleCreateRoom}
+        state={createRoomButtonState}
+        variant="success"
+        size="lg"
+        icon={<Plus className="w-5 h-5" />}
+        loadingText="Creating..."
+        successText="Created!"
+        className="whitespace-nowrap"
       >
-        <Plus className="w-5 h-5" />
         <span className="hidden sm:inline">Create Room</span>
         <span className="sm:hidden">Create</span>
-      </button>
+      </AnimatedButton>
     </div>
   );
 }

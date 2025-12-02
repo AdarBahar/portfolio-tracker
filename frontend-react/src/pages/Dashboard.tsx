@@ -4,6 +4,7 @@ import { usePortfolioData } from '@/hooks/usePortfolioData';
 import { formatCurrency, formatPercent, getGainLossClass } from '@/utils/formatting';
 import { calculateSectorAllocation, calculateAssetClassAllocation, calculatePerformanceByHolding } from '@/utils/chartCalculations';
 import { PageLayout, PageHeader } from '@/components/layout';
+import AnimatedButton from '@/components/ui/AnimatedButton';
 import MetricCard from '@/components/dashboard/MetricCard';
 import HoldingsTable from '@/components/dashboard/HoldingsTable';
 import AddPositionModal from '@/components/dashboard/AddPositionModal';
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [addPositionButtonState, setAddPositionButtonState] = useState<'idle' | 'loading' | 'success'>('idle');
 
   // Update lastUpdated whenever data changes (not just on mount)
   useEffect(() => {
@@ -83,13 +85,24 @@ export default function Dashboard() {
           title="Fantasy Broker"
           description={`Last updated: ${lastUpdated.toLocaleTimeString()}`}
           action={
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 bg-[#0BA5EC] hover:bg-[#0BA5EC]/90 text-white rounded-lg transition-all font-medium text-sm hover:shadow-lg w-full sm:w-fit flex items-center justify-center sm:justify-start gap-2"
+            <AnimatedButton
+              onClick={() => {
+                setAddPositionButtonState('loading');
+                setTimeout(() => {
+                  setShowAddModal(true);
+                  setAddPositionButtonState('idle');
+                }, 300);
+              }}
+              state={addPositionButtonState}
+              variant="primary"
+              size="md"
+              icon={<Plus className="w-4 h-4" />}
+              loadingText="Opening..."
+              successText="Opened!"
+              className="w-full sm:w-fit"
             >
-              <Plus className="w-4 h-4" />
               Add Position
-            </button>
+            </AnimatedButton>
           }
         />
         {/* Profile Header Section */}

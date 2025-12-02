@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader, User } from 'lucide-react';
+import { ArrowLeft, User, Loader } from 'lucide-react';
 import { PageLayout, PageHeader } from '@/components/layout';
+import AnimatedButton from '@/components/ui/AnimatedButton';
 import { useUserDetail, useUserLogs, useGrantStars, useRemoveStars } from '@/hooks/useAdmin';
 import { formatCurrency, formatDate } from '@/utils/formatting';
 import BudgetStarsAdjustmentPanel from '@/components/admin/BudgetStarsAdjustmentPanel';
@@ -72,14 +73,18 @@ function StarsAdjustmentForm({ user, onSuccess }: { user: any; onSuccess: () => 
           className="w-full px-3 py-2 bg-background border border-white/10 rounded text-foreground text-sm"
         />
       </div>
-      <button
+      <AnimatedButton
         type="submit"
-        disabled={grantLoading || removeLoading || !starsAmount || !starsReason.trim()}
-        className="w-full btn-primary flex items-center justify-center gap-2 disabled:opacity-50"
+        disabled={!starsAmount || !starsReason.trim()}
+        state={grantLoading || removeLoading ? 'loading' : 'idle'}
+        variant="primary"
+        size="lg"
+        className="w-full"
+        loadingText="Processing..."
+        successText="Updated!"
       >
-        {(grantLoading || removeLoading) && <Loader className="w-4 h-4 animate-spin" />}
         {starsAction === 'grant' ? 'Grant' : 'Remove'} {starsAmount || '0'} ⭐
-      </button>
+      </AnimatedButton>
     </form>
   );
 }

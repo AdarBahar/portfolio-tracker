@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Loader } from 'lucide-react';
 import { useMyBullPens, useAllBullPens } from '@/hooks/useBullPens';
+import AnimatedButton from '@/components/ui/AnimatedButton';
 import BullPenCard from '@/components/tradeRoom/BullPenCard';
 import CreateBullPenModal from '@/components/tradeRoom/CreateBullPenModal';
 import JoinBullPenModal from '@/components/tradeRoom/JoinBullPenModal';
@@ -13,6 +14,8 @@ export default function TradeRoom() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [filterState, setFilterState] = useState<string>('all');
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [joinButtonState, setJoinButtonState] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [createButtonState, setCreateButtonState] = useState<'idle' | 'loading' | 'success'>('idle');
 
   const { data: myBullPens = [], isLoading: myLoading } = useMyBullPens();
   const { isLoading: allLoading } = useAllBullPens();
@@ -60,19 +63,39 @@ export default function TradeRoom() {
               </p>
             </div>
             <div className="flex gap-2 sm:gap-3">
-              <button
-                onClick={() => setShowJoinModal(true)}
-                className="px-4 py-2 bg-[#0BA5EC] hover:bg-[#0BA5EC]/90 text-white rounded-lg transition-all font-medium text-sm hover:shadow-lg"
+              <AnimatedButton
+                onClick={() => {
+                  setJoinButtonState('loading');
+                  setTimeout(() => {
+                    setShowJoinModal(true);
+                    setJoinButtonState('idle');
+                  }, 300);
+                }}
+                state={joinButtonState}
+                variant="primary"
+                size="md"
+                loadingText="Opening..."
+                successText="Opened!"
               >
                 Join Room
-              </button>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="px-4 py-2 bg-gradient-to-r from-[#0BA5EC] to-[#7C3AED] hover:shadow-lg text-white rounded-lg transition-all font-medium text-sm flex items-center gap-2"
+              </AnimatedButton>
+              <AnimatedButton
+                onClick={() => {
+                  setCreateButtonState('loading');
+                  setTimeout(() => {
+                    setShowCreateModal(true);
+                    setCreateButtonState('idle');
+                  }, 300);
+                }}
+                state={createButtonState}
+                variant="primary"
+                size="md"
+                icon={<Plus className="w-4 h-4" />}
+                loadingText="Opening..."
+                successText="Opened!"
               >
-                <Plus className="w-4 h-4" />
                 Create Room
-              </button>
+              </AnimatedButton>
             </div>
           </div>
         </div>
@@ -118,12 +141,22 @@ export default function TradeRoom() {
         {!isLoading && filteredBullPens.length === 0 && (
           <div className="gradient-card backdrop-blur-sm rounded-2xl p-12 text-center mb-12 border border-border shadow-lg">
             <p className="text-muted-foreground mb-4">No trade rooms found</p>
-            <button
-              onClick={() => setShowJoinModal(true)}
-              className="px-6 py-2 bg-gradient-to-r from-[#0BA5EC] to-[#7C3AED] hover:shadow-lg text-white rounded-lg transition-all font-medium"
+            <AnimatedButton
+              onClick={() => {
+                setJoinButtonState('loading');
+                setTimeout(() => {
+                  setShowJoinModal(true);
+                  setJoinButtonState('idle');
+                }, 300);
+              }}
+              state={joinButtonState}
+              variant="primary"
+              size="lg"
+              loadingText="Opening..."
+              successText="Opened!"
             >
               Join a Room
-            </button>
+            </AnimatedButton>
           </div>
         )}
 
