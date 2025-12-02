@@ -64,7 +64,7 @@ export default function TopBar({
 
               {/* Notifications Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-2xl p-4 max-h-96 overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-80 gradient-card backdrop-blur-sm rounded-xl shadow-2xl p-4 max-h-96 overflow-y-auto border border-border">
                   <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
                     <h3 className="font-semibold text-foreground text-sm">Notifications</h3>
                     {notifications.length > 0 && (
