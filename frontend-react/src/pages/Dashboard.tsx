@@ -3,20 +3,20 @@ import { TrendingUp, TrendingDown, DollarSign, Calendar, Download, Plus } from '
 import { usePortfolioData } from '@/hooks/usePortfolioData';
 import { formatCurrency, formatPercent, getGainLossClass } from '@/utils/formatting';
 import { calculateSectorAllocation, calculateAssetClassAllocation, calculatePerformanceByHolding } from '@/utils/chartCalculations';
+import PageLayout from '@/components/layout/PageLayout';
 import MetricCard from '@/components/dashboard/MetricCard';
 import HoldingsTable from '@/components/dashboard/HoldingsTable';
 import AddPositionModal from '@/components/dashboard/AddPositionModal';
 import SectorAllocationChart from '@/components/charts/SectorAllocationChart';
 import AssetClassChart from '@/components/charts/AssetClassChart';
 import PerformanceChart from '@/components/charts/PerformanceChart';
-import ThemeToggle from '@/components/header/ThemeToggle';
-import UserProfile from '@/components/header/UserProfile';
 import ProfileHeaderContainer from '@/components/header/ProfileHeaderContainer';
 
 export default function Dashboard() {
   const { holdings, metrics, isLoading, error } = usePortfolioData();
   const [showAddModal, setShowAddModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   // Update lastUpdated whenever data changes (not just on mount)
   useEffect(() => {
@@ -24,6 +24,16 @@ export default function Dashboard() {
       setLastUpdated(new Date());
     }
   }, [holdings, isLoading]);
+
+  const handleMarkNotificationRead = (id: string) => {
+    setNotifications(prev =>
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    );
+  };
+
+  const handleClearNotifications = () => {
+    setNotifications([]);
+  };
 
   if (isLoading) {
     return (
@@ -61,32 +71,28 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+    <PageLayout
+      notifications={notifications}
+      onMarkNotificationRead={handleMarkNotificationRead}
+      onClearNotifications={handleClearNotifications}
+    >
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Dashboard Header */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Fantasy Broker</h1>
+              <h1 className="text-foreground mb-2 text-2xl sm:text-3xl font-bold">Fantasy Broker</h1>
               <p className="text-muted-foreground text-sm">Last updated: {lastUpdated.toLocaleTimeString()}</p>
             </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition"
-              >
-                <Plus className="w-4 h-4" />
-                Add Position
-              </button>
-              <ThemeToggle />
-              <UserProfile />
-            </div>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2 bg-[#0BA5EC] hover:bg-[#0BA5EC]/90 text-white rounded-lg transition-all font-medium text-sm hover:shadow-lg w-fit flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Position
+            </button>
           </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
         {/* Profile Header Section */}
         <div className="mb-8">
           <ProfileHeaderContainer
@@ -167,7 +173,7 @@ export default function Dashboard() {
 
       {/* Add Position Modal */}
       {showAddModal && <AddPositionModal onClose={() => setShowAddModal(false)} />}
-    </div>
+    </PageLayout>
   );
 }
 

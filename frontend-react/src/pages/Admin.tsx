@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Settings, BarChart3, Gift, ArrowLeft } from 'lucide-react';
-import ThemeToggle from '@/components/header/ThemeToggle';
-import UserProfile from '@/components/header/UserProfile';
+import PageLayout from '@/components/layout/PageLayout';
 import { useUsers, useUpdateUserAdmin } from '@/hooks/useAdmin';
 import { useRakeConfig, useRakeStats, useUpdateRakeConfig } from '@/hooks/useRake';
 import { usePromotions, useCreatePromotion } from '@/hooks/usePromotions';
@@ -15,6 +14,7 @@ export default function Admin() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'rake' | 'promotions'>('overview');
   const [showPromotionForm, setShowPromotionForm] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   // Hooks
   const { data: users = [], isLoading: usersLoading } = useUsers();
@@ -60,30 +60,22 @@ export default function Admin() {
     },
   ];
 
+  const handleMarkNotificationRead = (id: string) => {
+    setNotifications(prev =>
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    );
+  };
+
+  const handleClearNotifications = () => {
+    setNotifications([]);
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-slate-800/50 backdrop-blur">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white">⚙️ Admin Panel</h1>
-              <p className="text-muted-foreground text-sm">Manage platform settings, users, and promotions</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Portfolio
-              </button>
-              <ThemeToggle />
-              <UserProfile />
-            </div>
-          </div>
-        </div>
-      </header>
+    <PageLayout
+      notifications={notifications}
+      onMarkNotificationRead={handleMarkNotificationRead}
+      onClearNotifications={handleClearNotifications}
+    >
 
       {/* Main Content */}
       <main className="container mx-auto px-6 py-8">
@@ -240,7 +232,7 @@ export default function Admin() {
           />
         )}
       </main>
-    </div>
+    </PageLayout>
   );
 }
 

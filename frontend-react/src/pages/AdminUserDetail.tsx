@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader } from 'lucide-react';
-import ThemeToggle from '@/components/header/ThemeToggle';
-import UserProfile from '@/components/header/UserProfile';
+import PageLayout from '@/components/layout/PageLayout';
 import { useUserDetail, useUserLogs, useGrantStars, useRemoveStars } from '@/hooks/useAdmin';
 import { formatCurrency, formatDate } from '@/utils/formatting';
 import BudgetStarsAdjustmentPanel from '@/components/admin/BudgetStarsAdjustmentPanel';
@@ -88,6 +87,7 @@ function StarsAdjustmentForm({ user, onSuccess }: { user: any; onSuccess: () => 
 export default function AdminUserDetail() {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const [notifications, setNotifications] = useState<any[]>([]);
   const userIdNum = userId ? parseInt(userId, 10) : undefined;
   const { data: userDetailData, isLoading, error, refetch } = useUserDetail(userIdNum);
   const { data: logs = [] } = useUserLogs(userIdNum);
@@ -100,6 +100,16 @@ export default function AdminUserDetail() {
     refetch();
   };
 
+  const handleMarkNotificationRead = (id: string) => {
+    setNotifications(prev =>
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    );
+  };
+
+  const handleClearNotifications = () => {
+    setNotifications([]);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -110,58 +120,46 @@ export default function AdminUserDetail() {
 
   if (error || !user) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b border-white/10 bg-slate-800/50 backdrop-blur">
-          <div className="container mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => navigate('/admin')}
-                className="flex items-center gap-2 text-primary hover:text-primary/80"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Admin
-              </button>
-              <div className="flex items-center gap-4">
-                <ThemeToggle />
-                <UserProfile />
-              </div>
-            </div>
-          </div>
-        </header>
-        <main className="container mx-auto px-6 py-8">
+      <PageLayout
+        notifications={notifications}
+        onMarkNotificationRead={handleMarkNotificationRead}
+        onClearNotifications={handleClearNotifications}
+      >
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          <button
+            onClick={() => navigate('/admin')}
+            className="flex items-center gap-2 text-muted-foreground hover:text-[#0BA5EC] mb-4 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Admin</span>
+          </button>
           <div className="text-center">
             <p className="text-danger">User not found or error loading user details</p>
           </div>
         </main>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-slate-800/50 backdrop-blur">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => navigate('/admin')}
-              className="flex items-center gap-2 text-primary hover:text-primary/80"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Admin
-            </button>
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <UserProfile />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-white">{user.name || user.email}</h1>
-          <p className="text-muted-foreground mt-2">{user.email}</p>
+    <PageLayout
+      notifications={notifications}
+      onMarkNotificationRead={handleMarkNotificationRead}
+      onClearNotifications={handleClearNotifications}
+    >
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Back Button & Title */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/admin')}
+            className="flex items-center gap-2 text-muted-foreground hover:text-[#0BA5EC] mb-4 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Admin</span>
+          </button>
+          <h1 className="text-foreground mb-2 text-2xl sm:text-3xl font-bold">{user.name || user.email}</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">{user.email}</p>
         </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* User Info */}
           <div className="lg:col-span-2 space-y-6">
@@ -318,7 +316,7 @@ export default function AdminUserDetail() {
           </div>
         </div>
       </main>
-    </div>
+    </PageLayout>
   );
 }
 
