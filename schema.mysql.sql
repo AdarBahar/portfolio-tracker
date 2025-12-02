@@ -649,3 +649,62 @@ COMMENT='Aggregated stats per user per season for leaderboard ranking';
 -- INSERT INTO users (email, name, auth_provider, is_demo)
 -- VALUES ('demo@demo.local', 'Demo User', 'demo', TRUE);
 
+-- ============================================================================
+-- TRADE ROOM VIEWS
+-- Helper views for common Trade Room queries
+-- ============================================================================
+
+-- View: Active Trade Rooms
+-- Lists all active and scheduled trade rooms with player count
+CREATE OR REPLACE VIEW active_trade_rooms AS
+SELECT
+  bp.id,
+  bp.name,
+  bp.host_user_id,
+  u.name AS host_name,
+  bp.state,
+  bp.start_time,
+  bp.duration_sec,
+  COUNT(bpm.id) AS player_count,
+  bp.max_players,
+  bp.starting_cash
+FROM bull_pens bp
+JOIN users u ON bp.host_user_id = u.id
+LEFT JOIN bull_pen_memberships bpm ON bp.id = bpm.bull_pen_id AND bpm.status = 'active'
+WHERE bp.state IN ('active', 'scheduled')
+GROUP BY bp.id;
+
+-- View: User Trade Room Positions
+-- Shows user positions with current market values and unrealized P&L
+-- Note: Column names in bull_pen_positions are: qty, avg_cost (not quantity, average_cost)
+CREATE OR REPLACE VIEW user_trade_room_positions AS
+SELECT
+  bpp.id,
+  bpp.bull_pen_id,
+  bpp.user_id,
+  bpp.symbol,
+  bpp.qty AS quantity,
+  bpp.avg_cost AS average_cost,
+  md.current_price,
+  (bpp.qty * md.current_price) AS current_value,
+  ((md.current_price - bpp.avg_cost) * bpp.qty) AS unrealized_pnl
+FROM bull_pen_positions bpp
+LEFT JOIN market_data md ON bpp.symbol = md.symbol;
+
+-- View: Trade Room Leaderboard
+-- Shows leaderboard rankings with P&L and performance metrics
+-- Note: Column names in leaderboard_snapshots are: rank, pnl_abs, pnl_pct, snapshot_at
+CREATE OR REPLACE VIEW trade_room_leaderboard AS
+SELECT
+  ls.bull_pen_id,
+  ls.`rank`,
+  ls.user_id,
+  u.name,
+  ls.portfolio_value,
+  ls.pnl_abs AS pnl,
+  ls.pnl_pct AS pnl_percent,
+  ls.snapshot_at AS created_at
+FROM leaderboard_snapshots ls
+JOIN users u ON ls.user_id = u.id
+ORDER BY ls.bull_pen_id, ls.`rank`;
+

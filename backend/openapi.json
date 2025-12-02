@@ -2,8 +2,8 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Portfolio Tracker API",
-    "version": "1.3.0",
-    "description": "Backend API for the Portfolio Tracker application (Node.js + Express + MySQL). Includes comprehensive audit logging, soft delete functionality, user/holding status management, Stars System gamification with achievement rules and composite ranking scores, and user profile endpoints with React Query integration."
+    "version": "1.4.0",
+    "description": "Backend API for the Portfolio Tracker application (Node.js + Express + MySQL). Includes comprehensive audit logging, soft delete functionality, user/holding status management, Stars System gamification with achievement rules and composite ranking scores, user profile endpoints with React Query integration, and Trade Room (Bull Pen) competitive trading simulation with real-time leaderboards and market data integration."
   },
   "servers": [
     {
@@ -2443,6 +2443,250 @@
           }
         }
       }
+    },
+    "/api/bull-pens": {
+      "get": {
+        "summary": "List all trade rooms (bull pens)",
+        "description": "Returns a list of all trade rooms with optional filtering by state and host.",
+        "tags": ["Trade Rooms"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "description": "Filter by room state (scheduled, active, completed, cancelled)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "host_user_id",
+            "in": "query",
+            "description": "Filter by host user ID",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of trade rooms",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TradeRoom" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new trade room",
+        "description": "Creates a new trade room (bull pen) session.",
+        "tags": ["Trade Rooms"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTradeRoomRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Trade room created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TradeRoom" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bull-pens/{id}": {
+      "get": {
+        "summary": "Get trade room details",
+        "description": "Returns detailed information about a specific trade room.",
+        "tags": ["Trade Rooms"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Trade room ID",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trade room details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TradeRoom" }
+              }
+            }
+          },
+          "404": {
+            "description": "Trade room not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bull-pen-orders": {
+      "get": {
+        "summary": "List orders in trade rooms",
+        "description": "Returns a list of orders with optional filtering by room and user.",
+        "tags": ["Trade Room Orders"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "bull_pen_id",
+            "in": "query",
+            "description": "Filter by trade room ID",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "description": "Filter by user ID",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TradeRoomOrder" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Place an order in a trade room",
+        "description": "Places a buy or sell order in a trade room.",
+        "tags": ["Trade Room Orders"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTradeRoomOrderRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order placed successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TradeRoomOrder" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid order request",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/leaderboard": {
+      "get": {
+        "summary": "Get trade room leaderboard",
+        "description": "Returns the leaderboard for a specific trade room with rankings and performance metrics.",
+        "tags": ["Trade Room Leaderboard"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "bull_pen_id",
+            "in": "query",
+            "required": true,
+            "description": "Trade room ID",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Leaderboard data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LeaderboardEntry" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/market-data": {
+      "get": {
+        "summary": "Get market data for stocks",
+        "description": "Returns current market data (prices, changes) for specified symbols.",
+        "tags": ["Market Data"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "symbols",
+            "in": "query",
+            "description": "Comma-separated list of stock symbols",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Market data for symbols",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MarketData" }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3480,6 +3724,270 @@
           "ui_badge_code": {
             "type": "string",
             "description": "UI badge code for displaying the achievement"
+          }
+        }
+      },
+      "TradeRoom": {
+        "type": "object",
+        "description": "Trade room (bull pen) session for competitive stock trading",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Trade room ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Trade room name",
+            "example": "Tech Stocks Challenge"
+          },
+          "host_user_id": {
+            "type": "integer",
+            "description": "User ID of the room host",
+            "example": 123
+          },
+          "state": {
+            "type": "string",
+            "enum": ["scheduled", "active", "completed", "cancelled"],
+            "description": "Current state of the trade room",
+            "example": "active"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the trade room starts",
+            "example": "2025-12-02T10:00:00Z"
+          },
+          "duration_sec": {
+            "type": "integer",
+            "description": "Duration of the trade room in seconds",
+            "example": 3600
+          },
+          "max_players": {
+            "type": "integer",
+            "description": "Maximum number of players allowed",
+            "example": 10
+          },
+          "starting_cash": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Starting cash for each player",
+            "example": 100000
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the trade room was created",
+            "example": "2025-12-02T09:00:00Z"
+          }
+        }
+      },
+      "CreateTradeRoomRequest": {
+        "type": "object",
+        "description": "Request body for creating a new trade room",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Trade room name",
+            "example": "Tech Stocks Challenge"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the trade room starts",
+            "example": "2025-12-02T10:00:00Z"
+          },
+          "duration_sec": {
+            "type": "integer",
+            "description": "Duration in seconds",
+            "example": 3600
+          },
+          "max_players": {
+            "type": "integer",
+            "description": "Maximum number of players",
+            "example": 10
+          },
+          "starting_cash": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Starting cash per player",
+            "example": 100000
+          }
+        },
+        "required": ["name", "start_time", "duration_sec", "max_players", "starting_cash"]
+      },
+      "TradeRoomOrder": {
+        "type": "object",
+        "description": "Order placed in a trade room",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Order ID",
+            "example": 1
+          },
+          "bull_pen_id": {
+            "type": "integer",
+            "description": "Trade room ID",
+            "example": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "User ID who placed the order",
+            "example": 123
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Stock symbol",
+            "example": "AAPL"
+          },
+          "side": {
+            "type": "string",
+            "enum": ["buy", "sell"],
+            "description": "Order side",
+            "example": "buy"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["market", "limit"],
+            "description": "Order type",
+            "example": "market"
+          },
+          "qty": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Order quantity",
+            "example": 100
+          },
+          "status": {
+            "type": "string",
+            "enum": ["new", "partially_filled", "filled", "cancelled", "rejected"],
+            "description": "Order status",
+            "example": "filled"
+          },
+          "placed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the order was placed",
+            "example": "2025-12-02T10:05:00Z"
+          }
+        }
+      },
+      "CreateTradeRoomOrderRequest": {
+        "type": "object",
+        "description": "Request body for placing an order in a trade room",
+        "properties": {
+          "bull_pen_id": {
+            "type": "integer",
+            "description": "Trade room ID",
+            "example": 1
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Stock symbol",
+            "example": "AAPL"
+          },
+          "side": {
+            "type": "string",
+            "enum": ["buy", "sell"],
+            "description": "Order side",
+            "example": "buy"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["market", "limit"],
+            "description": "Order type",
+            "example": "market"
+          },
+          "qty": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Order quantity",
+            "example": 100
+          },
+          "limit_price": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Limit price (required for limit orders)",
+            "example": 150.50
+          }
+        },
+        "required": ["bull_pen_id", "symbol", "side", "type", "qty"]
+      },
+      "LeaderboardEntry": {
+        "type": "object",
+        "description": "Leaderboard entry for a trade room",
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "description": "Player rank in the room",
+            "example": 1
+          },
+          "user_id": {
+            "type": "integer",
+            "description": "User ID",
+            "example": 123
+          },
+          "name": {
+            "type": "string",
+            "description": "User name",
+            "example": "John Doe"
+          },
+          "portfolio_value": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Current portfolio value",
+            "example": 125000
+          },
+          "pnl": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Profit/Loss in absolute terms",
+            "example": 25000
+          },
+          "pnl_percent": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Profit/Loss as percentage",
+            "example": 25.0
+          },
+          "stars": {
+            "type": "integer",
+            "description": "Stars earned in this room",
+            "example": 10
+          }
+        }
+      },
+      "MarketData": {
+        "type": "object",
+        "description": "Market data for a stock symbol",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Stock symbol",
+            "example": "AAPL"
+          },
+          "current_price": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Current stock price",
+            "example": 150.50
+          },
+          "company_name": {
+            "type": "string",
+            "description": "Company name",
+            "example": "Apple Inc."
+          },
+          "change_percent": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Percentage change",
+            "example": 2.5
+          },
+          "last_updated": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the data was last updated",
+            "example": "2025-12-02T15:30:00Z"
           }
         }
       }
