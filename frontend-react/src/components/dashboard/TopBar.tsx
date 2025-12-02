@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, LogOut, Settings, TrendingUp, Menu, X } from 'lucide-react';
+import { Bell, LogOut, Settings, TrendingUp, Menu, X, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ThemeToggle from '@/components/header/ThemeToggle';
@@ -119,17 +119,28 @@ export default function TopBar({
 
               {/* User Menu Dropdown */}
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
+                <div className="absolute right-0 mt-2 w-56 gradient-card backdrop-blur-sm rounded-xl shadow-2xl overflow-hidden border border-border">
                   <button
                     onClick={() => navigate('/profile')}
-                    className="w-full px-4 py-3 text-left text-foreground hover:bg-muted flex items-center gap-3 transition-colors text-sm"
+                    className="w-full px-4 py-3 text-left text-foreground hover:bg-muted/50 flex items-center gap-3 transition-colors text-sm"
                   >
                     <Settings className="w-4 h-4" />
                     Profile Settings
                   </button>
+                  {user?.isAdmin && (
+                    <button
+                      onClick={() => navigate('/admin')}
+                      className="w-full px-4 py-3 text-left text-[#7C3AED] hover:bg-[#7C3AED]/10 flex items-center gap-3 transition-colors border-t border-border text-sm"
+                    >
+                      <Shield className="w-4 h-4" />
+                      Admin Page
+                    </button>
+                  )}
                   <button
                     onClick={handleLogout}
-                    className="w-full px-4 py-3 text-left text-[#EF4444] hover:bg-[#EF4444]/10 flex items-center gap-3 transition-colors border-t border-border text-sm"
+                    className={`w-full px-4 py-3 text-left text-[#EF4444] hover:bg-[#EF4444]/10 flex items-center gap-3 transition-colors text-sm ${
+                      user?.isAdmin ? 'border-t border-border' : 'border-t border-border'
+                    }`}
                   >
                     <LogOut className="w-4 h-4" />
                     Logout
@@ -162,6 +173,15 @@ export default function TopBar({
               <Settings className="w-4 h-4" />
               Profile Settings
             </button>
+            {user?.isAdmin && (
+              <button
+                onClick={() => navigate('/admin')}
+                className="w-full px-4 py-3 text-left text-[#7C3AED] hover:bg-[#7C3AED]/10 rounded-lg transition-colors flex items-center gap-3 text-sm"
+              >
+                <Shield className="w-4 h-4" />
+                Admin Page
+              </button>
+            )}
             <button
               onClick={handleLogout}
               className="w-full px-4 py-3 text-left text-[#EF4444] hover:bg-[#EF4444]/10 rounded-lg transition-colors flex items-center gap-3 text-sm"
