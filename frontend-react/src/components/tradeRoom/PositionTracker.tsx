@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Loader, X, TrendingUp, TrendingDown } from 'lucide-react';
+import { Loader, X } from 'lucide-react';
 import { useUserPositions, usePositionStats, formatPosition } from '@/hooks/usePositionTracking';
-import { useMarketData } from '@/hooks/useMarketData';
 import { formatCurrency } from '@/utils/formatting';
 
 interface PositionTrackerProps {

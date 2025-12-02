@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Loader, TrendingUp, TrendingDown } from 'lucide-react';
+import { Loader } from 'lucide-react';
 import { usePositions } from '@/hooks/useBullPenOrders';
 import { useMarketData } from '@/hooks/useMarketData';
-import { useUserPositions, useTotalPnL, usePositionStats } from '@/hooks/usePositionTracking';
 import { formatCurrency } from '@/utils/formatting';
 import { calculatePositionValue, calculatePositionGainLoss } from '@/utils/tradeRoomCalculations';
 import { websocketService } from '@/services/websocketService';

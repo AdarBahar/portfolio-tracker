@@ -11,7 +11,6 @@ interface LeaderboardViewProps {
 }
 
 export default function LeaderboardView({ bullPenId, isHost = false }: LeaderboardViewProps) {
-  const [showSnapshot, setShowSnapshot] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
   const { data: leaderboardData, isLoading, refetch } = useLeaderboard(bullPenId);

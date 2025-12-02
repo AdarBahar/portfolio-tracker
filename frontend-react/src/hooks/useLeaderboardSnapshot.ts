@@ -42,9 +42,7 @@ export function useLeaderboardSnapshotHistory(bullPenId: number | undefined, lim
     queryKey: ['leaderboardSnapshotHistory', bullPenId, limit],
     queryFn: async () => {
       if (!bullPenId) return [];
-      const response = await apiClient.get(`/bull-pens/${bullPenId}/leaderboard/history`, {
-        params: { limit },
-      });
+      const response = await apiClient.get(`/bull-pens/${bullPenId}/leaderboard/history?limit=${limit}`);
       return (response.data as any).snapshots || [];
     },
     enabled: !!bullPenId,
@@ -63,7 +61,7 @@ export function useCreateLeaderboardSnapshot() {
       const response = await apiClient.post(`/bull-pens/${bullPenId}/leaderboard/snapshot`);
       return response.data;
     },
-    onSuccess: (data, bullPenId) => {
+    onSuccess: (_data, bullPenId) => {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: ['leaderboardSnapshot', bullPenId] });
       queryClient.invalidateQueries({ queryKey: ['leaderboardSnapshotHistory', bullPenId] });

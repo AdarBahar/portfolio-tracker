@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Loader, ChevronDown } from 'lucide-react';
-import { useBullPenOrders } from '@/hooks/useBullPenOrders';
+import { useOrders } from '@/hooks/useBullPenOrders';
 import { formatCurrency } from '@/utils/formatting';
 
 interface OrderHistoryProps {
@@ -22,12 +22,12 @@ interface Order {
   pnl?: number;
 }
 
-export default function OrderHistory({ bullPenId, limit = 20 }: OrderHistoryProps) {
+export default function OrderHistory({ bullPenId }: OrderHistoryProps) {
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const [filterSide, setFilterSide] = useState<'all' | 'buy' | 'sell'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'executed' | 'cancelled'>('all');
 
-  const { data: orders = [], isLoading } = useBullPenOrders(bullPenId, false, limit);
+  const { data: orders = [], isLoading } = useOrders(bullPenId, false);
 
   if (isLoading) {
     return (

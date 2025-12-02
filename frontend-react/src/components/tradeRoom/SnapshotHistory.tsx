@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Loader, TrendingUp, TrendingDown } from 'lucide-react';
 import { useLeaderboardSnapshotHistory } from '@/hooks/useLeaderboardSnapshot';
-import { formatCurrency } from '@/utils/formatting';
 
 interface SnapshotHistoryProps {
   bullPenId: number;
@@ -35,7 +34,7 @@ export default function SnapshotHistory({ bullPenId, limit = 10 }: SnapshotHisto
         <h3 className="text-lg font-semibold text-foreground mb-4">Snapshot History</h3>
         
         <div className="space-y-2">
-          {snapshots.map((snapshot, idx) => {
+          {snapshots.map((snapshot: any, idx: number) => {
             const snapshotTime = new Date(snapshot);
             const isSelected = selectedSnapshot === snapshot;
             
