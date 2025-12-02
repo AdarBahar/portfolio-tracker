@@ -5,6 +5,7 @@
 
 const db = require('../db');
 const logger = require('../utils/logger');
+const wsIntegration = require('../websocket/integration');
 
 /**
  * Create leaderboard snapshot for a room
@@ -113,7 +114,20 @@ async function createLeaderboardSnapshot(bullPenId) {
     
     await connection.commit();
     logger.info(`Leaderboard snapshot created for room ${bullPenId}: ${snapshotCount} entries`);
-    
+
+    // Broadcast leaderboard update via WebSocket
+    try {
+      wsIntegration.onLeaderboardUpdated(bullPenId, {
+        id: bullPenId,
+        created_at: new Date().toISOString(),
+        rankings: leaderboardData,
+        total_participants: leaderboardData.length,
+        snapshot_number: snapshotCount
+      });
+    } catch (wsErr) {
+      logger.warn('[WebSocket] Failed to broadcast leaderboard update:', wsErr);
+    }
+
     return { success: true, snapshotCount };
   } catch (err) {
     await connection.rollback();

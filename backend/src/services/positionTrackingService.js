@@ -5,6 +5,7 @@
 
 const db = require('../db');
 const logger = require('../utils/logger');
+const wsIntegration = require('../websocket/integration');
 
 /**
  * Get user position for a symbol in a room
@@ -155,8 +156,29 @@ async function updatePosition(bullPenId, userId, symbol, qty, fillPrice) {
     }
     
     await connection.commit();
-    
-    return await getPosition(bullPenId, userId, symbol);
+
+    const updatedPosition = await getPosition(bullPenId, userId, symbol);
+
+    // Broadcast position update via WebSocket
+    try {
+      if (updatedPosition) {
+        wsIntegration.onPositionUpdated(bullPenId, {
+          userId,
+          symbol,
+          qty: updatedPosition.qty,
+          avgCost: updatedPosition.avg_cost,
+          currentPrice: updatedPosition.currentPrice,
+          marketValue: updatedPosition.marketValue,
+          unrealizedPnL: updatedPosition.unrealizedPnl,
+          unrealizedPnLPercent: updatedPosition.unrealizedPnlPct,
+          updatedAt: new Date().toISOString()
+        });
+      }
+    } catch (wsErr) {
+      logger.warn('[WebSocket] Failed to broadcast position update:', wsErr);
+    }
+
+    return updatedPosition;
   } catch (err) {
     await connection.rollback();
     logger.error(`Error updating position for user ${userId} in room ${bullPenId}:`, err);

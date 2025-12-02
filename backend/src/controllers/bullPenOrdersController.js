@@ -5,6 +5,7 @@ const logger = require('../utils/logger');
 const auditLog = require('../utils/auditLog');
 const { validateOrderParams } = require('../utils/tradeRoomValidation');
 const positionTrackingService = require('../services/positionTrackingService');
+const wsIntegration = require('../websocket/integration');
 
 class OrderError extends Error {
   constructor(status, message) {
@@ -137,6 +138,22 @@ async function placeOrder(req, res) {
 
     if (status === 'rejected') {
       await connection.commit();
+
+      // Broadcast order rejection via WebSocket
+      try {
+        wsIntegration.onOrderFailed(bullPenId, {
+          id: orderId,
+          user_id: userId,
+          symbol,
+          quantity: numericQty,
+          side,
+          order_type: type,
+          status: 'rejected'
+        }, rejectionReason);
+      } catch (wsErr) {
+        logger.warn('[WebSocket] Failed to broadcast order rejection:', wsErr);
+      }
+
       return res.status(200).json({
         orderId,
         status,
@@ -257,6 +274,23 @@ async function placeOrder(req, res) {
         newPosition: newPosition ? { symbol: newPosition.symbol, qty: newPosition.qty } : null
       }
     });
+
+    // Broadcast order execution via WebSocket
+    try {
+      wsIntegration.onOrderExecuted(bullPenId, {
+        id: orderId,
+        user_id: userId,
+        symbol,
+        quantity: numericQty,
+        execution_price: effectivePrice,
+        side,
+        order_type: type,
+        executed_at: new Date().toISOString(),
+        status: 'filled'
+      });
+    } catch (wsErr) {
+      logger.warn('[WebSocket] Failed to broadcast order execution:', wsErr);
+    }
 
     return res.status(200).json({
       orderId,

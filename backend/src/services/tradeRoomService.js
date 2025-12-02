@@ -8,6 +8,7 @@ const db = require('../db');
 const budgetService = require('./budgetService');
 const { v4: uuid } = require('uuid');
 const logger = require('../utils/logger');
+const wsIntegration = require('../websocket/integration');
 
 /**
  * Validate room state transition
@@ -77,11 +78,29 @@ async function updateRoomStateIfNeeded(bullPenId) {
       'UPDATE bull_pens SET state = ? WHERE id = ?',
       [calculatedStatus, bullPenId]
     );
-    
+
     logger.info(`Room ${bullPenId} state updated: ${roomState.state} -> ${calculatedStatus}`);
+
+    // Broadcast room state change via WebSocket
+    try {
+      const [rooms] = await db.execute('SELECT * FROM bull_pens WHERE id = ?', [bullPenId]);
+      if (rooms.length > 0) {
+        wsIntegration.onRoomStateChanged(bullPenId, {
+          state: calculatedStatus,
+          status: calculatedStatus,
+          start_time: rooms[0].start_time,
+          end_time: rooms[0].end_time,
+          duration_minutes: rooms[0].duration_sec / 60,
+          member_count: 0
+        });
+      }
+    } catch (wsErr) {
+      logger.warn('[WebSocket] Failed to broadcast room state update:', wsErr);
+    }
+
     return { updated: true, newState: calculatedStatus };
   }
-  
+
   return { updated: false, newState: roomState.state };
 }
 
@@ -163,6 +182,23 @@ async function transitionRoomState(bullPenId, newState) {
   );
 
   logger.info(`Room ${bullPenId} transitioned: ${roomState.state} -> ${newState}`);
+
+  // Broadcast room state change via WebSocket
+  try {
+    const [rooms] = await db.execute('SELECT * FROM bull_pens WHERE id = ?', [bullPenId]);
+    if (rooms.length > 0) {
+      wsIntegration.onRoomStateChanged(bullPenId, {
+        state: newState,
+        status: newState,
+        start_time: rooms[0].start_time,
+        end_time: rooms[0].end_time,
+        duration_minutes: rooms[0].duration_sec / 60,
+        member_count: 0
+      });
+    }
+  } catch (wsErr) {
+    logger.warn('[WebSocket] Failed to broadcast room state change:', wsErr);
+  }
 
   return {
     success: true,
