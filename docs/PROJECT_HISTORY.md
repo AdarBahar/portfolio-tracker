@@ -1,5 +1,72 @@
 # Project History
 
+## 2025-12-02 – WebSocket Service Integration - Phase 3.2 Complete
+
+- **Git reference**: `main` branch, commit `b6c31e7`
+- **Summary**: Integrated WebSocket events with Trade Room services to enable real-time updates. Orders, leaderboard snapshots, positions, and room state changes now broadcast to connected clients automatically.
+
+- **Details**:
+  - **Order Controller Integration** (`bullPenOrdersController.js`):
+    - Added WebSocket broadcasting on order execution
+    - Added WebSocket broadcasting on order rejection
+    - Broadcasts include order details, execution price, and status
+    - Graceful error handling with logging
+
+  - **Leaderboard Service Integration** (`leaderboardSnapshotService.js`):
+    - Added WebSocket broadcasting after snapshot creation
+    - Broadcasts leaderboard rankings and portfolio values
+    - Includes participant count and snapshot metadata
+    - Automatic broadcast on every snapshot update
+
+  - **Position Tracking Service Integration** (`positionTrackingService.js`):
+    - Added WebSocket broadcasting after position updates
+    - Broadcasts position details, P&L, and market values
+    - Includes current price and unrealized P&L
+    - Broadcasts on both new positions and updates
+
+  - **Trade Room Service Integration** (`tradeRoomService.js`):
+    - Added WebSocket broadcasting on room state transitions
+    - Added WebSocket broadcasting on automatic state updates
+    - Broadcasts room state, duration, and member count
+    - Covers both manual and time-based state changes
+
+  - **Error Handling**:
+    - All WebSocket broadcasts wrapped in try-catch
+    - Failures logged but don't interrupt service operations
+    - Services continue functioning even if WebSocket is unavailable
+
+  - **Files Modified** (4 total):
+    - `backend/src/controllers/bullPenOrdersController.js`
+    - `backend/src/services/leaderboardSnapshotService.js`
+    - `backend/src/services/positionTrackingService.js`
+    - `backend/src/services/tradeRoomService.js`
+
+- **Reasoning / Motivation**:
+  - Real-time updates essential for competitive trading experience
+  - Services now automatically notify all connected clients
+  - Decoupled WebSocket from business logic via integration layer
+  - Graceful degradation if WebSocket unavailable
+
+- **Impact**:
+  - ✅ Real-time order notifications to all room members
+  - ✅ Real-time leaderboard updates every 5 minutes
+  - ✅ Real-time position tracking for all users
+  - ✅ Real-time room state changes
+  - ✅ Seamless integration with existing services
+  - ✅ No breaking changes to existing APIs
+
+- **Testing**:
+  - ✅ Build successful with all changes
+  - ✅ No TypeScript errors
+  - ✅ All services maintain backward compatibility
+  - ✅ WebSocket integration layer tested in Phase 3.1
+
+- **Open questions / next steps**:
+  - Phase 3.3: End-to-end testing with frontend
+  - Phase 3.4: Performance testing and optimization
+  - Phase 3.5: Add heartbeat/ping-pong for connection health
+  - Phase 4: Production deployment and monitoring
+
 ## 2025-12-02 – WebSocket Backend Integration - Phase 3 Complete
 
 - **Git reference**: `main` branch, commit `5585553`
