@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader } from 'lucide-react';
-import PageLayout from '@/components/layout/PageLayout';
+import { ArrowLeft, Loader, User } from 'lucide-react';
+import { PageLayout, PageHeader } from '@/components/layout';
 import { useUserDetail, useUserLogs, useGrantStars, useRemoveStars } from '@/hooks/useAdmin';
 import { formatCurrency, formatDate } from '@/utils/formatting';
 import BudgetStarsAdjustmentPanel from '@/components/admin/BudgetStarsAdjustmentPanel';
@@ -148,18 +148,22 @@ export default function AdminUserDetail() {
       onClearNotifications={handleClearNotifications}
     >
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Back Button & Title */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate('/admin')}
-            className="flex items-center gap-2 text-muted-foreground hover:text-[#0BA5EC] mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Admin</span>
-          </button>
-          <h1 className="text-foreground mb-2 text-2xl sm:text-3xl font-bold">{user.name || user.email}</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">{user.email}</p>
-        </div>
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/admin')}
+          className="flex items-center gap-2 text-muted-foreground hover:text-[#0BA5EC] mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Back to Admin</span>
+        </button>
+
+        {/* User Header */}
+        <PageHeader
+          title={user.name || user.email}
+          description={user.email}
+          icon={User}
+          iconColor="text-[#0BA5EC]"
+        />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* User Info */}
           <div className="lg:col-span-2 space-y-6">

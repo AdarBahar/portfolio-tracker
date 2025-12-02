@@ -7,6 +7,7 @@ import CurrentGames from '@/components/dashboard/CurrentGames';
 import AvailableGames from '@/components/dashboard/AvailableGames';
 import SearchBar from '@/components/dashboard/SearchBar';
 import CreateRoomModal from '@/components/dashboard/CreateRoomModal';
+import { PageHeader } from '@/components/layout';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function DashboardNew() {
@@ -70,12 +71,10 @@ export default function DashboardNew() {
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Header */}
-          <div className="gradient-card backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-8 border border-border shadow-lg">
-            <h1 className="text-foreground mb-2 text-2xl sm:text-3xl font-bold">Fantasy Trading Dashboard</h1>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Manage your trade rooms and compete with players worldwide
-            </p>
-          </div>
+          <PageHeader
+            title="Fantasy Trading Dashboard"
+            description="Manage your trade rooms and compete with players worldwide"
+          />
 
           {/* Search Bar */}
           <SearchBar

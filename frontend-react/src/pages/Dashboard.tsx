@@ -3,7 +3,7 @@ import { TrendingUp, TrendingDown, DollarSign, Calendar, Download, Plus } from '
 import { usePortfolioData } from '@/hooks/usePortfolioData';
 import { formatCurrency, formatPercent, getGainLossClass } from '@/utils/formatting';
 import { calculateSectorAllocation, calculateAssetClassAllocation, calculatePerformanceByHolding } from '@/utils/chartCalculations';
-import PageLayout from '@/components/layout/PageLayout';
+import { PageLayout, PageHeader, PageSection } from '@/components/layout';
 import MetricCard from '@/components/dashboard/MetricCard';
 import HoldingsTable from '@/components/dashboard/HoldingsTable';
 import AddPositionModal from '@/components/dashboard/AddPositionModal';
@@ -79,20 +79,19 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Dashboard Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-              <h1 className="text-foreground mb-2 text-2xl sm:text-3xl font-bold">Fantasy Broker</h1>
-              <p className="text-muted-foreground text-sm">Last updated: {lastUpdated.toLocaleTimeString()}</p>
-            </div>
+        <PageHeader
+          title="Fantasy Broker"
+          description={`Last updated: ${lastUpdated.toLocaleTimeString()}`}
+          action={
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 bg-[#0BA5EC] hover:bg-[#0BA5EC]/90 text-white rounded-lg transition-all font-medium text-sm hover:shadow-lg w-fit flex items-center gap-2"
+              className="px-4 py-2 bg-[#0BA5EC] hover:bg-[#0BA5EC]/90 text-white rounded-lg transition-all font-medium text-sm hover:shadow-lg w-full sm:w-fit flex items-center justify-center sm:justify-start gap-2"
             >
               <Plus className="w-4 h-4" />
               Add Position
             </button>
-          </div>
+          }
+        />
         {/* Profile Header Section */}
         <div className="mb-8">
           <ProfileHeaderContainer

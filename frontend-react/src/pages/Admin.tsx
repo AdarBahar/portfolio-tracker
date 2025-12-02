@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Settings, BarChart3, Gift, ArrowLeft } from 'lucide-react';
-import PageLayout from '@/components/layout/PageLayout';
+import { Users, Settings, BarChart3, Gift, ArrowLeft, Shield } from 'lucide-react';
+import { PageLayout, PageHeader } from '@/components/layout';
 import { useUsers, useUpdateUserAdmin } from '@/hooks/useAdmin';
 import { useRakeConfig, useRakeStats, useUpdateRakeConfig } from '@/hooks/useRake';
 import { usePromotions, useCreatePromotion } from '@/hooks/usePromotions';
@@ -78,13 +78,13 @@ export default function Admin() {
     >
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-white mb-2">Admin Panel</h2>
-          <p className="text-muted-foreground">
-            Manage platform settings, users, and promotions
-          </p>
-        </div>
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <PageHeader
+          title="Admin Panel"
+          description="Manage platform settings, users, and promotions"
+          icon={Shield}
+          iconColor="text-[#7C3AED]"
+        />
 
         {/* Tab Navigation */}
         <div className="flex gap-4 mb-8 border-b border-white/10">
