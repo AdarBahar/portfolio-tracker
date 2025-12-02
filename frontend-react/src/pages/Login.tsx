@@ -209,8 +209,13 @@ export default function Login() {
           // Handle cases where prompt is not displayed
           if (reason === 'unregistered_origin') {
             console.warn('[Google Sign-In] Origin not registered in Google Cloud Console');
+            console.warn('[Google Sign-In] Please register the origin in Google Cloud Console:');
+            console.warn('[Google Sign-In] 1. Go to Google Cloud Console');
+            console.warn('[Google Sign-In] 2. APIs & Services → Credentials');
+            console.warn('[Google Sign-In] 3. Edit OAuth 2.0 Client ID');
+            console.warn('[Google Sign-In] 4. Add origin to "Authorized JavaScript origins"');
             setFormError(
-              'Google Sign-In is not configured for this origin. Please use Demo Mode or Email/Password login.'
+              'Google Sign-In is not configured for this origin. Please contact support or use Demo Mode.'
             );
             setGoogleButtonState('idle');
           } else if (reason === 'user_cancel') {
@@ -223,8 +228,13 @@ export default function Login() {
           } else if (reason === 'opt_out_or_no_session') {
             console.log('[Google Sign-In] User opted out or no session');
             setGoogleButtonState('idle');
+          } else if (reason === 'fedcm_not_supported') {
+            console.warn('[Google Sign-In] FedCM not supported in this browser');
+            setFormError('Your browser does not support Google Sign-In. Please use Demo Mode.');
+            setGoogleButtonState('idle');
           } else {
             console.warn('[Google Sign-In] Prompt not displayed for reason:', reason);
+            console.warn('[Google Sign-In] This may indicate FedCM is not properly configured');
             setGoogleButtonState('idle');
           }
         });
