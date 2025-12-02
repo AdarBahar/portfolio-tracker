@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const http = require('http');
 const app = require('./app');
 const db = require('./db');
 const logger = require('./utils/logger');
@@ -7,18 +8,22 @@ const WebSocketServer = require('./websocket/server');
 const wsIntegration = require('./websocket/integration');
 
 const PORT = process.env.PORT || 4000;
-const WS_PORT = process.env.WS_PORT || 4001;
+
+// Create HTTP server that will be shared by Express and WebSocket
+// This is required for Phusion Passenger compatibility
+const server = http.createServer(app);
 
 // Start REST API server
-app.listen(PORT, async () => {
+server.listen(PORT, async () => {
   logger.log(`Portfolio Tracker backend listening on port ${PORT}`);
 
-  // Start WebSocket server
+  // Start WebSocket server on the same HTTP server
+  // This avoids Phusion Passenger's "listen() called more than once" error
   try {
-    const wsServer = new WebSocketServer(WS_PORT);
+    const wsServer = new WebSocketServer(null, server);
     wsServer.start();
     wsIntegration.initializeIntegration(wsServer);
-    logger.log(`[Server] WebSocket server started on port ${WS_PORT}`);
+    logger.log(`[Server] WebSocket server started on same HTTP server`);
   } catch (err) {
     logger.error('[Server] Failed to start WebSocket server:', err);
   }

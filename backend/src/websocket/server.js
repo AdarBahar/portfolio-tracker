@@ -9,8 +9,9 @@ const logger = require('../utils/logger');
 const RoomManager = require('./roomManager');
 
 class WebSocketServer {
-  constructor(port = 4001) {
+  constructor(port = 4001, httpServer = null) {
     this.port = port;
+    this.httpServer = httpServer;
     this.wss = null;
     this.roomManager = new RoomManager();
     this.clients = new Map(); // userId -> Set of WebSocket connections
@@ -18,9 +19,17 @@ class WebSocketServer {
 
   /**
    * Start the WebSocket server
+   * If httpServer is provided, attach WebSocket to it (for Phusion Passenger compatibility)
+   * Otherwise, create a standalone WebSocket server on the specified port
    */
   start() {
-    this.wss = new WebSocket.Server({ port: this.port });
+    // If httpServer is provided, attach WebSocket to it (Phusion Passenger mode)
+    if (this.httpServer) {
+      this.wss = new WebSocket.Server({ server: this.httpServer });
+    } else {
+      // Standalone mode: create WebSocket server on specified port
+      this.wss = new WebSocket.Server({ port: this.port });
+    }
 
     this.wss.on('connection', (ws) => {
       logger.log(`[WebSocket] New connection attempt`);
