@@ -274,7 +274,7 @@ export default function Login() {
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="flex-1 flex items-center justify-center p-8">
+        <div className="flex-1 flex items-center justify-center p-8 bg-white">
           <div className="w-full max-w-md">
             {/* Mobile Logo */}
             <div className="lg:hidden flex items-center gap-3 mb-8">
@@ -453,13 +453,10 @@ export default function Login() {
               </button>
 
               {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-background text-muted-foreground">Or continue with</span>
-                </div>
+              <div className="flex items-center gap-4">
+                <div className="flex-1 border-t border-border"></div>
+                <span className="text-sm text-muted-foreground whitespace-nowrap">Or continue with</span>
+                <div className="flex-1 border-t border-border"></div>
               </div>
 
               {/* Social Login */}
