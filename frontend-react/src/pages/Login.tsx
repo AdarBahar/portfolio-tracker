@@ -79,57 +79,41 @@ export default function Login() {
       }
     };
 
-    // Load Google Sign-In script if not already loaded
-    if (!window.google) {
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        if (window.google?.accounts?.id && googleClientId) {
-          const initConfig: any = {
-            client_id: googleClientId,
-            callback: window.handleCredentialResponse,
-            auto_select: false,
-          };
+    // Wait for Google Sign-In script to load (loaded in index.html)
+    const initializeGoogle = () => {
+      if (window.google?.accounts?.id && googleClientId) {
+        console.log('[Google Sign-In] Initializing with client ID:', googleClientId);
+        const initConfig: any = {
+          client_id: googleClientId,
+          callback: window.handleCredentialResponse,
+          auto_select: false,
+        };
 
-          // Only use FedCM in production (HTTPS)
-          // On localhost (HTTP), FedCM fails with "Not signed in with the identity provider"
-          if (!disableFedCM) {
-            initConfig.use_fedcm_for_prompt = true;
-            console.log('[Google Sign-In] Initialized with FedCM support (production)');
-          } else {
-            // Explicitly disable FedCM on localhost
-            initConfig.use_fedcm_for_prompt = false;
-            console.log('[Google Sign-In] Initialized without FedCM (localhost development)');
-          }
-
-          window.google.accounts.id.initialize(initConfig);
+        // Only use FedCM in production (HTTPS)
+        // On localhost (HTTP), FedCM fails with "Not signed in with the identity provider"
+        if (!disableFedCM) {
+          initConfig.use_fedcm_for_prompt = true;
+          console.log('[Google Sign-In] Initialized with FedCM support (production)');
+        } else {
+          // Explicitly disable FedCM on localhost
+          initConfig.use_fedcm_for_prompt = false;
+          console.log('[Google Sign-In] Initialized without FedCM (localhost development)');
         }
-      };
-      script.onerror = () => {
-        console.error('[Google Sign-In] Failed to load Google Sign-In script');
-      };
-      document.body.appendChild(script);
-    } else if (window.google?.accounts?.id && googleClientId) {
-      // Script already loaded, just initialize
-      const initConfig: any = {
-        client_id: googleClientId,
-        callback: window.handleCredentialResponse,
-        auto_select: false,
-      };
 
-      if (!disableFedCM) {
-        initConfig.use_fedcm_for_prompt = true;
-        console.log('[Google Sign-In] Already initialized with FedCM support (production)');
+        try {
+          window.google.accounts.id.initialize(initConfig);
+          console.log('[Google Sign-In] Initialization complete');
+        } catch (error) {
+          console.error('[Google Sign-In] Initialization error:', error);
+        }
       } else {
-        // Explicitly disable FedCM on localhost
-        initConfig.use_fedcm_for_prompt = false;
-        console.log('[Google Sign-In] Already initialized without FedCM (localhost development)');
+        console.warn('[Google Sign-In] Google library not ready yet, retrying...');
+        setTimeout(initializeGoogle, 100);
       }
+    };
 
-      window.google.accounts.id.initialize(initConfig);
-    }
+    // Initialize when component mounts
+    initializeGoogle();
   }, [login, navigate]);
 
   const onSubmit = async (data: LoginFormInputs) => {
@@ -185,25 +169,21 @@ export default function Login() {
     try {
       // Trigger Google Sign-In using the modern approach
       if (window.google?.accounts?.id) {
-        // Use the renderButton method directly for better FedCM compatibility
-        const buttonElement = document.getElementById('google-signin-button');
-        if (buttonElement) {
-          window.google.accounts.id.renderButton(buttonElement, {
-            type: 'standard',
-            theme: 'outline',
-            size: 'large',
-            text: 'signin_with',
-            locale: 'en_US',
+        console.log('[Google Sign-In] Attempting to trigger One Tap prompt');
+
+        // Trigger One Tap prompt directly
+        window.google.accounts.id.prompt((notification: any) => {
+          console.log('[Google Sign-In] Prompt notification:', {
+            isDisplayed: notification.isDisplayed?.(),
+            isNotDisplayed: notification.isNotDisplayed?.(),
+            getNotDisplayedReason: notification.getNotDisplayedReason?.(),
+            isSkippedMoment: notification.isSkippedMoment?.(),
+            isDismissedMoment: notification.isDismissedMoment?.(),
           });
-        } else {
-          // Fallback: trigger One Tap with FedCM-compatible options
-          window.google.accounts.id.prompt((notification: any) => {
-            // Handle notification status without using deprecated methods
-            if (notification.isDisplayed()) {
-              console.log('[Google Sign-In] One Tap displayed');
-            }
-          });
-        }
+        });
+      } else {
+        console.warn('[Google Sign-In] Google library not loaded yet');
+        setFormError('Google Sign-In is not ready. Please refresh the page and try again.');
       }
     } catch (error) {
       console.error('Google Sign-In error:', error);

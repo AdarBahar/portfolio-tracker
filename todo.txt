@@ -1,7 +1,5 @@
 save cache for tickers data, to reduce API calls
-run code review on frontend and backend
-Login - add last used label
-Login - google opens devtools
+
 
 
 Admin page
