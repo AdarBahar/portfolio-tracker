@@ -62,6 +62,7 @@ export default function Login() {
   useEffect(() => {
     const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '539842594800-bpqtcpi56vaf7nkiqcf1796socl2cjqp.apps.googleusercontent.com';
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+    const disableFedCM = import.meta.env.VITE_DISABLE_FEDCM === 'true';
 
     window.handleCredentialResponse = async (response: any) => {
       try {
@@ -86,14 +87,24 @@ export default function Login() {
       script.defer = true;
       script.onload = () => {
         if (window.google?.accounts?.id && googleClientId) {
-          window.google.accounts.id.initialize({
+          const initConfig: any = {
             client_id: googleClientId,
             callback: window.handleCredentialResponse,
             auto_select: false,
-            // FedCM-compatible options
-            use_fedcm_for_prompt: true,
-          });
-          console.log('[Google Sign-In] Initialized successfully with FedCM support');
+          };
+
+          // Only use FedCM in production (HTTPS)
+          // On localhost (HTTP), FedCM fails with "Not signed in with the identity provider"
+          if (!disableFedCM) {
+            initConfig.use_fedcm_for_prompt = true;
+            console.log('[Google Sign-In] Initialized with FedCM support (production)');
+          } else {
+            // Explicitly disable FedCM on localhost
+            initConfig.use_fedcm_for_prompt = false;
+            console.log('[Google Sign-In] Initialized without FedCM (localhost development)');
+          }
+
+          window.google.accounts.id.initialize(initConfig);
         }
       };
       script.onerror = () => {
@@ -102,14 +113,22 @@ export default function Login() {
       document.body.appendChild(script);
     } else if (window.google?.accounts?.id && googleClientId) {
       // Script already loaded, just initialize
-      window.google.accounts.id.initialize({
+      const initConfig: any = {
         client_id: googleClientId,
         callback: window.handleCredentialResponse,
         auto_select: false,
-        // FedCM-compatible options
-        use_fedcm_for_prompt: true,
-      });
-      console.log('[Google Sign-In] Already initialized with FedCM support');
+      };
+
+      if (!disableFedCM) {
+        initConfig.use_fedcm_for_prompt = true;
+        console.log('[Google Sign-In] Already initialized with FedCM support (production)');
+      } else {
+        // Explicitly disable FedCM on localhost
+        initConfig.use_fedcm_for_prompt = false;
+        console.log('[Google Sign-In] Already initialized without FedCM (localhost development)');
+      }
+
+      window.google.accounts.id.initialize(initConfig);
     }
   }, [login, navigate]);
 
