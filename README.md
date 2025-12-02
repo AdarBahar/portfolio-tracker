@@ -18,7 +18,7 @@ A modern, accessible, and database-ready portfolio tracking application built wi
 
 ## Quick Start
 
-### Local Development
+### React Frontend Development
 
 1. **Clone the repository:**
    ```bash
@@ -26,53 +26,79 @@ A modern, accessible, and database-ready portfolio tracking application built wi
    cd portfolio-tracker
    ```
 
-2. **Set up Google OAuth (optional):**
-   - See `GOOGLE_OAUTH_SETUP.md` for detailed instructions
-   - Or use Demo Mode (no setup required)
+2. **Install dependencies:**
+   ```bash
+   cd frontend-react
+   npm install
+   ```
 
-3. **Start a local server:**
+3. **Start development server:**
+   ```bash
+   npm run dev
+   ```
+   Server runs at `http://localhost:5173/`
+
+4. **Sign in:**
+   - **Google Sign-In:** Works with localhost setup (see `GOOGLE_OAUTH_LOCALHOST_SETUP.md`)
+   - **Demo Mode:** Works immediately, no setup needed
+
+### Build for Production
+
+```bash
+cd frontend-react
+npm run build
+```
+
+Output: `../react/` directory
+
+See `BUILD_AND_DEPLOY.md` for complete build and deployment instructions.
+
+### Legacy Vanilla JavaScript Version
+
+The original vanilla JavaScript version is still available:
+
+1. **Start a local server:**
    ```bash
    python3 -m http.server 8000
    # or
    npx serve
    ```
 
-4. **Open in browser:**
+2. **Open in browser:**
    ```
    http://localhost:8000/login.html
    ```
-
-5. **Sign in:**
-   - **Google Sign-In:** Requires OAuth setup (see step 2)
-   - **Demo Mode:** Works immediately, no setup needed
-
-That's it! No build process required for development.
 
 ## Project Structure
 
 ```
 portfolio-tracker/
-├── index.html                      # Main app page
-├── login.html                      # Login page
-├── styles/
-│   ├── style.css                   # Main styles
-│   └── login.css                   # Login page styles
-├── scripts/
-│   ├── app.js                      # Main entry point
-│   ├── login.js                    # Login page logic
-│   ├── auth.js                     # Authentication manager
-│   ├── state.js                    # State management
-│   ├── dataService.js              # Data persistence layer
-│   ├── ui.js                       # UI updates
-│   ├── charts.js                   # Chart rendering
-│   ├── sparklines.js               # Sparkline rendering
-│   ├── interactions.js             # User interactions
-│   ├── modals.js                   # Modal management
-│   ├── calculations.js             # Financial calculations
-│   ├── utils.js                    # Utility functions
-│   ├── constants.js                # Configuration
-│   └── sampleData.js               # Demo data
+├── frontend-react/                 # React frontend (NEW)
+│   ├── src/
+│   │   ├── pages/                  # Page components
+│   │   ├── components/             # Reusable components
+│   │   ├── hooks/                  # Custom React hooks
+│   │   ├── contexts/               # React contexts
+│   │   ├── utils/                  # Utility functions
+│   │   ├── App.tsx                 # Main app component
+│   │   └── main.tsx                # Entry point
+│   ├── index.html                  # HTML template
+│   ├── vite.config.ts              # Vite configuration
+│   ├── tailwind.config.ts          # Tailwind CSS configuration
+│   ├── package.json                # Dependencies
+│   ├── .env.production             # Production environment
+│   ├── .env.development            # Development environment
+│   └── README.md                   # Frontend documentation
+├── react/                          # Built React frontend (generated)
+├── backend/                        # Node.js/Express backend
+├── index.html                      # Legacy vanilla JS main page
+├── login.html                      # Legacy vanilla JS login page
+├── styles/                         # Legacy vanilla JS styles
+├── scripts/                        # Legacy vanilla JS scripts
 ├── schema.mysql.sql                # MySQL database schema
+├── BUILD_AND_DEPLOY.md             # Build and deployment guide
+├── GOOGLE_OAUTH_FEDCM_SETUP.md     # Google Sign-In FedCM setup
+├── GOOGLE_OAUTH_LOCALHOST_SETUP.md # Google Sign-In localhost setup
 ├── DATABASE_SETUP_MYSQL.md         # Database setup guide
 ├── DATABASE_MIGRATION_GUIDE.md     # Backend migration guide
 ├── DATABASE_SCHEMA_DIAGRAM.md      # Schema diagrams
@@ -81,7 +107,9 @@ portfolio-tracker/
 ├── REFACTORING.md                  # Refactoring documentation
 ├── IMPLEMENTATION_SUMMARY.md       # Implementation summary
 ├── AUTHENTICATION_SUMMARY.md       # Authentication documentation
-└── GOOGLE_OAUTH_SETUP.md           # Google OAuth setup guide
+├── docs/
+│   └── PROJECT_HISTORY.md          # Project history and changes
+└── README.md                       # This file
 ```
 
 ## Architecture
@@ -143,6 +171,43 @@ User Action → State Update → Notify Listeners → Update UI
 - Export portfolio summary
 - Copy to clipboard
 - Plain text format
+
+## React Frontend
+
+The application now includes a modern React frontend with TypeScript, Tailwind CSS, and Vite.
+
+### Features
+
+- **Modern UI** - Built with React 18+ and TypeScript
+- **Responsive Design** - Mobile-first approach with Tailwind CSS
+- **Dark Mode** - Theme switching with CSS variables
+- **Reusable Components** - PageHeader, PageSection, StatCard, ProfileStrip, AnimatedButton
+- **Animated Buttons** - Hover and click animations with loading/success states
+- **Real-time Updates** - React Query for data fetching and caching
+- **Type Safety** - Full TypeScript support
+- **Accessibility** - WCAG compliant with proper focus management
+
+### Development
+
+```bash
+cd frontend-react
+npm install
+npm run dev
+```
+
+### Production Build
+
+```bash
+cd frontend-react
+npm run build
+```
+
+See `BUILD_AND_DEPLOY.md` for complete build and deployment instructions.
+
+### Google Sign-In Setup
+
+- **Development**: See `GOOGLE_OAUTH_LOCALHOST_SETUP.md`
+- **Production**: See `GOOGLE_OAUTH_FEDCM_SETUP.md`
 
 ## Database Migration
 

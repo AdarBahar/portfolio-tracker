@@ -3630,3 +3630,148 @@ Successfully applied Phase 3 schema migration to local database:
   - Plan Phase 6: Additional features (notifications, settings, etc.)
   - Plan Phase 7: Performance optimization and monitoring
   - Plan Phase 8: E2E testing and QA automation
+
+## 2025-12-02 – Reusable Components, Animations, and FedCM Production Setup
+
+- **Git reference**: `main` branch, commits `8e16c81`, `3d8c03f`, `5e15f77`, `411446e`, `2579e4a`, `40cfcf9`
+- **Summary**: Created comprehensive reusable layout components (PageHeader, PageSection, StatCard, ProfileStrip), implemented animated buttons with hover/click effects across all pages, and configured FedCM for production Google Sign-In. Added complete build and deployment documentation.
+
+- **Details**:
+
+  - **Phase 1: Reusable Layout Components** (commit `8e16c81`):
+    - Created `PageHeader.tsx` - Reusable header with title, description, icon, and action button
+    - Created `PageSection.tsx` - Flexible section wrapper for organizing content
+    - Created `StatCard.tsx` - Card component for displaying statistics
+    - Created `ProfileStrip.tsx` - User profile display component
+    - Created `PageLayout.tsx` - Wrapper providing consistent TopBar header
+    - Created `index.ts` - Barrel export for easy imports
+    - Applied to Dashboard, Admin, AdminUserDetail pages
+    - Reduced code duplication and improved consistency
+    - Files created: `frontend-react/src/components/layout/` (5 new components)
+
+  - **Phase 2: Animated Buttons** (commits `5e15f77`, `411446e`):
+    - Created `AnimatedButton.tsx` - Reusable button component with multiple variants
+    - Supports 6 variants: primary, secondary, danger, success, ghost, outline
+    - Supports 4 sizes: sm, md, lg, icon
+    - Manages 4 states: idle, loading, success, error
+    - Hover animations: lift effect (translateY -2px) with shadow glow
+    - Click animations: scale effect (0.95x)
+    - Loading state: spinning icon with pulse glow
+    - Success state: bouncing checkmark
+    - Created `AnimatedButton.css` with comprehensive keyframes
+    - Applied to all pages:
+      - Login.tsx: Submit, Google, GitHub, Demo buttons
+      - Dashboard.tsx: Add Position button
+      - SearchBar.tsx: Create Room button
+      - TradeRoom.tsx: Join Room, Create Room buttons
+      - JoinBullPenModal.tsx: Cancel, Join buttons
+      - CreateBullPenModal.tsx: Cancel, Create buttons
+      - Admin.tsx: Create Promotion button
+      - AdminUserDetail.tsx: Grant/Remove Stars button
+    - Files created: `frontend-react/src/components/ui/AnimatedButton.tsx`, `AnimatedButton.css`
+    - Files deleted: `frontend-react/src/pages/Login.css` (consolidated into AnimatedButton.css)
+
+  - **Phase 3: Google Sign-In FedCM Production Setup** (commits `2579e4a`, `40cfcf9`):
+    - Initial fix: Disabled FedCM in production (`.env.production: VITE_DISABLE_FEDCM=true`)
+    - Realized FedCM is mandatory and disabling is not sustainable
+    - Final fix: Enabled FedCM in production (`.env.production: VITE_DISABLE_FEDCM=false`)
+    - Enhanced error handling in `Login.tsx`:
+      - Better logging for prompt display status
+      - Handle credential_unavailable reason (user not signed into Google)
+      - Handle user_cancel reason
+      - Handle opt_out_or_no_session reason
+      - Handle fedcm_not_supported reason
+    - Enhanced initialization logging:
+      - Log environment info (production/development, FedCM status)
+      - Log full initialization config for debugging
+      - Better reason messages for FedCM disable
+    - Created `GOOGLE_OAUTH_FEDCM_SETUP.md` with complete setup guide:
+      - Step-by-step origin registration instructions
+      - FedCM configuration steps
+      - Troubleshooting guide
+      - References to Google documentation
+    - Files modified: `frontend-react/.env.production`, `frontend-react/src/pages/Login.tsx`
+    - Files created: `GOOGLE_OAUTH_FEDCM_SETUP.md`
+
+  - **Build Results**:
+    - JavaScript: 447.79 kB (131.40 kB gzipped)
+    - CSS: 50.23 kB (9.28 kB gzipped)
+    - Total modules: 1857
+    - ✅ All builds successful with zero TypeScript errors
+
+  - **Files Created**:
+    - `frontend-react/src/components/layout/PageHeader.tsx`
+    - `frontend-react/src/components/layout/PageSection.tsx`
+    - `frontend-react/src/components/layout/StatCard.tsx`
+    - `frontend-react/src/components/layout/ProfileStrip.tsx`
+    - `frontend-react/src/components/layout/PageLayout.tsx`
+    - `frontend-react/src/components/layout/index.ts`
+    - `frontend-react/src/components/ui/AnimatedButton.tsx`
+    - `frontend-react/src/components/ui/AnimatedButton.css`
+    - `GOOGLE_OAUTH_FEDCM_SETUP.md`
+
+  - **Files Modified**:
+    - `frontend-react/src/pages/Login.tsx` - Updated all buttons to use AnimatedButton
+    - `frontend-react/src/pages/Dashboard.tsx` - Updated Add Position button
+    - `frontend-react/src/pages/Admin.tsx` - Updated Create Promotion button
+    - `frontend-react/src/pages/AdminUserDetail.tsx` - Updated Grant/Remove Stars button
+    - `frontend-react/src/components/dashboard/SearchBar.tsx` - Updated Create Room button
+    - `frontend-react/src/pages/TradeRoom.tsx` - Updated Join/Create Room buttons
+    - `frontend-react/src/components/tradeRoom/JoinBullPenModal.tsx` - Updated action buttons
+    - `frontend-react/src/components/tradeRoom/CreateBullPenModal.tsx` - Updated action buttons
+    - `frontend-react/.env.production` - FedCM configuration
+
+- **Reasoning / Motivation**:
+  - Reduce code duplication across pages with reusable components
+  - Improve consistency in UI/UX with standardized components
+  - Provide better user feedback with animated buttons
+  - Make Google Sign-In work reliably on production HTTPS
+  - FedCM is becoming mandatory - need proper setup for future compatibility
+  - Comprehensive documentation helps developers understand setup requirements
+
+- **Impact**:
+  - ✅ Consistent layout and styling across all pages
+  - ✅ Reduced code duplication (easier to maintain and update)
+  - ✅ Better user feedback with button animations
+  - ✅ Faster development with reusable components
+  - ✅ Google Sign-In configured for production FedCM
+  - ✅ Clear documentation for FedCM setup and troubleshooting
+  - ✅ Improved accessibility with proper focus states
+  - ✅ Better performance with GPU-accelerated animations
+
+- **Deployment / Ops notes**:
+  - **Frontend**: Rebuild required (`npm run build`)
+  - **Production deployment**:
+    - Deploy new build to `/fantasybroker/react/` directory
+    - Ensure origin is registered in Google Cloud Console (see GOOGLE_OAUTH_FEDCM_SETUP.md)
+    - FedCM configuration may take 10-30 minutes to propagate
+  - **Environment**: `.env.production` has `VITE_DISABLE_FEDCM=false` (FedCM enabled)
+  - **Google Cloud Console**: Must register origin for FedCM to work:
+    - Add `https://www.bahar.co.il` to Authorized JavaScript origins
+    - Add `https://bahar.co.il` to Authorized JavaScript origins
+    - Add `https://www.bahar.co.il/fantasybroker/react/` to Authorized JavaScript origins
+    - Enable FedCM configuration in OAuth 2.0 Client ID settings
+  - **Rollback**: All changes are non-breaking; can revert to previous build if needed
+
+- **Testing**:
+  - ✅ Build verification: TypeScript compilation successful (zero errors)
+  - ✅ Build verification: Vite build successful (2.44s)
+  - ✅ Build verification: Bundle size 447.79 kB (gzip: 131.40 kB)
+  - ✅ Manual testing: All reusable components render correctly
+  - ✅ Manual testing: Button animations work on all pages
+  - ✅ Manual testing: Hover effects display properly
+  - ✅ Manual testing: Click animations provide feedback
+  - ✅ Manual testing: Loading states work correctly
+  - ✅ Manual testing: Success states display checkmark
+  - ✅ Manual testing: All pages maintain functionality with new components
+  - ⏳ Pending: Full Google Sign-In flow after origin registration in Google Cloud Console
+
+- **Open questions / next steps**:
+  - Verify origin registration in Google Cloud Console for FedCM
+  - Test Google Sign-In on production after origin registration
+  - Consider adding more button variants (e.g., link button, icon-only button)
+  - Consider creating additional reusable components (Card, Badge, Modal, etc.)
+  - Consider adding component showcase/storybook
+  - Plan Phase 6: Additional UI components and refinements
+  - Plan Phase 7: Performance optimization and monitoring
+  - Plan Phase 8: E2E testing and QA automation
