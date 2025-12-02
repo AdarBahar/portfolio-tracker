@@ -2,6 +2,8 @@ const db = require('../db');
 const { badRequest, forbidden, internalError, notFound } = require('../utils/apiError');
 const logger = require('../utils/logger');
 const auditLog = require('../utils/auditLog');
+const { validateRoomCreation, validateRoomUpdate } = require('../utils/tradeRoomValidation');
+const tradeRoomService = require('../services/tradeRoomService');
 
 // Helper: build Bull Pen response object
 function mapBullPenRow(row) {
@@ -38,8 +40,18 @@ async function createBullPen(req, res) {
     inviteCode,
   } = req.body || {};
 
-  if (!name || !durationSec || !startingCash) {
-    return badRequest(res, 'Missing required fields: name, durationSec, startingCash');
+  // Validate input parameters
+  const validation = validateRoomCreation({
+    name,
+    durationSec,
+    startingCash,
+    maxPlayers,
+    startTime,
+    description,
+  });
+
+  if (!validation.valid) {
+    return badRequest(res, validation.errors.join('; '));
   }
 
   let connection;

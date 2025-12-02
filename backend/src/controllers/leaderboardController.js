@@ -1,6 +1,8 @@
 const db = require('../db');
 const { badRequest, forbidden, notFound, internalError } = require('../utils/apiError');
 const logger = require('../utils/logger');
+const leaderboardSnapshotService = require('../services/leaderboardSnapshotService');
+const positionTrackingService = require('../services/positionTrackingService');
 
 /**
  * Calculate portfolio value for a user in a bull pen
@@ -169,8 +171,108 @@ async function getLeaderboard(req, res) {
   }
 }
 
+/**
+ * POST /api/bull-pens/:id/leaderboard/snapshot
+ * Create a new leaderboard snapshot (admin or host only)
+ */
+async function createSnapshot(req, res) {
+  const userId = req.user && req.user.id;
+  const bullPenId = parseInt(req.params.id, 10);
+
+  if (!bullPenId) {
+    return badRequest(res, 'Missing bull pen id');
+  }
+
+  try {
+    // Verify user is host or admin
+    const [bullPenRows] = await db.execute(
+      'SELECT host_user_id FROM bull_pens WHERE id = ? AND deleted_at IS NULL',
+      [bullPenId]
+    );
+
+    if (!bullPenRows.length) {
+      return notFound(res, 'Bull pen not found');
+    }
+
+    const bullPen = bullPenRows[0];
+    if (bullPen.host_user_id !== userId && !(req.user && req.user.is_admin)) {
+      return forbidden(res, 'Only room host or admin can create snapshots');
+    }
+
+    // Create snapshot
+    const result = await leaderboardSnapshotService.createLeaderboardSnapshot(bullPenId);
+
+    if (!result.success) {
+      return internalError(res, result.error || 'Failed to create snapshot');
+    }
+
+    return res.json({
+      success: true,
+      snapshotCount: result.snapshotCount,
+      message: `Leaderboard snapshot created with ${result.snapshotCount} entries`,
+    });
+  } catch (err) {
+    logger.error('Error creating leaderboard snapshot:', err);
+    return internalError(res, 'Failed to create leaderboard snapshot');
+  }
+}
+
+/**
+ * GET /api/bull-pens/:id/leaderboard/snapshot
+ * Get latest leaderboard snapshot
+ */
+async function getLatestSnapshot(req, res) {
+  const bullPenId = parseInt(req.params.id, 10);
+
+  if (!bullPenId) {
+    return badRequest(res, 'Missing bull pen id');
+  }
+
+  try {
+    const snapshot = await leaderboardSnapshotService.getLatestSnapshot(bullPenId);
+
+    return res.json({
+      bullPenId,
+      snapshotCount: snapshot.length,
+      entries: snapshot,
+    });
+  } catch (err) {
+    logger.error('Error fetching latest snapshot:', err);
+    return internalError(res, 'Failed to fetch snapshot');
+  }
+}
+
+/**
+ * GET /api/bull-pens/:id/leaderboard/history
+ * Get leaderboard snapshot history
+ */
+async function getSnapshotHistory(req, res) {
+  const bullPenId = parseInt(req.params.id, 10);
+  const limit = Math.min(parseInt(req.query.limit || 10, 10), 100);
+
+  if (!bullPenId) {
+    return badRequest(res, 'Missing bull pen id');
+  }
+
+  try {
+    const history = await leaderboardSnapshotService.getSnapshotHistory(bullPenId, limit);
+
+    return res.json({
+      bullPenId,
+      historyCount: history.length,
+      snapshots: history,
+    });
+  } catch (err) {
+    logger.error('Error fetching snapshot history:', err);
+    return internalError(res, 'Failed to fetch snapshot history');
+  }
+}
+
 module.exports = {
   getLeaderboard,
   calculatePortfolioValue, // Export for use in background jobs
+  createSnapshot,
+  getLatestSnapshot,
+  getSnapshotHistory,
 };
 

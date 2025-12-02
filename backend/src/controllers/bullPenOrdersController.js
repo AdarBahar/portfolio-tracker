@@ -3,6 +3,8 @@ const { sendError, internalError, badRequest } = require('../utils/apiError');
 const { fetchPriceFromAPI } = require('./marketDataController');
 const logger = require('../utils/logger');
 const auditLog = require('../utils/auditLog');
+const { validateOrderParams } = require('../utils/tradeRoomValidation');
+const positionTrackingService = require('../services/positionTrackingService');
 
 class OrderError extends Error {
   constructor(status, message) {
@@ -73,18 +75,20 @@ async function placeOrder(req, res) {
     return badRequest(res, 'Missing required fields: bullPenId, symbol, side, type, qty');
   }
 
-  if (!['buy', 'sell'].includes(side)) {
-    return badRequest(res, 'Invalid side. Expected "buy" or "sell"');
-  }
+  // Validate order parameters
+  const validation = validateOrderParams({
+    symbol,
+    side,
+    type,
+    qty: Number(qty),
+    limitPrice: limitPrice ? Number(limitPrice) : undefined,
+  });
 
-  if (!['market', 'limit'].includes(type)) {
-    return badRequest(res, 'Invalid type. Expected "market" or "limit"');
+  if (!validation.valid) {
+    return badRequest(res, validation.errors.join('; '));
   }
 
   const numericQty = Number(qty);
-  if (!Number.isFinite(numericQty) || numericQty <= 0) {
-    return badRequest(res, 'qty must be a positive number');
-  }
 
   let connection;
   try {
