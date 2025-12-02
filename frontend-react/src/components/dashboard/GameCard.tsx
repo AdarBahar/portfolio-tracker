@@ -17,13 +17,13 @@ export default function GameCard({
   const getStateColor = (state: string) => {
     switch (state) {
       case 'active':
-        return 'bg-green-500/10 text-green-500 border-green-500/30';
+        return 'bg-[#16A34A]/10 text-[#16A34A] border-[#16A34A]/30';
       case 'scheduled':
-        return 'bg-blue-500/10 text-blue-500 border-blue-500/30';
+        return 'bg-[#0BA5EC]/10 text-[#0BA5EC] border-[#0BA5EC]/30';
       case 'completed':
-        return 'bg-gray-500/10 text-gray-500 border-gray-500/30';
+        return 'bg-[#93A3B8]/10 text-[#93A3B8] border-[#93A3B8]/30';
       default:
-        return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30';
+        return 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/30';
     }
   };
 
@@ -37,17 +37,17 @@ export default function GameCard({
   const durationDays = Math.floor(durationHours / 24);
 
   return (
-    <div className="gradient-card backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-border shadow-lg hover:shadow-xl transition-all">
+    <div className="gradient-card backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-border shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-3 sm:mb-4">
         <div className="flex-1 min-w-0">
-          <h3 className="text-foreground font-semibold text-lg truncate">{bullPen.name}</h3>
+          <h3 className="text-foreground font-semibold text-base sm:text-lg truncate">{bullPen.name}</h3>
           {bullPen.description && (
-            <p className="text-muted-foreground text-sm truncate mt-1">{bullPen.description}</p>
+            <p className="text-muted-foreground text-xs sm:text-sm truncate mt-1">{bullPen.description}</p>
           )}
         </div>
         <span
-          className={`ml-2 px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${getStateColor(
+          className={`ml-2 px-2 sm:px-3 py-1 rounded-lg text-xs font-medium border whitespace-nowrap ${getStateColor(
             bullPen.state
           )}`}
         >
@@ -56,47 +56,47 @@ export default function GameCard({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="space-y-3 mb-4">
         {/* Starting Cash */}
-        <div className="flex items-center gap-2 p-2 bg-muted/20 rounded-lg">
-          <DollarSign className="w-4 h-4 text-green-500 flex-shrink-0" />
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs">Starting Cash</p>
-            <p className="text-foreground font-semibold text-sm truncate">
-              ${bullPen.startingCash.toLocaleString()}
-            </p>
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            <DollarSign className="w-4 h-4 text-[#16A34A] flex-shrink-0" />
+            <span className="text-muted-foreground">Starting Cash</span>
           </div>
+          <p className="text-foreground font-semibold">
+            ${bullPen.startingCash.toLocaleString()}
+          </p>
         </div>
 
         {/* Duration */}
-        <div className="flex items-center gap-2 p-2 bg-muted/20 rounded-lg">
-          <Clock className="w-4 h-4 text-blue-500 flex-shrink-0" />
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs">Duration</p>
-            <p className="text-foreground font-semibold text-sm truncate">
-              {durationDays > 0 ? `${durationDays}d` : `${durationHours}h`}
-            </p>
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-[#0BA5EC] flex-shrink-0" />
+            <span className="text-muted-foreground">Duration</span>
           </div>
+          <p className="text-foreground font-semibold">
+            {durationDays > 0 ? `${durationDays}d` : `${durationHours}h`}
+          </p>
         </div>
 
         {/* Max Players */}
-        <div className="flex items-center gap-2 p-2 bg-muted/20 rounded-lg">
-          <Users className="w-4 h-4 text-purple-500 flex-shrink-0" />
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs">Max Players</p>
-            <p className="text-foreground font-semibold text-sm">{bullPen.maxPlayers}</p>
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-[#7C3AED] flex-shrink-0" />
+            <span className="text-muted-foreground">Max Players</span>
           </div>
+          <p className="text-foreground font-semibold">{bullPen.maxPlayers}</p>
         </div>
 
         {/* Start Date */}
-        <div className="flex items-center gap-2 p-2 bg-muted/20 rounded-lg">
-          <TrendingUp className="w-4 h-4 text-yellow-500 flex-shrink-0" />
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs">Starts</p>
-            <p className="text-foreground font-semibold text-sm truncate">
-              {formatDate(bullPen.startTime)}
-            </p>
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-[#F59E0B] flex-shrink-0" />
+            <span className="text-muted-foreground">Starts</span>
           </div>
+          <p className="text-foreground font-semibold">
+            {formatDate(bullPen.startTime)}
+          </p>
         </div>
       </div>
 
@@ -105,14 +105,14 @@ export default function GameCard({
         {isJoined ? (
           <button
             onClick={onView}
-            className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all font-medium text-sm"
+            className="flex-1 py-2 bg-gradient-to-r from-[#0BA5EC] to-[#7C3AED] hover:shadow-lg text-white rounded-lg transition-all font-medium text-sm"
           >
             View Room
           </button>
         ) : (
           <button
             onClick={onJoin}
-            className="flex-1 py-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:shadow-lg text-white rounded-lg transition-all font-medium text-sm"
+            className="flex-1 py-2 bg-[#16A34A] hover:bg-[#16A34A]/90 hover:shadow-lg text-white rounded-lg transition-all font-medium text-sm"
           >
             Join Room
           </button>

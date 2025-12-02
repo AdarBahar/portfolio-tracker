@@ -12,25 +12,25 @@ export default function PlayerProfile({ profile, stats }: PlayerProfileProps) {
       label: 'Global Rank',
       value: `#${stats.globalRank || 'N/A'}`,
       icon: Trophy,
-      color: 'text-yellow-500',
+      color: 'text-[#F59E0B]',
     },
     {
       label: 'Win Rate',
       value: `${(stats.winRate || 0).toFixed(1)}%`,
       icon: TrendingUp,
-      color: 'text-green-500',
+      color: 'text-[#16A34A]',
     },
     {
       label: 'Total Rooms',
       value: stats.totalRoomsPlayed || 0,
       icon: Target,
-      color: 'text-blue-500',
+      color: 'text-[#0BA5EC]',
     },
     {
       label: 'Total Wins',
       value: stats.totalWins || 0,
       icon: Award,
-      color: 'text-purple-500',
+      color: 'text-[#7C3AED]',
     },
   ];
 
@@ -44,26 +44,26 @@ export default function PlayerProfile({ profile, stats }: PlayerProfileProps) {
               <img
                 src={profile.picture}
                 alt={profile.name}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover ring-4 ring-blue-500/30"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover ring-4 ring-[#0BA5EC]/30"
               />
             ) : (
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center ring-4 ring-blue-500/30">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-[#0BA5EC] to-[#7C3AED] flex items-center justify-center ring-4 ring-[#0BA5EC]/30">
                 <span className="text-2xl text-white font-bold">
                   {profile.name?.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
-            <div className="absolute -bottom-2 -right-2 gradient-primary rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg">
+            <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-[#0BA5EC] to-[#7C3AED] rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg">
               <span className="text-xs sm:text-sm text-white font-bold">1</span>
             </div>
           </div>
 
           <div className="min-w-0 flex-1">
-            <h2 className="text-foreground mb-1 truncate font-semibold">{profile.name}</h2>
+            <h2 className="text-foreground mb-1 truncate font-semibold text-base">{profile.name}</h2>
             <p className="text-muted-foreground mb-2 text-sm sm:text-base truncate">
               @{profile.username || profile.name?.toLowerCase().replace(/\s+/g, '_')}
             </p>
-            <div className="flex items-center gap-1 text-green-500">
+            <div className="flex items-center gap-1 text-[#16A34A]">
               <TrendingUp className="w-4 h-4 flex-shrink-0" />
               <span className="text-xs sm:text-sm truncate">
                 ${(stats.totalRoomsPlayed * 1000).toLocaleString()} earned
@@ -79,7 +79,7 @@ export default function PlayerProfile({ profile, stats }: PlayerProfileProps) {
             return (
               <div
                 key={index}
-                className="bg-muted/30 rounded-xl p-3 sm:p-4 border border-border/50 hover:border-blue-500/50 transition-colors"
+                className="bg-muted/30 rounded-xl p-3 sm:p-4 border border-border/50 hover:border-[#0BA5EC]/50 transition-colors"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <Icon className={`w-4 h-4 flex-shrink-0 ${stat.color}`} />

@@ -30,16 +30,16 @@ export default function TopBar({
   };
 
   return (
-    <header className="border-b border-border bg-card/50 backdrop-blur sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+    <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 h-16">
+      <div className="max-w-7xl mx-auto px-4 h-full flex items-center">
+        <div className="flex items-center justify-between w-full">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-700 rounded-lg flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#0BA5EC] to-[#7C3AED] rounded-lg flex items-center justify-center shadow-lg">
               <TrendingUp className="w-6 h-6 text-white" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-foreground font-bold">Fantasy Trading</h1>
+              <h1 className="text-foreground font-bold text-base">Fantasy Trading</h1>
               <p className="text-muted-foreground text-xs">Master the Markets</p>
             </div>
             {/* Debug Badge */}
@@ -54,23 +54,23 @@ export default function TopBar({
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 hover:bg-muted rounded-lg transition"
+                className="relative p-2 text-muted-foreground hover:text-[#0BA5EC] hover:bg-muted rounded-lg transition-colors"
               >
-                <Bell className="w-5 h-5 text-foreground" />
+                <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-[#EF4444] rounded-full"></span>
                 )}
               </button>
 
               {/* Notifications Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-card border border-border rounded-lg shadow-lg p-4 max-h-96 overflow-y-auto">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-foreground">Notifications</h3>
+                <div className="absolute right-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-2xl p-4 max-h-96 overflow-y-auto">
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
+                    <h3 className="font-semibold text-foreground text-sm">Notifications</h3>
                     {notifications.length > 0 && (
                       <button
                         onClick={onClearNotifications}
-                        className="text-xs text-muted-foreground hover:text-foreground"
+                        className="text-xs text-muted-foreground hover:text-[#0BA5EC] transition-colors"
                       >
                         Clear all
                       </button>
@@ -83,8 +83,8 @@ export default function TopBar({
                       {notifications.map(notif => (
                         <div
                           key={notif.id}
-                          className={`p-2 rounded-lg cursor-pointer transition ${
-                            notif.read ? 'bg-muted/30' : 'bg-blue-500/10 border border-blue-500/30'
+                          className={`p-3 rounded-lg cursor-pointer transition ${
+                            notif.read ? 'bg-muted/30' : 'bg-[#0BA5EC]/10 border border-[#0BA5EC]/30'
                           }`}
                           onClick={() => onMarkNotificationRead(notif.id)}
                         >
@@ -119,17 +119,17 @@ export default function TopBar({
 
               {/* User Menu Dropdown */}
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg overflow-hidden">
+                <div className="absolute right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
                   <button
                     onClick={() => navigate('/profile')}
-                    className="w-full px-4 py-2 text-left text-foreground hover:bg-muted flex items-center gap-2 transition"
+                    className="w-full px-4 py-3 text-left text-foreground hover:bg-muted flex items-center gap-3 transition-colors text-sm"
                   >
                     <Settings className="w-4 h-4" />
                     Profile Settings
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="w-full px-4 py-2 text-left text-destructive hover:bg-destructive/10 flex items-center gap-2 transition border-t border-border"
+                    className="w-full px-4 py-3 text-left text-[#EF4444] hover:bg-[#EF4444]/10 flex items-center gap-3 transition-colors border-t border-border text-sm"
                   >
                     <LogOut className="w-4 h-4" />
                     Logout
@@ -157,14 +157,14 @@ export default function TopBar({
           <div className="md:hidden mt-4 space-y-2 border-t border-border pt-4">
             <button
               onClick={() => navigate('/profile')}
-              className="w-full px-4 py-2 text-left text-foreground hover:bg-muted rounded-lg transition flex items-center gap-2"
+              className="w-full px-4 py-3 text-left text-foreground hover:bg-muted rounded-lg transition-colors flex items-center gap-3 text-sm"
             >
               <Settings className="w-4 h-4" />
               Profile Settings
             </button>
             <button
               onClick={handleLogout}
-              className="w-full px-4 py-2 text-left text-destructive hover:bg-destructive/10 rounded-lg transition flex items-center gap-2"
+              className="w-full px-4 py-3 text-left text-[#EF4444] hover:bg-[#EF4444]/10 rounded-lg transition-colors flex items-center gap-3 text-sm"
             >
               <LogOut className="w-4 h-4" />
               Logout
