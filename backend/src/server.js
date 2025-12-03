@@ -13,22 +13,19 @@ const PORT = process.env.PORT || 4000;
 // This is required for Phusion Passenger compatibility
 const server = http.createServer(app);
 
-// Start REST API server
-server.listen(PORT, async () => {
-  logger.log(`Portfolio Tracker backend listening on port ${PORT}`);
+// Initialize WebSocket server on the HTTP server
+// This must be done BEFORE listen() is called
+try {
+  const wsServer = new WebSocketServer(null, server);
+  wsServer.start();
+  wsIntegration.initializeIntegration(wsServer);
+  logger.log(`[Server] WebSocket server initialized on same HTTP server`);
+} catch (err) {
+  logger.error('[Server] Failed to initialize WebSocket server:', err);
+}
 
-  // Start WebSocket server on the same HTTP server
-  // This avoids Phusion Passenger's "listen() called more than once" error
-  try {
-    const wsServer = new WebSocketServer(null, server);
-    wsServer.start();
-    wsIntegration.initializeIntegration(wsServer);
-    logger.log(`[Server] WebSocket server started on same HTTP server`);
-  } catch (err) {
-    logger.error('[Server] Failed to start WebSocket server:', err);
-  }
-
-  // Start background jobs only if DB is available and tables exist
+// Start background jobs initialization (async, doesn't block server startup)
+(async () => {
   try {
     // Check if bull_pens table exists (basic health check)
     await db.execute('SELECT 1 FROM bull_pens LIMIT 1');
@@ -45,4 +42,14 @@ server.listen(PORT, async () => {
     logger.warn('[Server] Skipping background jobs - DB tables not ready:', err.message);
     logger.warn('[Server] Server will continue without background jobs. Run schema migrations to enable jobs.');
   }
+})();
+
+// Start REST API server
+// In Phusion Passenger, this listen() call is intercepted and managed by Passenger
+// In standalone mode, this starts the server on the specified port
+server.listen(PORT, () => {
+  logger.log(`Portfolio Tracker backend listening on port ${PORT}`);
 });
+
+// Export server for Phusion Passenger
+module.exports = server;

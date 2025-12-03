@@ -30,14 +30,16 @@ class WebSocketServer {
       const basePath = process.env.API_BASE_PATH || '';
       const wsPath = `${basePath}/ws`;
       this.wss = new WebSocket.Server({ server: this.httpServer, path: wsPath });
+      logger.log(`[WebSocket] Server attached to HTTP server at path: ${wsPath}`);
     } else {
       // Standalone mode: create WebSocket server on specified port
       this.wss = new WebSocket.Server({ port: this.port });
+      logger.log(`[WebSocket] Server started on port ${this.port}`);
     }
 
     this.wss.on('connection', (ws) => {
       logger.log(`[WebSocket] New connection attempt`);
-      
+
       // Set timeout for authentication (5 seconds)
       const authTimeout = setTimeout(() => {
         if (!ws.userId) {
@@ -65,8 +67,6 @@ class WebSocketServer {
         logger.error('[WebSocket] Connection error:', err);
       });
     });
-
-    logger.log(`[WebSocket] Server started on port ${this.port}`);
   }
 
   /**
