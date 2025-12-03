@@ -13,10 +13,17 @@ Options +FollowSymLinks
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /fantasybroker/
-    
+
+    # === WebSocket Support ===
+    # CRITICAL: Ensure WebSocket upgrade requests are NOT rewritten and are passed to Phusion Passenger
+    # This allows /fantasybroker-api/ws to reach the backend Node.js server
+    RewriteCond %{HTTP:Upgrade} websocket [NC]
+    RewriteCond %{HTTP:Connection} upgrade [NC]
+    RewriteRule ^ - [L]
+
     # Redirect root to login page
     RewriteRule ^$ login.html [L]
-    
+
     # If the requested file/directory doesn't exist, don't rewrite
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
