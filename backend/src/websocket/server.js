@@ -29,16 +29,31 @@ class WebSocketServer {
       // Use the same base path as the REST API for consistency
       const basePath = process.env.API_BASE_PATH || '';
       const wsPath = `${basePath}/ws`;
+
+      logger.log(`[WebSocket] Attempting to attach to HTTP server...`);
+      logger.log(`[WebSocket] API_BASE_PATH: ${basePath}`);
+      logger.log(`[WebSocket] WebSocket path: ${wsPath}`);
+      logger.log(`[WebSocket] HTTP server: ${this.httpServer ? 'provided' : 'not provided'}`);
+
       this.wss = new WebSocket.Server({ server: this.httpServer, path: wsPath });
+
       logger.log(`[WebSocket] Server attached to HTTP server at path: ${wsPath}`);
+      logger.log(`[WebSocket] WebSocket server ready to accept connections`);
     } else {
       // Standalone mode: create WebSocket server on specified port
       this.wss = new WebSocket.Server({ port: this.port });
       logger.log(`[WebSocket] Server started on port ${this.port}`);
     }
 
-    this.wss.on('connection', (ws) => {
-      logger.log(`[WebSocket] New connection attempt`);
+    this.wss.on('connection', (ws, req) => {
+      logger.log(`[WebSocket] ✅ NEW CONNECTION ESTABLISHED`);
+      logger.log(`[WebSocket] Request URL: ${req.url}`);
+      logger.log(`[WebSocket] Request headers:`, {
+        upgrade: req.headers.upgrade,
+        connection: req.headers.connection,
+        'sec-websocket-key': req.headers['sec-websocket-key'],
+        'sec-websocket-version': req.headers['sec-websocket-version']
+      });
 
       // Set timeout for authentication (5 seconds)
       const authTimeout = setTimeout(() => {

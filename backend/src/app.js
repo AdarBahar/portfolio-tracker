@@ -131,6 +131,17 @@ app.use(`${BASE_PATH}/internal/v1/settlement`, requireInternalService, settlemen
 // Internal cancellation routes (service-to-service)
 app.use(`${BASE_PATH}/internal/v1/cancellation`, requireInternalService, cancellationRoutes);
 
+// Catch-all route for WebSocket upgrade requests
+// This allows the WebSocket server to handle upgrade requests
+// The WebSocket server is attached to the HTTP server and will intercept
+// requests with Upgrade: websocket header before Express processes them
+app.all(`${BASE_PATH}/ws`, (req, res) => {
+  // This route should never be reached if WebSocket is properly attached
+  // If we get here, it means the WebSocket upgrade failed
+  logger.warn('[Express] WebSocket upgrade request reached Express instead of WebSocket server');
+  res.status(400).json({ error: 'WebSocket upgrade failed' });
+});
+
 // Global error handler (basic)
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
