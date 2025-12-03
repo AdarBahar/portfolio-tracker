@@ -10,6 +10,12 @@ ErrorDocument 404 /404.html
 #  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 #</IfModule>
 
+# === WebSocket Support ===
+# Ensure WebSocket upgrade requests are NOT rewritten and are passed to Phusion Passenger
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^ - [L]
+
 # === Hard-block sensitive files fast (before any rewrites) ===
 # Deny .env, .ht*, dotfiles, VCS, and common config/lock files
 RewriteRule (?i)^(\.env|\.htaccess|\.htpasswd)$ - [F,L]

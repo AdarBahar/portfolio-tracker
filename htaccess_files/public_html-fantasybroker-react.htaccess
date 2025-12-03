@@ -10,7 +10,13 @@ Options +FollowSymLinks -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /fantasybroker/react/
-    
+
+    # === WebSocket Support ===
+    # Ensure WebSocket upgrade requests are NOT rewritten and are passed to Phusion Passenger
+    RewriteCond %{HTTP:Upgrade} websocket [NC]
+    RewriteCond %{HTTP:Connection} upgrade [NC]
+    RewriteRule ^ - [L]
+
     # If the requested file/directory doesn't exist, rewrite to index.html
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
