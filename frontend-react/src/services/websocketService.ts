@@ -29,14 +29,13 @@ class WebSocketService {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const hostname = window.location.hostname;
 
-    // In production (Phusion Passenger), WebSocket is attached to same HTTP server
-    // So we connect to the same port as the REST API (port 4000)
-    // The HTTP server will upgrade the connection to WebSocket at /ws path
-    // In development, also use the same port
-    const port = ':4000';
-    const path = '/ws';
+    // In production (Phusion Passenger), WebSocket is served through Apache
+    // at the same path as the REST API: /fantasybroker-api/ws
+    // No port needed - Apache handles the routing
+    // In development, also use the same path
+    const path = '/fantasybroker-api/ws';
 
-    return `${protocol}//${hostname}${port}${path}`;
+    return `${protocol}//${hostname}${path}`;
   }
 
   /**

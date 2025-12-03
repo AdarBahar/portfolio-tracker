@@ -26,7 +26,10 @@ class WebSocketServer {
     // If httpServer is provided, attach WebSocket to it (Phusion Passenger mode)
     if (this.httpServer) {
       // Attach WebSocket to specific path on the HTTP server
-      this.wss = new WebSocket.Server({ server: this.httpServer, path: '/ws' });
+      // Use the same base path as the REST API for consistency
+      const basePath = process.env.API_BASE_PATH || '';
+      const wsPath = `${basePath}/ws`;
+      this.wss = new WebSocket.Server({ server: this.httpServer, path: wsPath });
     } else {
       // Standalone mode: create WebSocket server on specified port
       this.wss = new WebSocket.Server({ port: this.port });
