@@ -1,0 +1,35 @@
+# Node.js Backend - Apache Configuration for Phusion Passenger
+# This .htaccess is for /public_html/fantasybroker/backend/
+# which is mapped to https://www.bahar.co.il/fantasybroker-api/
+
+# === CRITICAL: Disable all rewriting for Phusion Passenger ===
+# Phusion Passenger handles ALL requests - Apache should NOT rewrite anything
+<IfModule mod_rewrite.c>
+    RewriteEngine Off
+</IfModule>
+
+# === WebSocket Support ===
+# Allow WebSocket upgrade requests to pass through to Phusion Passenger
+<IfModule mod_headers.c>
+    # Ensure WebSocket connections are not buffered
+    Header set Connection "Upgrade"
+    Header set Upgrade "websocket"
+</IfModule>
+
+# === Security: Prevent access to sensitive files ===
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "\.(env|json|lock|yaml|yml)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# === Allow Phusion Passenger to handle all requests ===
+# Do NOT rewrite anything - let Phusion Passenger handle it
+PassengerEnabled on
+PassengerAppType node
+PassengerStartupFile src/server.js
+
