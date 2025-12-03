@@ -57,6 +57,33 @@ app.get(`${BASE_PATH}/api/health`, async (req, res) => {
   }
 });
 
+// WebSocket Diagnostics endpoint
+app.get(`${BASE_PATH}/api/ws-diagnostics`, (req, res) => {
+  return res.json({
+    status: 'ok',
+    websocket: {
+      enabled: true,
+      path: `${BASE_PATH}/ws`,
+      expectedPath: '/fantasybroker-api/ws',
+      apiBasePath: BASE_PATH,
+      port: process.env.PORT || 4000,
+      phusionPassenger: true,
+      httpServerAttached: true,
+    },
+    environment: {
+      nodeEnv: process.env.NODE_ENV || 'production',
+      apiBasePath: process.env.API_BASE_PATH || 'NOT SET',
+      port: process.env.PORT || 4000,
+    },
+    server: {
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      pid: process.pid,
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // OpenAPI (Swagger) JSON
 app.get(`${BASE_PATH}/api/openapi.json`, (req, res) => {
   res.json(openapi);

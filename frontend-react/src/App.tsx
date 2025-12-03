@@ -12,6 +12,7 @@ import Admin from './pages/Admin';
 import AdminUserDetail from './pages/AdminUserDetail';
 import NotFound from './pages/NotFound';
 import ProfileHeaderDemo from './components/header/ProfileHeader.demo';
+import WebSocketDiagnostics from './pages/WebSocketDiagnostics';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +39,7 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile-header-demo" element={<ProfileHeaderDemo />} />
+            <Route path="/ws-diagnostics" element={<WebSocketDiagnostics />} />
 
             {/* Protected Routes */}
             <Route
