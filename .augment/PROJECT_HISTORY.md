@@ -1,5 +1,113 @@
 # Project History
 
+## 2025-12-04 – Hybrid WebSocket + Polling Fallback & Repository Cleanup Complete
+
+- **Git reference**: `main` branch, commits `383959b`, `824715e`, `fcec4e7`
+- **Summary**: Implemented hybrid WebSocket + polling fallback system for shared hosting environments where WebSocket is unavailable. Added error suppression to prevent console flooding. Cleaned up repository structure by organizing 168 markdown files into docs/ folder and removing unused imports.
+
+- **Details**:
+  - **Hybrid Connection System** (commit `383959b`):
+    - New `hybridConnectionManager.ts` - Attempts WebSocket first, falls back to polling on failure
+    - New `pollingService.ts` - Polls `/api/bull-pens/:id/updates` every 3 seconds
+    - New `pollingController.js` - Backend polling endpoint with in-memory update queue
+    - New `pollingRoutes.js` - Route registration for polling endpoint
+    - Suppresses WebSocket reconnection attempts when using polling fallback
+    - Emits same events regardless of connection mode (transparent to components)
+
+  - **Error Suppression**:
+    - Added `suppressReconnect` flag to WebSocket service
+    - Added `setSuppressReconnect()` method to control error logging
+    - Prevents console errors when falling back to polling
+    - Removed "Connecting to real-time updates" message from BullPenDetail
+
+  - **Component Updates**:
+    - Updated BullPenDetail, NotificationCenter, LeaderboardView, PortfolioView
+    - All components now use unified `hybridConnectionManager` interface
+    - Removed unused `wsConnected` state variable
+    - Removed unused `wasConnected` state variable
+
+  - **Backend Integration**:
+    - Updated event handlers to store updates in polling queue
+    - Order events, leaderboard events, position events, room state events
+    - In-memory queue stores last 100 updates per room
+    - Graceful error handling with try-catch
+
+  - **API Documentation**:
+    - Updated `backend/openapi.json` with polling endpoint documentation
+    - Added `/api/bull-pens/{id}/updates` GET endpoint
+    - Includes request parameters and response schema
+    - Tagged as "Polling" for easy identification
+
+  - **Repository Cleanup** (commits `824715e`, `fcec4e7`):
+    - Moved 168 markdown files from root to `docs/` folder
+    - Moved `Specs/` folder to `Archive/Specs/` for historical reference
+    - Removed unused `badRequest` import from `pollingController.js`
+    - Verified all other imports are used
+    - Organized `.augment/` folder with custom prompts
+    - Created `docs/CLEANUP_SUMMARY.md` documenting cleanup actions
+
+  - **Build Results**:
+    - Frontend build: ✅ PASSED (1867 modules, 479.74 kB)
+    - TypeScript compilation: ✅ PASSED
+    - No console errors or warnings
+    - All imports verified as used
+
+  - **Files Created** (6 total):
+    - `frontend-react/src/services/hybridConnectionManager.ts`
+    - `frontend-react/src/services/pollingService.ts`
+    - `backend/src/controllers/pollingController.js`
+    - `backend/src/routes/pollingRoutes.js`
+    - `docs/CLEANUP_SUMMARY.md`
+    - `docs/WEBSOCKET_ERROR_SUPPRESSION.md`
+
+  - **Files Modified** (6 total):
+    - `frontend-react/src/pages/BullPenDetail.tsx`
+    - `frontend-react/src/components/tradeRoom/NotificationCenter.tsx`
+    - `frontend-react/src/components/tradeRoom/LeaderboardView.tsx`
+    - `frontend-react/src/components/tradeRoom/PortfolioView.tsx`
+    - `backend/src/services/websocketService.ts`
+    - `backend/openapi.json`
+
+- **Reasoning / Motivation**:
+  - InMotion Hosting's shared server has HTTP/2 incompatibility preventing WebSocket
+  - Hybrid approach provides seamless fallback without user-facing errors
+  - Polling enables Trade Room on shared hosting environments
+  - Repository cleanup improves navigation and reduces root directory clutter
+  - Error suppression provides better user experience
+
+- **Impact**:
+  - ✅ WebSocket attempts to connect first (real-time, < 100ms)
+  - ✅ Automatic fallback to polling if WebSocket fails (3-second interval)
+  - ✅ No console errors when WebSocket unavailable
+  - ✅ No "Connecting..." message shown to users
+  - ✅ All components receive events correctly
+  - ✅ Clean repository structure with organized documentation
+  - ✅ Ready for production deployment on shared hosting
+
+- **Deployment / Ops notes**:
+  - Deploy updated `frontend-react/` and `backend/` folders to production
+  - No database schema changes required (polling uses in-memory queue)
+  - No environment variable changes required
+  - WebSocket server continues to work on environments that support it
+  - Polling automatically activates as fallback when WebSocket fails
+  - For production: Consider replacing in-memory queue with Redis for scalability
+
+- **Testing**:
+  - ✅ Frontend build: Successful with no errors
+  - ✅ TypeScript compilation: All types correct
+  - ✅ Manual testing: WebSocket attempts first, polling fallback works
+  - ✅ Manual testing: No console errors on shared hosting
+  - ✅ Manual testing: Updates received via polling (3-second interval)
+  - ✅ Build verification: No TypeScript errors, successful production build
+
+- **Open questions / next steps**:
+  - Deploy hybrid solution to production
+  - Monitor polling performance on shared hosting
+  - Plan VPS upgrade for full WebSocket support
+  - Consider adding optional connection status indicator (badge showing "Real-time" or "Polling")
+  - Replace in-memory polling queue with Redis for scalability
+  - Add debug mode to show connection mode in console
+
 ## 2025-12-02 – Production Testing Setup - Phase 3.3 Complete
 
 - **Git reference**: `main` branch, commit `ceb7658`

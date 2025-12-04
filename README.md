@@ -51,7 +51,50 @@ npm run build
 
 Output: `../react/` directory
 
-See `BUILD_AND_DEPLOY.md` for complete build and deployment instructions.
+#### Build & Deployment Instructions
+
+**Frontend Build:**
+```bash
+cd frontend-react
+npm install          # Install dependencies
+npm run build        # Build for production
+```
+
+**Backend Setup:**
+```bash
+cd backend
+npm install          # Install dependencies
+npm start            # Start backend server (port 4000)
+```
+
+**Deployment to Production:**
+
+1. **Frontend Deployment:**
+   - Build output is in `react/` directory
+   - Deploy to web server at `/fantasybroker/react/` path
+   - Ensure `.htaccess` file is deployed for security headers
+   - See `docs/BUILD_AND_DEPLOY.md` for detailed deployment methods
+
+2. **Backend Deployment:**
+   - Deploy `backend/` folder to production server
+   - Ensure Node.js is installed (v14+)
+   - Set environment variables (see `.env.example`)
+   - Restart backend service after deployment
+   - WebSocket server starts automatically on port 4001
+
+3. **Database Setup:**
+   - Import `schema.mysql.sql` to create tables
+   - Ensure MySQL/MariaDB is running
+   - Update database credentials in backend `.env`
+
+4. **Hybrid Connection (Shared Hosting):**
+   - WebSocket attempts to connect first (real-time)
+   - Automatically falls back to polling if WebSocket fails
+   - Polling interval: 3 seconds
+   - No user-facing errors or messages
+   - Works seamlessly on shared hosting without WebSocket support
+
+See `docs/BUILD_AND_DEPLOY.md` for complete build and deployment instructions.
 
 ### Legacy Vanilla JavaScript Version
 
