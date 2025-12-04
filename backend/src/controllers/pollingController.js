@@ -6,7 +6,7 @@
 
 const db = require('../db');
 const logger = require('../utils/logger');
-const { badRequest, notFound, internalError } = require('../utils/apiError');
+const { notFound, internalError } = require('../utils/apiError');
 
 /**
  * Store for tracking room updates

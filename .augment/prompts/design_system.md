@@ -1,0 +1,1 @@
+Update the `.augment/design-system.md` for changes done on the react UI to make sure that we keep using the same design rules across the app.

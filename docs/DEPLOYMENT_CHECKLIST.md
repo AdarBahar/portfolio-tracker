@@ -1,200 +1,166 @@
 # Production Deployment Checklist
 
-## Pre-Deployment Verification
+## Pre-Deployment (Local)
 
-### ✅ Security Audit Complete
-- [x] No `config.local.js` in deployment package
-- [x] No `config.local.example.js` in deployment package
-- [x] No `.md` documentation files in deployment package
-- [x] No test/spec files in deployment package
-- [x] Google OAuth Client ID properly configured in `config.js`
-- [x] Backend `.env.example` is template-only (no real credentials)
+### Backend
+- [ ] Run `npm run build` - no errors
+- [ ] Run `npm test` - all tests pass
+- [ ] Check `.env.production` configured
+- [ ] Verify database credentials
+- [ ] Verify JWT secret set
+- [ ] Verify CORS origin set
+- [ ] Check WebSocket port 4001 available
+- [ ] Review recent commits
+- [ ] Tag release: `git tag v3.3.0`
 
-### ✅ Configuration Files
-- [x] `scripts/config.js` - Contains production Google Client ID
-- [x] `scripts/config.js` - Auto-detects production hostname
-- [x] `backend/.env.example` - Template for production environment variables
+### Frontend
+- [ ] Run `npm run build` - no errors
+- [ ] Run `npm run type-check` - no errors
+- [ ] Check `.env.production` configured
+- [ ] Verify API URL correct
+- [ ] Verify Google Client ID set
+- [ ] Check build output in `react/` directory
+- [ ] Verify bundle size acceptable
+- [ ] Review recent commits
 
-### ✅ Deployment Package Contents
-- **Total Files:** 71 files
-- **Frontend:** 3 HTML, 3 CSS, 26 JavaScript files
-- **Backend:** Complete source code, no development files
-- **Size:** ~403 KB
+### Code Quality
+- [ ] No console errors in dev
+- [ ] No React warnings in dev
+- [ ] No TypeScript errors
+- [ ] No linting errors
+- [ ] All tests passing
+- [ ] Code reviewed
+- [ ] Security audit passed
 
-## Deployment Steps
+## Deployment (Production)
 
-### 1. Build Deployment Package
-```bash
-./deploy_zip.sh
-```
+### Backend Deployment
+- [ ] SSH into production server
+- [ ] Navigate to `/var/www/fantasybroker-api`
+- [ ] Deploy using rsync/SCP/Git
+- [ ] Copy `.env.production` file
+- [ ] Run `npm install`
+- [ ] Run `npm run build`
+- [ ] Start backend: `pm2 start dist/src/server.js`
+- [ ] Verify process running: `pm2 status`
+- [ ] Check logs: `pm2 logs portfolio-backend`
 
-**Output:** `dist/deploy/portfolio-tracker-deploy.zip`
+### Frontend Deployment
+- [ ] Navigate to `/var/www/fantasybroker/react`
+- [ ] Deploy using rsync/SCP/Git
+- [ ] Verify file permissions
+- [ ] Clear web server cache
+- [ ] Verify index.html present
+- [ ] Verify assets directory present
 
-### 2. Extract on Production Server
-```bash
-unzip portfolio-tracker-deploy.zip -d /path/to/production
-```
-
-### 3. Configure Backend Environment
-```bash
-cd backend
-cp .env.example .env
-nano .env  # Edit with production values
-```
-
-**Required Environment Variables:**
-- `PORT` - Backend server port (default: 4000)
-- `DB_HOST` - MySQL host
-- `DB_PORT` - MySQL port (default: 3306)
-- `DB_USER` - MySQL username
-- `DB_PASSWORD` - MySQL password
-- `DB_NAME` - Database name (portfolio_tracker)
-- `JWT_SECRET` - Strong random secret for JWT tokens
-- `GOOGLE_CLIENT_ID` - Google OAuth Client ID (same as frontend)
-- `FINNHUB_API_KEY` - Finnhub API key for market data
-- `MARKET_DATA_MODE` - Set to `production`
-
-### 4. Install Backend Dependencies
-```bash
-cd backend
-npm ci --production
-```
-
-### 5. Start Backend Server
-```bash
-# Using PM2 (recommended)
-pm2 start src/server.js --name fantasybroker-api
-
-# Or using node directly
-node src/server.js
-```
-
-### 6. Verify Backend is Running
-```bash
-curl http://localhost:4000/health
-```
-
-Expected response: `{"status":"ok"}`
-
-### 7. Deploy Frontend Files
-Copy frontend files to web server directory:
-```bash
-cp index.html /var/www/html/fantasybroker/
-cp login.html /var/www/html/fantasybroker/
-cp trade-room.html /var/www/html/fantasybroker/
-cp -r scripts /var/www/html/fantasybroker/
-cp -r styles /var/www/html/fantasybroker/
-```
-
-### 8. Configure Web Server
-
-**For Apache (.htaccess):**
-```apache
-# Enable CORS for API calls
-Header set Access-Control-Allow-Origin "*"
-
-# Enable HTTPS redirect
-RewriteEngine On
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-```
-
-**For Nginx:**
-```nginx
-location /fantasybroker/ {
-    root /var/www/html;
-    index index.html;
-    try_files $uri $uri/ =404;
-}
-
-location /fantasybroker-api/ {
-    proxy_pass http://localhost:4000/;
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection 'upgrade';
-    proxy_set_header Host $host;
-    proxy_cache_bypass $http_upgrade;
-}
-```
+### Database
+- [ ] Verify database connection
+- [ ] Check all tables exist
+- [ ] Verify schema up to date
+- [ ] Check data integrity
+- [ ] Backup database before deployment
 
 ## Post-Deployment Verification
 
-### ✅ Frontend Checks
-- [ ] Visit `https://www.bahar.co.il/fantasybroker/`
-- [ ] Verify page loads without errors
-- [ ] Check browser console for errors
-- [ ] Verify `config.local.js` returns 404 (should not exist)
-- [ ] Test theme toggle (light/dark mode)
-- [ ] Test "Join the game" banner link
+### Backend
+- [ ] REST API responding: `curl https://www.bahar.co.il/fantasybroker-api/api/health`
+- [ ] WebSocket server running: `lsof -i :4001`
+- [ ] Database connected
+- [ ] No errors in logs
+- [ ] Process memory usage normal
+- [ ] CPU usage normal
 
-### ✅ Authentication Checks
-- [ ] Visit `https://www.bahar.co.il/fantasybroker/login.html`
-- [ ] Test Google Sign-In button appears
-- [ ] Test Demo Mode login
-- [ ] Verify JWT token is stored in localStorage
-- [ ] Test logout functionality
+### Frontend
+- [ ] Page loads: `https://www.bahar.co.il/fantasybroker/react/`
+- [ ] No console errors (F12)
+- [ ] No React warnings
+- [ ] Assets loading correctly
+- [ ] CSS styling correct
+- [ ] Responsive design works
 
-### ✅ Trade Room Checks
-- [ ] Visit `https://www.bahar.co.il/fantasybroker/trade-room.html`
-- [ ] Verify redirect to login if not authenticated
-- [ ] Test dashboard view loads
-- [ ] Test BullPen detail view
-- [ ] Test trading panel
-- [ ] Test portfolio display
-- [ ] Test leaderboard
+### Functionality
+- [ ] Login works
+- [ ] Google Sign-In works
+- [ ] Dashboard loads
+- [ ] Trade Room loads
+- [ ] Can create room
+- [ ] Can join room
+- [ ] Can place order
+- [ ] Real-time updates work
+- [ ] Leaderboard updates
+- [ ] Position tracking works
+- [ ] WebSocket connection established
 
-### ✅ API Checks
-- [ ] Test `/api/health` endpoint
-- [ ] Test `/api/auth/google` endpoint
-- [ ] Test `/api/my/bull-pens` endpoint (requires auth)
-- [ ] Test `/api/market-data/:symbol` endpoint
-- [ ] Verify CORS headers are set correctly
+### Performance
+- [ ] Page load time < 3 seconds
+- [ ] API response time < 500ms
+- [ ] WebSocket latency < 100ms
+- [ ] No memory leaks
+- [ ] No connection timeouts
+- [ ] Concurrent users working
 
-### ✅ Security Checks
-- [ ] Verify `config.local.js` is NOT accessible
-- [ ] Verify `config.local.example.js` is NOT accessible
-- [ ] Verify `.env` file is NOT accessible
-- [ ] Verify backend source code is NOT accessible from web
-- [ ] Test HTTPS is enforced
-- [ ] Verify JWT tokens expire correctly
+### Security
+- [ ] HTTPS working
+- [ ] CSP headers set
+- [ ] CORS configured correctly
+- [ ] JWT validation working
+- [ ] No sensitive data in logs
+- [ ] No security warnings
+
+## Monitoring Setup
+
+- [ ] Error tracking configured (Sentry/etc)
+- [ ] Performance monitoring configured
+- [ ] WebSocket connection monitoring
+- [ ] Database monitoring
+- [ ] Server resource monitoring
+- [ ] Alerts configured
+- [ ] Log aggregation configured
 
 ## Rollback Plan
 
-If issues are found:
+- [ ] Previous version tagged
+- [ ] Rollback procedure documented
+- [ ] Database backup available
+- [ ] Rollback tested (optional)
+- [ ] Team notified of rollback plan
 
-1. **Stop backend server:**
-   ```bash
-   pm2 stop fantasybroker-api
-   ```
+## Communication
 
-2. **Restore previous version:**
-   ```bash
-   cp -r /path/to/backup/* /var/www/html/fantasybroker/
-   ```
+- [ ] Team notified of deployment
+- [ ] Users notified of maintenance (if needed)
+- [ ] Support team briefed
+- [ ] Deployment time scheduled
+- [ ] Rollback contact identified
 
-3. **Restart backend with previous version:**
-   ```bash
-   pm2 restart fantasybroker-api
-   ```
+## Post-Deployment
 
-## Monitoring
+- [ ] Monitor for 24 hours
+- [ ] Collect user feedback
+- [ ] Check error logs
+- [ ] Verify performance metrics
+- [ ] Document any issues
+- [ ] Plan next deployment
 
-### Logs to Monitor
-- Backend logs: `pm2 logs fantasybroker-api`
-- Web server logs: `/var/log/apache2/error.log` or `/var/log/nginx/error.log`
-- Browser console: Check for JavaScript errors
+## Sign-Off
 
-### Metrics to Track
-- API response times
-- Error rates
-- User authentication success rate
-- Market data API usage
+- [ ] QA Lead: _________________ Date: _______
+- [ ] Dev Lead: ________________ Date: _______
+- [ ] DevOps Lead: _____________ Date: _______
+- [ ] Product Owner: ___________ Date: _______
 
-## Support
+## Deployment Details
 
-For issues, check:
-1. `DEPLOYMENT_SECURITY_AUDIT.md` - Security audit details
-2. `README.md` - General project documentation
-3. Backend logs for API errors
-4. Browser console for frontend errors
+**Deployment Date**: _______________
+**Deployed By**: ___________________
+**Version**: ______________________
+**Commit Hash**: ___________________
+**Duration**: ______________________
+**Issues**: ________________________
+
+## Notes
+
+```
+[Space for deployment notes]
+```
 
