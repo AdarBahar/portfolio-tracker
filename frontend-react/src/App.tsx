@@ -24,10 +24,16 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // Use different basename for development vs production
+  // Use different basename for development vs staging vs production
   // Development (localhost): use root path "/"
+  // Staging: use "/fantasybroker-staging"
   // Production: use "/fantasybroker/react"
-  const basename = import.meta.env.DEV ? '/' : '/fantasybroker/react';
+  const isStaging = import.meta.env.VITE_ENVIRONMENT === 'staging';
+  const basename = import.meta.env.DEV
+    ? '/'
+    : isStaging
+      ? '/fantasybroker-staging'
+      : '/fantasybroker/react';
 
   return (
     <QueryClientProvider client={queryClient}>

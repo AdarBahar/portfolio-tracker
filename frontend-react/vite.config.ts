@@ -5,10 +5,16 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // Base path for production deployment
+  // Base path for deployment
   // Note: Keep in sync with server configuration and .htaccess RewriteBase
-  // For development (localhost), use root path to avoid OAuth origin issues
-  base: process.env.NODE_ENV === 'production' ? '/fantasybroker/react/' : '/',
+  // Development (localhost): use root path to avoid OAuth origin issues
+  // Staging: use /fantasybroker-staging/
+  // Production: use /fantasybroker/react/
+  base: process.env.VITE_ENVIRONMENT === 'staging'
+    ? '/fantasybroker-staging/'
+    : process.env.NODE_ENV === 'production'
+      ? '/fantasybroker/react/'
+      : '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

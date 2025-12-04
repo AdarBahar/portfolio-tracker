@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ThemeToggle from '@/components/header/ThemeToggle';
 import DebugBadge from '@/components/DebugBadge';
+import StagingBadge from '@/components/StagingBadge';
 
 interface TopBarProps {
   notifications: any[];
@@ -42,8 +43,12 @@ export default function TopBar({
               <h1 className="text-foreground font-bold text-base">Fantasy Trading</h1>
               <p className="text-muted-foreground text-xs">Master the Markets</p>
             </div>
-            {/* Debug Badge */}
+            {/* Staging Badge */}
             <div className="ml-4">
+              <StagingBadge />
+            </div>
+            {/* Debug Badge */}
+            <div className="ml-2">
               <DebugBadge />
             </div>
           </div>
