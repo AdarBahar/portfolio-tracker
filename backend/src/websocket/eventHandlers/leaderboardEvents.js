@@ -1,9 +1,11 @@
 /**
  * Leaderboard Event Handlers for WebSocket Broadcasting
  * Broadcasts leaderboard updates to room subscribers
+ * Also adds updates to polling queue for clients using polling fallback
  */
 
 const logger = require('../../utils/logger');
+const { addRoomUpdate } = require('../../controllers/pollingController');
 
 /**
  * Broadcast leaderboard updated event
@@ -23,6 +25,7 @@ function broadcastLeaderboardUpdated(wsServer, bullPenId, snapshot) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'leaderboard_update', message.data);
     logger.log(`[LeaderboardEvents] Broadcasted leaderboard_update for room ${bullPenId}`);
   } catch (err) {
     logger.error('[LeaderboardEvents] Failed to broadcast leaderboard_update:', err);
@@ -49,6 +52,7 @@ function broadcastRankingChanged(wsServer, bullPenId, userId, oldRank, newRank, 
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'ranking_changed', message.data);
     logger.log(`[LeaderboardEvents] Broadcasted ranking_changed for user ${userId} in room ${bullPenId}`);
   } catch (err) {
     logger.error('[LeaderboardEvents] Failed to broadcast ranking_changed:', err);
@@ -72,6 +76,7 @@ function broadcastSnapshotCreated(wsServer, bullPenId, snapshot) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'snapshot_created', message.data);
     logger.log(`[LeaderboardEvents] Broadcasted snapshot_created for room ${bullPenId}`);
   } catch (err) {
     logger.error('[LeaderboardEvents] Failed to broadcast snapshot_created:', err);

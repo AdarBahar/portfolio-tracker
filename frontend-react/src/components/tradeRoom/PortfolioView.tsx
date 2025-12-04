@@ -4,7 +4,7 @@ import { usePositions } from '@/hooks/useBullPenOrders';
 import { useMarketData } from '@/hooks/useMarketData';
 import { formatCurrency } from '@/utils/formatting';
 import { calculatePositionValue, calculatePositionGainLoss } from '@/utils/tradeRoomCalculations';
-import { websocketService } from '@/services/websocketService';
+import { hybridConnectionManager } from '@/services/hybridConnectionManager';
 
 interface PortfolioViewProps {
   bullPenId: number;
@@ -17,9 +17,9 @@ export default function PortfolioView({ bullPenId, cash = 0 }: PortfolioViewProp
 
   // Subscribe to position updates
   useEffect(() => {
-    if (!websocketService.isConnected()) return;
+    if (!hybridConnectionManager.isConnected()) return;
 
-    const unsubscribe = websocketService.on('position_update', (data) => {
+    const unsubscribe = hybridConnectionManager.on('position_update', (data) => {
       if (data.bullPenId === bullPenId && autoRefresh) {
         refetch();
       }

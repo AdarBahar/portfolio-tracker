@@ -4388,3 +4388,102 @@ Successfully applied Phase 3 schema migration to local database:
   - Plan Phase 2: Frontend components and UI
   - Plan Phase 3: Integration and real-time updates
   - Plan Phase 4: Polish and optimization
+
+## 2025-12-04 – Hybrid WebSocket + Polling Implementation with Error Suppression
+
+- **Git reference**: `main` branch, commits for hybrid connection implementation
+- **Summary**: Implemented hybrid WebSocket + polling fallback system to support shared hosting environments where WebSocket is unavailable. Added error suppression to prevent console flooding when falling back to polling. Updated all Trade Room components to use the unified hybrid connection manager.
+
+- **Details**:
+  - **Backend Polling Service** (`backend/src/controllers/pollingController.js`, `backend/src/routes/pollingRoutes.js`):
+    - New polling endpoint: `GET /api/bull-pens/:id/updates`
+    - In-memory update queue (last 100 updates per room)
+    - Automatic cleanup of old updates
+    - Authentication required for polling endpoint
+    - Stores updates from all event handlers (orders, positions, leaderboard, room state)
+
+  - **Frontend Hybrid Connection Manager** (`frontend-react/src/services/hybridConnectionManager.ts`):
+    - Attempts WebSocket connection first
+    - Automatically falls back to polling if WebSocket fails
+    - Emits same events regardless of connection mode
+    - Manages connection status (websocket, polling, offline)
+    - Suppresses WebSocket errors when using polling fallback
+    - Provides unified interface for all components
+
+  - **Frontend Polling Service** (`frontend-react/src/services/pollingService.ts`):
+    - Polls `/api/bull-pens/:id/updates` every 3 seconds
+    - Emits same events as WebSocket service
+    - Handles authentication and error recovery
+    - Automatic cleanup of polling intervals
+
+  - **WebSocket Service Enhancements** (`frontend-react/src/services/websocketService.ts`):
+    - Added `suppressReconnect` flag to control error logging
+    - Added `setSuppressReconnect(suppress: boolean)` method
+    - Updated error handlers to respect suppression flag
+    - Prevents console errors when falling back to polling
+    - Maintains backward compatibility
+
+  - **Backend Event Handler Updates**:
+    - `leaderboardEvents.js`: Stores updates in polling queue
+    - `orderEvents.js`: Stores updates in polling queue
+    - `positionEvents.js`: Stores updates in polling queue
+    - `roomStateEvents.js`: Stores updates in polling queue
+
+  - **Component Updates** (all use `hybridConnectionManager` instead of `websocketService`):
+    - `BullPenDetail.tsx`: Removed "Connecting to real-time updates" message
+    - `NotificationCenter.tsx`: Uses hybrid manager for event subscriptions
+    - `LeaderboardView.tsx`: Uses hybrid manager for real-time updates
+    - `PortfolioView.tsx`: Uses hybrid manager for position updates
+
+  - **Files Created** (4 total):
+    - `backend/src/controllers/pollingController.js` (polling logic)
+    - `backend/src/routes/pollingRoutes.js` (polling endpoint)
+    - `frontend-react/src/services/hybridConnectionManager.ts` (hybrid connection logic)
+    - `frontend-react/src/services/pollingService.ts` (polling service)
+
+  - **Files Modified** (10 total):
+    - Backend: 5 files (app.js, 4 event handlers)
+    - Frontend: 5 files (websocketService, 4 components)
+
+- **Reasoning / Motivation**:
+  - InMotion Hosting shared server doesn't support WebSocket (HTTP/2 incompatibility)
+  - VPS upgrade required for full WebSocket support
+  - Hybrid approach provides immediate solution without infrastructure changes
+  - Polling fallback is transparent to users
+  - Error suppression prevents console spam on shared hosting
+  - Unified interface simplifies component development
+
+- **Impact**:
+  - ✅ Trade Room works on shared hosting via polling fallback
+  - ✅ No console errors when WebSocket unavailable
+  - ✅ No "Connecting..." message shown to users
+  - ✅ Seamless fallback (users don't know which mode is active)
+  - ✅ Ready for VPS upgrade (WebSocket will work immediately)
+  - ✅ Updates every 3 seconds via polling (acceptable for shared hosting)
+  - ✅ Real-time updates via WebSocket when available (< 100ms)
+
+- **Deployment / Ops notes**:
+  - No database schema changes required
+  - No environment variable changes required
+  - Polling endpoint requires authentication (same as other endpoints)
+  - In-memory queue will be replaced with Redis in production
+  - No special deployment steps needed
+  - Frontend build must be updated (new services)
+  - Backend must be restarted to load new routes
+
+- **Testing**:
+  - ✅ Build verification: `npm run build` passes with no errors
+  - ✅ TypeScript compilation: All type errors fixed
+  - ✅ Manual testing on shared hosting: Polling fallback works
+  - ✅ No console errors when WebSocket fails
+  - ✅ Updates received every 3 seconds
+  - ✅ All components receive events correctly
+  - ✅ Connection status tracked accurately
+
+- **Open questions / next steps**:
+  - Phase 6.1: Deploy hybrid solution to production
+  - Phase 6.2: Monitor polling performance and adjust interval if needed
+  - Phase 6.3: Plan VPS upgrade for full WebSocket support
+  - Phase 6.4: Add optional connection status indicator (badge showing "Real-time" or "Polling")
+  - Phase 6.5: Add debug mode to show connection mode in console
+  - Future: Replace in-memory queue with Redis for scalability

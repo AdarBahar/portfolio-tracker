@@ -2562,6 +2562,86 @@
         }
       }
     },
+    "/api/bull-pens/{id}/updates": {
+      "get": {
+        "summary": "Get trade room updates (polling fallback)",
+        "description": "Returns recent updates for a trade room. Used as a fallback when WebSocket is unavailable. Returns updates from the last 3 seconds or since the last_update_id provided.",
+        "tags": ["Trade Rooms", "Polling"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Trade room ID",
+            "schema": { "type": "integer" }
+          },
+          {
+            "name": "last_update_id",
+            "in": "query",
+            "description": "Last update ID received (for incremental updates)",
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recent updates for the trade room",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "updates": {
+                      "type": "array",
+                      "description": "Array of recent updates",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "description": "Update ID"
+                          },
+                          "type": {
+                            "type": "string",
+                            "description": "Update type (order_executed, position_update, leaderboard_update, room_state_changed, etc.)",
+                            "example": "order_executed"
+                          },
+                          "data": {
+                            "type": "object",
+                            "description": "Update payload (varies by type)"
+                          },
+                          "timestamp": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "When the update occurred"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Trade room not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/bull-pen-orders": {
       "get": {
         "summary": "List orders in trade rooms",

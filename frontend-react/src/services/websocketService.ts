@@ -20,6 +20,7 @@ class WebSocketService {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 3000;
   private isIntentionallyClosed = false;
+  private suppressReconnect = false; // Flag to suppress reconnection attempts
 
   constructor() {
     this.url = this.getWebSocketUrl();
@@ -74,15 +75,20 @@ class WebSocketService {
         };
 
         this.ws.onerror = (error) => {
-          console.error('[WebSocket] Error:', error);
+          // Only log errors if not suppressed (i.e., not managed by hybrid manager)
+          if (!this.suppressReconnect) {
+            console.error('[WebSocket] Error:', error);
+          }
           reject(error);
         };
 
         this.ws.onclose = () => {
-          console.log('[WebSocket] Disconnected');
+          if (!this.suppressReconnect) {
+            console.log('[WebSocket] Disconnected');
+          }
           this.connectionListeners.forEach(cb => cb(false));
-          
-          if (!this.isIntentionallyClosed) {
+
+          if (!this.isIntentionallyClosed && !this.suppressReconnect) {
             this.attemptReconnect();
           }
         };
@@ -155,6 +161,31 @@ class WebSocketService {
   }
 
   /**
+   * Subscribe to a room (for compatibility with hybrid manager)
+   */
+  subscribeToRoom(bullPenId: number): void {
+    if (this.isConnected()) {
+      this.send('subscribe_room', { bullPenId });
+    }
+  }
+
+  /**
+   * Unsubscribe from a room (for compatibility with hybrid manager)
+   */
+  unsubscribeFromRoom(bullPenId: number): void {
+    if (this.isConnected()) {
+      this.send('unsubscribe_room', { bullPenId });
+    }
+  }
+
+  /**
+   * Suppress reconnection attempts (used by hybrid manager)
+   */
+  setSuppressReconnect(suppress: boolean): void {
+    this.suppressReconnect = suppress;
+  }
+
+  /**
    * Attempt to reconnect
    */
   private attemptReconnect(): void {
@@ -165,9 +196,9 @@ class WebSocketService {
 
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-    
+
     console.log(`[WebSocket] Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
-    
+
     setTimeout(() => {
       if (this.token && !this.isIntentionallyClosed) {
         this.connect(this.token).catch(err => {

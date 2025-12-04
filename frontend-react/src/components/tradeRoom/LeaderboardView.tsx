@@ -3,7 +3,7 @@ import { Loader, Trophy, RefreshCw, History } from 'lucide-react';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { useLeaderboardSnapshot, useCreateLeaderboardSnapshot } from '@/hooks/useLeaderboardSnapshot';
 import { formatCurrency } from '@/utils/formatting';
-import { websocketService } from '@/services/websocketService';
+import { hybridConnectionManager } from '@/services/hybridConnectionManager';
 
 interface LeaderboardViewProps {
   bullPenId: number;
@@ -19,9 +19,9 @@ export default function LeaderboardView({ bullPenId, isHost = false }: Leaderboa
 
   // Subscribe to real-time leaderboard updates
   useEffect(() => {
-    if (!websocketService.isConnected()) return;
+    if (!hybridConnectionManager.isConnected()) return;
 
-    const unsubscribe = websocketService.on('leaderboard_update', (data) => {
+    const unsubscribe = hybridConnectionManager.on('leaderboard_update', (data) => {
       if (data.bullPenId === bullPenId && autoRefresh) {
         refetch();
       }

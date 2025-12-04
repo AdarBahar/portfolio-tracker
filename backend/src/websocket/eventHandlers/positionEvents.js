@@ -1,9 +1,11 @@
 /**
  * Position Event Handlers for WebSocket Broadcasting
  * Broadcasts position updates to room subscribers
+ * Also adds updates to polling queue for clients using polling fallback
  */
 
 const logger = require('../../utils/logger');
+const { addRoomUpdate } = require('../../controllers/pollingController');
 
 /**
  * Broadcast position updated event
@@ -29,6 +31,7 @@ function broadcastPositionUpdated(wsServer, bullPenId, position) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'position_update', message.data);
     logger.log(`[PositionEvents] Broadcasted position_update for position ${position.id} in room ${bullPenId}`);
   } catch (err) {
     logger.error('[PositionEvents] Failed to broadcast position_update:', err);
@@ -57,6 +60,7 @@ function broadcastPositionClosed(wsServer, bullPenId, position, realizedPnL) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'position_closed', message.data);
     logger.log(`[PositionEvents] Broadcasted position_closed for position ${position.id} in room ${bullPenId}`);
   } catch (err) {
     logger.error('[PositionEvents] Failed to broadcast position_closed:', err);
@@ -83,6 +87,7 @@ function broadcastPortfolioUpdated(wsServer, bullPenId, userId, portfolio) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'portfolio_update', message.data);
     logger.log(`[PositionEvents] Broadcasted portfolio_update for user ${userId} in room ${bullPenId}`);
   } catch (err) {
     logger.error('[PositionEvents] Failed to broadcast portfolio_update:', err);

@@ -1,9 +1,11 @@
 /**
  * Room State Event Handlers for WebSocket Broadcasting
  * Broadcasts room state changes to subscribers
+ * Also adds updates to polling queue for clients using polling fallback
  */
 
 const logger = require('../../utils/logger');
+const { addRoomUpdate } = require('../../controllers/pollingController');
 
 /**
  * Broadcast room state changed event
@@ -25,6 +27,7 @@ function broadcastRoomStateChanged(wsServer, bullPenId, room) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'room_state_changed', message.data);
     logger.log(`[RoomStateEvents] Broadcasted room_state_changed for room ${bullPenId} to state ${room.state}`);
   } catch (err) {
     logger.error('[RoomStateEvents] Failed to broadcast room_state_changed:', err);
@@ -50,6 +53,7 @@ function broadcastRoomStarted(wsServer, bullPenId, room) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'room_started', message.data);
     logger.log(`[RoomStateEvents] Broadcasted room_started for room ${bullPenId}`);
   } catch (err) {
     logger.error('[RoomStateEvents] Failed to broadcast room_started:', err);
@@ -72,6 +76,7 @@ function broadcastRoomEnded(wsServer, bullPenId, room) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'room_ended', message.data);
     logger.log(`[RoomStateEvents] Broadcasted room_ended for room ${bullPenId}`);
   } catch (err) {
     logger.error('[RoomStateEvents] Failed to broadcast room_ended:', err);
@@ -94,6 +99,7 @@ function broadcastMemberJoined(wsServer, bullPenId, userId, memberCount) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'member_joined', message.data);
     logger.log(`[RoomStateEvents] Broadcasted member_joined for user ${userId} in room ${bullPenId}`);
   } catch (err) {
     logger.error('[RoomStateEvents] Failed to broadcast member_joined:', err);
@@ -116,6 +122,7 @@ function broadcastMemberLeft(wsServer, bullPenId, userId, memberCount) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'member_left', message.data);
     logger.log(`[RoomStateEvents] Broadcasted member_left for user ${userId} in room ${bullPenId}`);
   } catch (err) {
     logger.error('[RoomStateEvents] Failed to broadcast member_left:', err);

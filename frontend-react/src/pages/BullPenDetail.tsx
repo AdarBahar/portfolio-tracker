@@ -10,7 +10,7 @@ import OrderHistory from '@/components/tradeRoom/OrderHistory';
 import SnapshotHistory from '@/components/tradeRoom/SnapshotHistory';
 import NotificationCenter from '@/components/tradeRoom/NotificationCenter';
 import TopBar from '@/components/dashboard/TopBar';
-import { websocketService } from '@/services/websocketService';
+import { hybridConnectionManager } from '@/services/hybridConnectionManager';
 import { STORAGE_KEYS } from '@/lib/api';
 
 type TabType = 'trading' | 'portfolio' | 'leaderboard' | 'positions' | 'orders' | 'history';
@@ -20,7 +20,6 @@ export default function BullPenDetail() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('trading');
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [wsConnected, setWsConnected] = useState(false);
 
   const bullPenId = id ? parseInt(id, 10) : undefined;
   const { data: bullPen, isLoading } = useBullPen(bullPenId);
@@ -35,21 +34,23 @@ export default function BullPenDetail() {
     setNotifications([]);
   };
 
-  // Connect to WebSocket on mount
+  // Connect to hybrid connection (WebSocket + polling fallback) on mount
   useEffect(() => {
     const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-    if (token && !websocketService.isConnected()) {
-      websocketService.connect(token)
-        .then(() => setWsConnected(true))
-        .catch(err => console.error('WebSocket connection failed:', err));
+    if (token && !hybridConnectionManager.isConnected()) {
+      hybridConnectionManager.connect(token)
+        .catch(err => console.error('Connection failed:', err));
     }
 
-    // Subscribe to connection changes
-    const unsubscribe = websocketService.onConnectionChange((connected) => {
-      setWsConnected(connected);
+    // Subscribe to connection changes (for future use if needed)
+    const unsubscribe = hybridConnectionManager.onConnectionChange(() => {
+      // Connection status changed, but we don't need to show a message
+      // since polling fallback is automatic
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   // Navigate to trade-room if bull pen not found (after loading completes)
@@ -155,13 +156,6 @@ export default function BullPenDetail() {
 
       {/* Notification Center */}
       {bullPenId && <NotificationCenter bullPenId={bullPenId} />}
-
-      {/* WebSocket Status Indicator */}
-      {!wsConnected && (
-        <div className="fixed top-20 right-4 px-4 py-2 bg-warning/10 border border-warning/30 rounded-lg text-warning text-sm">
-          Connecting to real-time updates...
-        </div>
-      )}
     </div>
   );
 }

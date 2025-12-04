@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { X, AlertCircle, CheckCircle, Info, Bell } from 'lucide-react';
-import { websocketService } from '@/services/websocketService';
+import { hybridConnectionManager } from '@/services/hybridConnectionManager';
 
 export interface Notification {
   id: string;
@@ -20,11 +20,11 @@ export default function NotificationCenter({ bullPenId }: NotificationCenterProp
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    if (!websocketService.isConnected()) return;
+    if (!hybridConnectionManager.isConnected()) return;
 
     // Subscribe to various events
     const unsubscribers = [
-      websocketService.on('order_executed', (data) => {
+      hybridConnectionManager.on('order_executed', (data) => {
         addNotification({
           type: 'success',
           title: 'Order Executed',
@@ -32,7 +32,7 @@ export default function NotificationCenter({ bullPenId }: NotificationCenterProp
         });
       }),
 
-      websocketService.on('order_failed', (data) => {
+      hybridConnectionManager.on('order_failed', (data) => {
         addNotification({
           type: 'error',
           title: 'Order Failed',
@@ -40,7 +40,7 @@ export default function NotificationCenter({ bullPenId }: NotificationCenterProp
         });
       }),
 
-      websocketService.on('room_state_changed', (data) => {
+      hybridConnectionManager.on('room_state_changed', (data) => {
         addNotification({
           type: 'info',
           title: 'Room State Changed',
@@ -48,7 +48,7 @@ export default function NotificationCenter({ bullPenId }: NotificationCenterProp
         });
       }),
 
-      websocketService.on('leaderboard_updated', (data) => {
+      hybridConnectionManager.on('leaderboard_updated', (data) => {
         addNotification({
           type: 'info',
           title: 'Leaderboard Updated',
@@ -56,7 +56,7 @@ export default function NotificationCenter({ bullPenId }: NotificationCenterProp
         });
       }),
 
-      websocketService.on('position_closed', (data) => {
+      hybridConnectionManager.on('position_closed', (data) => {
         addNotification({
           type: 'success',
           title: 'Position Closed',

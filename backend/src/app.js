@@ -13,6 +13,7 @@ const bullPenOrdersRoutes = require('./routes/bullPenOrdersRoutes');
 const myBullPensRoutes = require('./routes/myBullPensRoutes');
 const marketDataRoutes = require('./routes/marketDataRoutes');
 const leaderboardRoutes = require('./routes/leaderboardRoutes');
+const pollingRoutes = require('./routes/pollingRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const budgetRoutes = require('./routes/budgetRoutes');
 const internalBudgetRoutes = require('./routes/internalBudgetRoutes');
@@ -110,6 +111,7 @@ app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, bullPensRoutes);
 app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, bullPenMembershipsRoutes);
 app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, bullPenOrdersRoutes);
 app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, leaderboardRoutes);
+app.use(`${BASE_PATH}/api/bull-pens`, authenticateToken, pollingRoutes);
 app.use(`${BASE_PATH}/api/my`, authenticateToken, myBullPensRoutes);
 app.use(`${BASE_PATH}/api/market-data`, marketDataRoutes);
 

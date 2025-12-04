@@ -1,9 +1,11 @@
 /**
  * Order Event Handlers for WebSocket Broadcasting
  * Broadcasts order execution and failure events to room subscribers
+ * Also adds updates to polling queue for clients using polling fallback
  */
 
 const logger = require('../../utils/logger');
+const { addRoomUpdate } = require('../../controllers/pollingController');
 
 /**
  * Broadcast order executed event
@@ -27,6 +29,7 @@ function broadcastOrderExecuted(wsServer, bullPenId, order) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'order_executed', message.data);
     logger.log(`[OrderEvents] Broadcasted order_executed for order ${order.id} in room ${bullPenId}`);
   } catch (err) {
     logger.error('[OrderEvents] Failed to broadcast order_executed:', err);
@@ -55,6 +58,7 @@ function broadcastOrderFailed(wsServer, bullPenId, order, reason) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'order_failed', message.data);
     logger.log(`[OrderEvents] Broadcasted order_failed for order ${order.id} in room ${bullPenId}`);
   } catch (err) {
     logger.error('[OrderEvents] Failed to broadcast order_failed:', err);
@@ -82,6 +86,7 @@ function broadcastOrderCancelled(wsServer, bullPenId, order) {
     };
 
     wsServer.broadcastToRoom(bullPenId, message);
+    addRoomUpdate(bullPenId, 'order_cancelled', message.data);
     logger.log(`[OrderEvents] Broadcasted order_cancelled for order ${order.id} in room ${bullPenId}`);
   } catch (err) {
     logger.error('[OrderEvents] Failed to broadcast order_cancelled:', err);
